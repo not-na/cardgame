@@ -24,6 +24,7 @@ Packets
    :maxdepth: 1
 
    packets/packet_auth
+   packets/packet_auth_precheck
 
    packets/packet_status_user
    packets/packet_status_internal_message

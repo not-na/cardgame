@@ -11,3 +11,4 @@ Packets
    :maxdepth: 1
 
    packet_auth
+   packet_auth_precheck
