@@ -318,7 +318,7 @@ class ClientSubProcess(PopenSubProcess):
     def get_params(self):
         # Store the command line base, everything else is appended
         if not profile:
-            cmdline = [PYTHON_BINARY, "-u", "-O", MAIN_FILE_CLIENT, "--client"]
+            cmdline = [PYTHON_BINARY, "-u", "-O", MAIN_FILE_CLIENT]
         else:
             cmdline = [PYTHON_BINARY, "-u", "-O", "-m", "cProfile", "-o", "cardgame_profile.txt", "-s", "cumtime", MAIN_FILE_CLIENT, "--client"]
 
@@ -342,7 +342,7 @@ class ClientSubProcess(PopenSubProcess):
 
 class ServerSubProcess(PopenSubProcess):
     def get_params(self):
-        cmdline = [PYTHON_BINARY, "-u", "-O", MAIN_FILE_SERVER, "--server"]
+        cmdline = [PYTHON_BINARY, "-u", "-O", MAIN_FILE_SERVER]
         cmdline.extend(self.args)
         #cmdline.extend(["--authserver", self.authserver])
 
@@ -828,7 +828,7 @@ def main(stdscr):
                 in_mode = "str"
                 in_type = "str"
                 in_out = "auth_name"
-                in_status = "Accounts not yet implemented!"
+                in_status = ""
             elif c == ord("b"):
                 # Scroll to the bottom
                 cur_proc.scroll_v = 0
