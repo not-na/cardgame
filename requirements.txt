@@ -2,3 +2,4 @@ peng3d==1.10.1
 peng3dnet==0.1.2a1
 psutil==5.7.0
 sphinx_rtd_theme==0.2.4
+sphinxcontrib-domaintools==0.2

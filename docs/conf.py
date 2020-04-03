@@ -72,6 +72,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    "cg_ext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

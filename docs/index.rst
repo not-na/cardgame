@@ -14,6 +14,13 @@ Welcome to Cardgame's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   protospec/index
+
+   commands
+
+   contributing
+   glossary
+
 
 
 Indices and tables
