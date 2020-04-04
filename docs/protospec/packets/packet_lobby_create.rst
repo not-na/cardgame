@@ -1,5 +1,5 @@
 
-``cg:lobby.create`` - Lobby Creation Packet
+``cg:lobby.create`` - Creating a lobby
 =====================================================
 
 .. cg:packet:: cg:lobby.create
@@ -19,10 +19,12 @@ This packet is used to create a :term:`lobby`.
 Purpose
 -------
 
-Using this packet, the server is notified of the creation of a :term:`custom game`\ .
-It will create a :term:`lobby` and add the creator and his :term:`party`\ members to it.
-After the server receiving this packet, it will send the concerned clients a
-:cg:packet:`cg:lobby.join` packet.
+Using this packet, the server is notified of the creation of a :term:`lobby`\ , either
+because a :term:`custom game` was created by a client, or because the :term:`matchmaking`
+matched enough players together to start a game.
+
+Upon creating the lobby, the creator and his :term:`party` members will be joined using
+a :cg:packet:`cg:lobby.join` packet.
 
 Structure
 ---------

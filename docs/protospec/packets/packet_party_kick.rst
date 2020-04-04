@@ -1,10 +1,10 @@
 
-``cg:lobby.kick`` - Kicking a user out of a lobby
+``cg:party.kick`` - Kicking a user out of a party
 =====================================================
 
-.. cg:packet:: cg:lobby.invite
+.. cg:packet:: cg:party.invite
 
-This packet is used to kick another client out of a :term:`lobby`.
+This packet is used to kick another client out of a :term:`party`.
 
 +-----------------------+--------------------------------------------+
 |Internal Name          |:cg:packet:`cg:lobby.kick`                  |
@@ -13,17 +13,17 @@ This packet is used to kick another client out of a :term:`lobby`.
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``lobby`` only                              |
+|Valid Modes            |``active`` and ``lobby``                    |
 +-----------------------+--------------------------------------------+
 
 Purpose
 -------
 
-This packet is used to kick a client out of a :term:`lobby`\ . It also allows the kicker
+This packet is used to kick a client out of a :term:`party`\ . It also allows the kicker
 to name a reason for why the other client has been kicked.
 
 This client will receive a :cg:packet:`cg:status.message` packet informing it on the
-reason. Subsequently, the server will send it a :cg:packet:`cg:lobby.leave` packet.
+reason. Subsequently, the server will send it a :cg:packet:`cg:party.leave` packet.
 
 Structure
 ---------
@@ -42,4 +42,4 @@ This is the data sent by the server to the client: ::
 ``reason`` is the justification for the kick.
 
 .. seealso::
-   See the :cg:packet:`cg:lobby.leave` packet for further information on leaving a lobby.
+   See the :cg:packet:`cg:party.leave` packet for further information on leaving a party.

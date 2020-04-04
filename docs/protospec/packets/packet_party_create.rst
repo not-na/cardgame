@@ -1,31 +1,31 @@
 
-``cg:lobby.ready`` - Ready to begin the game
+``cg:party.create`` - Creating a party
 =====================================================
 
 .. cg:packet:: cg:lobby.ready
 
-This packet is used by a client to signalise it is ready to begin the game.
+This packet is used to create a :term:`party`\ .
 
 +-----------------------+--------------------------------------------+
-|Internal Name          |:cg:packet:`cg:lobby.ready`                 |
+|Internal Name          |:cg:packet:`cg:party.create`                |
 +-----------------------+--------------------------------------------+
 |Direction              |Serverbound                                 |
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``lobby`` only                              |
+|Valid Modes            |``active`` only                             |
 +-----------------------+--------------------------------------------+
 
 Purpose
 -------
 
-This packet is used by a client to signalise it is ready to begin the game. When all
-clients in a :term:`lobby` conveyed their readiness, the game begins.
-
-When the server receives this packet, it will send a :cg:packet:`cg:lobby.change` packet
-to all clients in the lobby containing the updated list of ready players.
+This packet is used by a client to create a :term:`party`\ . Afterwards, the client will
+be automatically joined the party using the :cg:packet:`cg:party.join` packet.
 
 Structure
 ---------
 
 The package ought not to contain any data.
+
+.. seealso::
+   See the :cg:packet:`cg:party.join` for further information on joining a party.
