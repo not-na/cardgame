@@ -17,4 +17,4 @@ Packets
    packet_lobby_change
    packet_lobby_leave
    packet_lobby_kick
-   packet_lobby.ready
+   packet_lobby_ready
