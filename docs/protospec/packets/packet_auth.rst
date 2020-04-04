@@ -69,6 +69,15 @@ if ``status`` is ``logged_in`` or ``user_exists``\ .
 further information in the :term:`user database`\ . It is only present if ``status``
 is ``logged_in``\ .
 
+If the login attempt was successful, the server will already pre-send a :cg:packet:`cg:status.user`
+packet with information on the user. It will also send a :cg:packet:`cg:status.server.mainscreen`
+packet to update the client on the contents of the main screen. Also, the connection
+mode will change to ``active``\ .
+
+.. seealso::
+   See the :cg:packet:`cg:status.user` packet for more information on how to get
+   User data.
+
 .. seealso::
    See the :cg:packet:`cg:auth.precheck` packet for more information on the
    authentication process.

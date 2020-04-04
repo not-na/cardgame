@@ -27,7 +27,8 @@ Packets
    packets/packet_auth_precheck
 
    packets/packet_status_user
-   packets/packet_status_internal_message
+   packets/packet_status_message
+   packets/packet_status_server_mainscreen
 
    packets/packet_lobby_create
    packets/packet_lobby_join

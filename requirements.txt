@@ -2,4 +2,9 @@ peng3d==1.10.1
 peng3dnet==0.1.2a1
 psutil==5.7.0
 sphinx_rtd_theme==0.2.4
-sphinxcontrib-domaintools==0.2
+plumbum==1.6.9
+ujson==2.0.3
+jsoncomment==0.4.2
+PyYAML==5.3.1
+msgpack==1.0.0
+cachetools==4.0.0
