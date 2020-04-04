@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  loadingscreen.py
 #  
-#  Copyright 2020 notna <notna@apparat.org>
+#  Copyright 2020 contributors of cardgame
 #  
 #  This file is part of cardgame.
 #
@@ -21,7 +21,14 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import version
-from . import constants
-from . import error
-from . import gui
+import peng3d
+
+import cgclient.gui
+
+
+class LoadingScreenMenu(peng3d.gui.GUIMenu):
+    pass
+
+
+class LoadingScreenSubMenu(peng3d.gui.SubMenu):
+    pass

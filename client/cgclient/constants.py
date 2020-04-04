@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  constants.py
 #  
-#  Copyright 2020 notna <notna@apparat.org>
+#  Copyright 2020 contributors of cardgame
 #  
 #  This file is part of cardgame.
 #
@@ -21,7 +21,3 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import version
-from . import constants
-from . import error
-from . import gui

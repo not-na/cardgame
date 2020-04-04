@@ -132,3 +132,8 @@ dmypy.json
 .idea/
 
 cardgame-py/
+
+client/crash_reports/
+client/logs/
+server/crash_reports/
+server/logs/

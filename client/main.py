@@ -22,15 +22,18 @@
 
 import os
 import sys
+sys.path.extend([os.path.abspath(".")])
 
 import time
 stime = time.time()
 
 import traceback
 
+import cg
 import cgclient
 
 from plumbum import cli
+
 
 class CardgameApp(cli.Application):
     PROGNAME = "CardGame"
@@ -60,7 +63,17 @@ class CardgameApp(cli.Application):
 
         # TODO...
         print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
+        c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
 
+        c.info("Successfully created CG")
+
+        c.init_client(username=self.username, pwd=self.pwd, default_server=self.addr)
+
+        c.info("Starting GUI main loop...")
+        #c.client.gui.start_main_loop()
+
+        c.info("GUI Main loop stopped")
+        sys.stdout.flush()
         return 0
 
 
@@ -74,8 +87,7 @@ def main():
         traceback.print_exc()
         try:
             # Try to "file" a crash report
-            # TODO: implement crash reporter
-            pass
+            cg.c.crash("Exception Occured")
         except Exception:
             # Report if that fails
             print("Exception during crash report:")
