@@ -1,0 +1,12 @@
+loglevel:
+   main: 10
+   launcher: 20
+   file: 10
+basefilename: logs/cg.log
+backupcount: 16
+format:
+   file: "[%(filetime)s] [%(module)s/%(levelname)s] %(message)s"
+   launcher: "[%(launchertime)s] [%(module)s/%(levelname)s] %(message)s"
+   launchertime: "%X"
+   crashtime: "%x %X"
+   filetime: "%x %X"

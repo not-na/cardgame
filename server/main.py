@@ -22,12 +22,14 @@
 
 import os
 import sys
+sys.path.extend([os.path.abspath(".")])
 
 import time
 stime = time.time()
 
 import traceback
 
+import cg
 import cgserver
 
 from plumbum import cli
@@ -48,6 +50,17 @@ class CardgameApp(cli.Application):
 
         # TODO...
         print(f"--address={self.addr}")
+        c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
+
+        c.info("Successfully created CG")
+
+        c.init_server(addr=self.addr)
+
+        c.info("Starting server")
+        # TODO: actually implement c.server.start
+
+        c.info("Server stopped")
+        sys.stdout.flush()
 
         return 0
 
@@ -62,7 +75,7 @@ def main():
         traceback.print_exc()
         try:
             # Try to "file" a crash report
-            # TODO: implement crash reporter
+            cg.c.crash("Exception Occured")
             pass
         except Exception:
             # Report if that fails
@@ -71,8 +84,7 @@ def main():
     finally:
         try:
             # Always try to send out a shutdown event
-            # TODO: clean shutdown
-            pass
+            cg.c.send_event("cg:shutdown", {"reason": "shutdown"})
         except Exception:
             # Report on any exceptions
             print("Exception during shutdown handler:")

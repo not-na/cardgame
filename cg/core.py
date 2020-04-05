@@ -95,9 +95,15 @@ class CardGame(object):
     def init_client(self, username=None, pwd=None, default_server=None):
         import cgclient
 
-        self.info("Starting client")
+        self.info("Initializing client")
         #self.client = cgclient.client.Client(self, username, pwd, default_server)
         #self.client.init_gui()
+
+    def init_server(self, addr=None):
+        import cgserver
+
+        self.info("Initializing Server")
+        # TODO: actually start server
 
     # Event Handlers
 

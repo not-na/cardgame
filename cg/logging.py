@@ -86,6 +86,8 @@ LOGGER_BLACKLIST = [
     "past.translation",
     "future_stdlib",
     "chardet.universaldetector",
+    "jsonspec.pointer.bases",
+    "jsonspec.pointer",
 ]
 
 
@@ -320,6 +322,9 @@ class CGLogger(logging.Logger):
 
         if self.name in LOGGER_BLACKLIST:
             return  # Ignore loggers on the blacklist
+
+        if cg.c is None:
+            raise RuntimeError(f"Could not find CG object while initializing Logger {self.name}")
 
         self.setLevel(logging.DEBUG)
 

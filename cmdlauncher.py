@@ -565,11 +565,11 @@ def main(stdscr):
             stdscr.clear()
 
             # Top Help Line
-            stdscr.addstr(0, 0, "(h)elp (q)uit (s)pawn process (k)ill process")
+            stdscr.addstr(0, 0, "(h)elp  (q)uit  (s)pawn process  (k)ill process  (r)estart process")
             stdscr.chgat(0, 0, -1, curses.A_REVERSE)
 
             # Bottom Help Line
-            stdscr.addstr(h - 1, 0, "(v)iew process  write to std(i)n")
+            stdscr.addstr(h - 1, 0, "(v)iew process  write to std(i)n  (a)dd account")
             stdscr.chgat(h - 1, 0, -1, curses.A_REVERSE)
 
             # Client List

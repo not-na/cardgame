@@ -20,6 +20,17 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import uuid
 
 from . import cache
 from . import serializer
+from . import time
+
+
+def uuidify(uuid_in):
+    if isinstance(uuid_in, str):
+        return uuid.UUID(uuid_in)
+    elif isinstance(uuid_in, uuid.UUID):
+        return uuid_in
+    else:
+        raise TypeError(f"Unsupported UUID representation of type {type(uuid_in)}")

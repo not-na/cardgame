@@ -1,0 +1,7 @@
+resolution:
+  width: 1920
+  height: 1080
+caption: CardGame
+vsync: true
+fullscreen: false
+fps: 60

@@ -61,7 +61,6 @@ class CardgameApp(cli.Application):
         print("Client starting...")
         sys.stdout.flush()
 
-        # TODO...
         print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
         c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
 
@@ -70,6 +69,7 @@ class CardgameApp(cli.Application):
         c.init_client(username=self.username, pwd=self.pwd, default_server=self.addr)
 
         c.info("Starting GUI main loop...")
+        # TODO: enable this when the main loop is implemented
         #c.client.gui.start_main_loop()
 
         c.info("GUI Main loop stopped")
@@ -95,8 +95,7 @@ def main():
     finally:
         try:
             # Always try to send out a shutdown event
-            # TODO: clean shutdown
-            pass
+            cg.c.send_event("cg:shutdown", {"reason": "shutdown"})
         except Exception:
             # Report on any exceptions
             print("Exception during shutdown handler:")
