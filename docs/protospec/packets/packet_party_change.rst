@@ -1,6 +1,6 @@
 
-``cg:party.change`` - Changes in the party
-=====================================================
+``cg:party.change`` - Party data change
+=======================================
 
 .. cg:packet:: cg:party.change
 

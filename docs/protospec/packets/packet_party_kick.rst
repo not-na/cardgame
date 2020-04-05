@@ -1,10 +1,10 @@
 
-``cg:party.kick`` - Kicking a user out of a party
-=====================================================
+``cg:party.kick`` - Kick user from party
+========================================
 
 .. cg:packet:: cg:party.invite
 
-This packet is used to kick another client out of a :term:`party`.
+This packet is used to kick another client from a :term:`party`.
 
 +-----------------------+--------------------------------------------+
 |Internal Name          |:cg:packet:`cg:lobby.kick`                  |
@@ -19,7 +19,7 @@ This packet is used to kick another client out of a :term:`party`.
 Purpose
 -------
 
-This packet is used to kick a client out of a :term:`party`\ . It also allows the kicker
+This packet is used to kick a client from a :term:`party`\ . It also allows the kicker
 to name a reason for why the other client has been kicked.
 
 This client will receive a :cg:packet:`cg:status.message` packet informing it on the

@@ -1,6 +1,6 @@
 
-``cg:party.leave`` - Leaving a party
-=====================================================
+``cg:party.leave`` - Leave party
+================================
 
 .. cg:packet:: cg:party.leave
 

@@ -1,6 +1,6 @@
 
-``cg:lobby.leave`` - Leaving a lobby
-=====================================================
+``cg:lobby.leave`` - Leave lobby
+================================
 
 .. cg:packet:: cg:lobby.leave
 

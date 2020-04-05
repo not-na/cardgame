@@ -1,6 +1,6 @@
 
-``cg:lobby.invite.accept`` - Accepting the invitation to a lobby
-=====================================================
+``cg:lobby.invite.accept`` - Accept invitation to lobby
+=======================================================
 
 .. cg:packet:: cg:lobby.invite.accept
 

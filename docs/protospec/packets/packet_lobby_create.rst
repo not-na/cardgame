@@ -1,5 +1,5 @@
 
-``cg:lobby.create`` - Creating a lobby
+``cg:lobby.create`` - Create lobby
 =====================================================
 
 .. cg:packet:: cg:lobby.create

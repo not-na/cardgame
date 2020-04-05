@@ -1,10 +1,10 @@
 
-``cg:lobby.kick`` - Kicking a user out of a lobby
-=====================================================
+``cg:lobby.kick`` - Kick user from lobby
+========================================
 
 .. cg:packet:: cg:lobby.invite
 
-This packet is used to kick another client out of a :term:`lobby`.
+This packet is used to kick another client from a :term:`lobby`.
 
 +-----------------------+--------------------------------------------+
 |Internal Name          |:cg:packet:`cg:lobby.kick`                  |
@@ -19,7 +19,7 @@ This packet is used to kick another client out of a :term:`lobby`.
 Purpose
 -------
 
-This packet is used to kick a client out of a :term:`lobby`\ . It also allows the kicker
+This packet is used to kick a client from a :term:`lobby`\ . It also allows the kicker
 to name a reason for why the other client has been kicked.
 
 This client will receive a :cg:packet:`cg:status.message` packet informing it on the

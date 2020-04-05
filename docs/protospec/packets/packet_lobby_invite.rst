@@ -1,6 +1,6 @@
 
-``cg:lobby.invite`` - Inviting a client to a lobby
-=====================================================
+``cg:lobby.invite`` - Invite client to lobby
+==============================================
 
 .. cg:packet:: cg:lobby.invite
 

@@ -1,6 +1,6 @@
 
-``cg:lobby.join`` - Joining a lobby
-=====================================================
+``cg:lobby.join`` - Join lobby
+==============================
 
 .. cg:packet:: cg:lobby.join
 

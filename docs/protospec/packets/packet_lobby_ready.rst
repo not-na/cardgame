@@ -1,6 +1,6 @@
 
-``cg:lobby.ready`` - Ready to begin the game
-=====================================================
+``cg:lobby.ready`` - Lobby readiness conveyance
+===============================================
 
 .. cg:packet:: cg:lobby.ready
 

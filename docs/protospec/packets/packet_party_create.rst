@@ -1,6 +1,6 @@
 
-``cg:party.create`` - Creating a party
-=====================================================
+``cg:party.create`` - Party creation
+====================================
 
 .. cg:packet:: cg:lobby.ready
 

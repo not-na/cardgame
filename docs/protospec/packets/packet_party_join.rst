@@ -1,5 +1,5 @@
-``cg:party.join`` - Joining a party
-=====================================================
+``cg:party.join`` - Join party
+==============================
 
 .. cg:packet:: cg:party.join
 

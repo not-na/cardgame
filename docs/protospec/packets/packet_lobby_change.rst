@@ -1,6 +1,6 @@
 
-``cg:lobby.change`` - Changes in the lobby
-=====================================================
+``cg:lobby.change`` - Lobby data change
+=======================================
 
 .. cg:packet:: cg:lobby.change
 

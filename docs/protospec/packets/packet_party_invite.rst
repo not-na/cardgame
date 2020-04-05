@@ -1,6 +1,6 @@
 
-``cg:party.invite`` - Inviting a client to a party
-=====================================================
+``cg:party.invite`` - Invite client to party
+============================================
 
 .. cg:packet:: cg:party.invite
 

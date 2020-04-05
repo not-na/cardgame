@@ -1,6 +1,6 @@
 
-``cg:party.invite.accept`` - Accepting the invitation to a party
-=====================================================
+``cg:party.invite.accept`` - Accept invitation to party
+=======================================================
 
 .. cg:packet:: cg:party.invite.accept
 
