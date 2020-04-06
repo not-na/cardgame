@@ -8,3 +8,10 @@ meta.name.de=Englisch
 window.caption=Card Game
 
 gui.menu.load.progress.loading=Loading...
+
+gui.menu.serverselect.title.playbtn.label=Play
+gui.menu.serverselect.title.settingsbtn.label=Settings
+
+gui.menu.serverselect.serverselect.okbtn.label=Connect
+
+gui.menu.smain.loadconn.connecting=Connecting...

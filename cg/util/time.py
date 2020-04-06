@@ -71,7 +71,7 @@ def tdiff_format(t1, t2=None):
         elif t_y == 100:
             return "a century ago"
         elif t_y == 1000:  # Let's hope python still exists then
-            return "a millenium ago"
+            return "a millennium ago"
         else:
             return f"{t_y} years ago"
 

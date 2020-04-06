@@ -23,12 +23,44 @@
 import os
 from typing import Callable, Dict
 
-REMOVE_ERRHANDLER = True
-MAX_IGNORE = 3  # Only outputs debug messages this many times for unhandled events
+MAX_IGNORE = 3
+"""
+Defines how many times a debug message should be output per unhandled event.
+
+Setting this to ``1`` will cause exactly one debug message to be generated.
+
+This constant may be changed during runtime by any code.
+"""
 
 F_RAISE_ERRORS = 1 << 0
+"""
+Flag signifying that errors should be raised for this error handler.
+
+.. seealso::
+   See :py:meth:`EventManager.add_event_listener()` for more information.
+"""
+
 F_REMOVE_ONERROR = 1 << 1
+"""
+Flag signifying that this handler should be removed whenever it causes an error.
+
+.. note::
+   If :py:data:`F_REMOVE_ONERROR` is also passed, this flag will have no effect.
+
+.. seealso::
+   See :py:meth:`EventManager.add_event_listener()` for more information.
+"""
+
 F_SILENT = 1 << 2
+"""
+Flag signifying that this handler is silent.
+
+When passed, log messages will be suppressed for this handler. Additionally, it will not
+be added to the event dump list.
+
+.. seealso::
+   See :py:meth:`EventManager.add_event_listener()` for more information.
+"""
 
 
 class EventManager(object):
@@ -43,7 +75,15 @@ class EventManager(object):
 
         self.add_event_listener("cg:shutdown", self.handle_shutdown)
 
-    def send_event(self, event, data=None):
+    def send_event(self, event: str, data=None) -> None:
+        """
+        Send a event to all registered event handlers.
+
+        :param str event: Name of the event to trigger
+        :param dict data: Optional context data
+        :return: None
+        """
+
         if data is None:
             data = {}
 

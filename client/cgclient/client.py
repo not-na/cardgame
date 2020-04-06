@@ -43,6 +43,8 @@ class Client(object):
         self._client: Union[CGClient, None] = None
         self.server = None
 
+        self.default_server = default_server if default_server is not None else ""
+
         self.username = username
         self.pwd = pwd
         # TODO: implement default_server
@@ -54,6 +56,10 @@ class Client(object):
     def init_gui(self):
         self.gui = cgclient.gui.PengGUI(self, self.cg)
         self.gui.init()
+
+    def connect_to(self, addr):
+        self.cg.info(f"Connecting to server {addr}")
+        # TODO: actually connect
 
     # Event Handlers
 

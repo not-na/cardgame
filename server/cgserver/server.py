@@ -149,7 +149,7 @@ class DedicatedServer(object):
 
     # Event Handlers
     def register_event_handlers(self):
-        self.cg.add_event_listener("roum:command.stop.do", self.handler_commandstop)
+        self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop)
 
     def handler_commandstop(self, event: str, data: Dict):
         # TODO: implement server stop

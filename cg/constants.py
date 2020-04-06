@@ -24,6 +24,33 @@
 # Network modes / states
 
 STATE_AUTH = 100
+"""
+The ``auth`` state signals that the client still has to authenticate itself.
+
+Most packets cannot be sent in this state.
+"""
+
 STATE_ACTIVE = 101
+"""
+The ``active`` state signals that the client is active and authenticated.
+
+This usually means that it is on the main screen of the server and neither ingame nor in
+a lobby.
+
+.. note::
+   Clients in this state may or may not be in a party.
+"""
+
 STATE_LOBBY = 102
-STATE_INGAME = 103
+"""
+The ``lobby`` state signals that the client is in a lobby.
+
+This state is usually rather short-lived and followed by one of the :py:data:`STATE_GAME_*` states.
+"""
+
+STATE_GAME_DK = 110
+"""
+The ``game_dk`` state signals that this client is currently playing :term:`Doppelkopf`\\ .
+
+This state is usually followed by either :py:data:`STATE_LOBBY` or :py:data:`STATE_ACTIVE`\\ .
+"""

@@ -30,11 +30,13 @@ import cgclient
 
 from . import loadingscreen
 from . import serverselect
+from . import servermain
 
 
 class PengGUI(object):
     loadingscreen: loadingscreen.LoadingScreenMenu
     serverselect: serverselect.ServerSelectMenu
+    servermain: servermain.ServerMainMenu
 
     def __init__(self, client, c: cg.CardGame):
         self.client = client
@@ -56,6 +58,7 @@ class PengGUI(object):
             vsync=self.cg.get_config_option("cg:graphics.vsync"),
             fullscreen=self.cg.get_config_option("cg:graphics.fullscreen"),
         )
+        self.window.maximize()
 
         #pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
         pyglet.clock.schedule_interval(self.update, 1 / 60)
@@ -75,17 +78,24 @@ class PengGUI(object):
         )
         self.window.addMenu(self.loadingscreen)
 
-        #self.serverselect = serverselect.ServerSelectMenu(
-        #    "serverselect",
-        #    self.window, self.peng, self,
-        #)
-        #self.window.addMenu(self.serverselect)
+        self.serverselect = serverselect.ServerSelectMenu(
+            "serverselect",
+            self.window, self.peng, self,
+        )
+        self.window.addMenu(self.serverselect)
+
+        self.servermain = servermain.ServerMainMenu(
+            "servermain",
+            self.window, self.peng, self,
+        )
+        self.window.addMenu(self.servermain)
 
         # Change to loadingscreen after everything is initialized
         self.window.changeMenu("loadingscreen")
 
     def update(self, dt=None):
-        pass
+        if self.window.menu.name == "loadingscreen":
+            self.window.changeMenu("serverselect")
 
     def start_main_loop(self):
         self.run = True
