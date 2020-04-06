@@ -14,13 +14,13 @@ used for the game :term:`Doppelkopf`\ .
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``game_dk`` only                            |
+|Valid States           |``game_dk`` only                            |
 +-----------------------+--------------------------------------------+
 
 Purpose
 -------
 
-Using this packet, the server can signalise the client that a card is transferred
+Using this packet, the server can signalise the client that a card was transferred
 to another :term:`slot`\ . This packet is only available for the game :term:`Doppelkopf`\ .
 
 This may be used for dealing the cards, where the cards will be moved from the shuffled
@@ -39,6 +39,10 @@ concerned players.
    card if the client is intended to know about it. Otherwise, the client will only be informed
    on the transfer of an unknown card.
 
+.. note::
+   This packet also implicitly creates cards by transferring from a slot that does not
+   contain the card. This "source" slot is usually the main deck.
+
 Structure
 ---------
 
@@ -56,7 +60,7 @@ This is the data sent by the server to the client: ::
 ``card_id`` is the :term:`UUID` of the transferred card.
 
 ``card_value`` is the value of the card. If the client should not know about the card
-value, -0 will be transmitted.
+value, an empty string will be transmitted.
 
 ``from_slot`` is the :term:`slot` in which the card was before the transfer.
 

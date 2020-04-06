@@ -13,7 +13,7 @@ This packet is used to kick another client from a :term:`party`.
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``active`` and ``lobby``                    |
+|Valid States           |``active`` and ``lobby``                    |
 +-----------------------+--------------------------------------------+
 
 Purpose

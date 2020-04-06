@@ -117,7 +117,7 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
         def f():
             self.peng.cg.client.connect_to(self.addr.text)
             self.window.changeMenu("servermain")
-            self.window.menus["servermain"].changeSubMenu("load_conn")
+            self.window.menus["servermain"].changeSubMenu("loadconn")
         self.okbtn.addAction("click", f)
 
     def reload_server_list(self):

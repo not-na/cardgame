@@ -13,7 +13,7 @@ This packet is used by the server to inform the client on any kind of change in 
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``lobby`` only                              |
+|Valid States           |``lobby`` only                              |
 +-----------------------+--------------------------------------------+
 
 Purpose

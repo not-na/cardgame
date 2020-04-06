@@ -1,11 +1,11 @@
 
-``cg:game.dk.scoreboard`` - Distribute points
+``cg:game.dk.scoreboard`` - Update the scoreboard
 =================================================
 
 .. cg:packet:: cg:game.dk.scoreboard
 
-This packet is used to distribute points and pips. It is only
-used for the game :term:`Doppelkopf`\ .
+This packet is used to update points and pips. It is only used for the game
+:term:`Doppelkopf`\ .
 
 +-----------------------+--------------------------------------------+
 |Internal Name          |:cg:packet:`cg:game.dk.scoreboard`          |
@@ -14,13 +14,13 @@ used for the game :term:`Doppelkopf`\ .
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``game_dk`` only                            |
+|Valid States           |``game_dk`` only                            |
 +-----------------------+--------------------------------------------+
 
 Purpose
 -------
 
-Using this packet, the server distributes points and pips to the players. This packet is
+Using this packet, the server updates points and pips that players have. This packet is
 only available for the game :term:`Doppelkopf`\ .
 
 After each trick, the packet will convey the pips all players received. At the
@@ -30,7 +30,8 @@ received.
 Structure
 ---------
 
-Note that all examples shown here contain placeholder data and will have different content in actual packets.
+Note that all examples shown here contain placeholder data and will have different
+content in actual packets.
 
 This is the data sent by the server to the client: ::
 
@@ -51,3 +52,6 @@ This is the data sent by the server to the client: ::
 ``points`` is the amount of points the player has accumulated in the play.
 
 ``point_change`` is the amount of points the player gained with the last game.
+
+.. note::
+   Both ``point_change`` and ``pip_change`` may be zero if nothing has changed.

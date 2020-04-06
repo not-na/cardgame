@@ -13,7 +13,7 @@ This packet is used by a client to signalise it is ready to begin the game.
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``lobby`` only                              |
+|Valid States           |``lobby`` only                              |
 +-----------------------+--------------------------------------------+
 
 Purpose

@@ -13,7 +13,7 @@ This packet is used to accept the invitation to a :term:`lobby`.
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``active`` only                             |
+|Valid States           |``active`` only                             |
 +-----------------------+--------------------------------------------+
 
 Purpose

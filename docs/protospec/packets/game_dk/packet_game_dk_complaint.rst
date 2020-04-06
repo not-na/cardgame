@@ -1,10 +1,10 @@
 
-``cg:game.dk.complaint`` - Denounce a wrong move
-================================================
+``cg:game.dk.complaint`` - Point out a wrong move
+=================================================
 
 .. cg:packet:: cg:game.dk.complaint
 
-This packet is used to denounce a mistake another player has made. It is only used for
+This packet is used to point out a mistake another player has made. It is only used for
 the game :term:`Doppelkopf`\ .
 
 +-----------------------+--------------------------------------------+
@@ -14,7 +14,7 @@ the game :term:`Doppelkopf`\ .
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``game_dk`` only                            |
+|Valid States           |``game_dk`` only                            |
 +-----------------------+--------------------------------------------+
 
 Purpose
@@ -35,13 +35,14 @@ If the accusation proves to be wrong or if the accusing player decides to cancel
 accusation, he will receive a penalty himself. Otherwise, the accused player will be
 punished and the game might be aborted, depending on the penalty settings.
 
-The mistake can also emanate from a chat or voice chat. That, the server cannot prove,
-so the two other players have to confirm it using a :cg:packet:`cg:game.dk.question` and
-a :cg:packet:`cg:game.dk.announce` packet. If 3 of the 4 players back the accusation, the
-punishment will be undergone by the accused, otherwise by the accuser.
+The mistake can also emanate from a chat or voice chat. Since the server cannot automatically
+arbitrate such a complaint, the two other players have to confirm it using a
+:cg:packet:`cg:game.dk.question` and a :cg:packet:`cg:game.dk.announce` packet. If 3 of
+the 4 players back the accusation, the punishment will be undergone by the accused,
+otherwise by the accuser.
 
 .. note::
-   If the punished player ought to receive demerits, the :cg:packet:`cg:game.dk.scoreboard`
+   If the punished player ought to receive demerit points, the :cg:packet:`cg:game.dk.scoreboard`
    will be used.
 
 .. seealso::
@@ -50,7 +51,8 @@ punishment will be undergone by the accused, otherwise by the accuser.
 Structure
 ---------
 
-Note that all examples shown here contain placeholder data and will have different content in actual packets.
+Note that all examples shown here contain placeholder data and will have different
+content in actual packets.
 
 This is the data sent by the client to the server: ::
 
@@ -72,35 +74,42 @@ reply like this: ::
 
    {
       "moves":{
-         2:{
+         "a2b227a1-5b19-49e4-bca4-0c473f3e7ba1":{
             "type":"announcement",
             "data":"vorbehalt_no",
-         }
-         6:{
+         },
+         "98fd442d-4ee0-4d96-bf51-12917e36a001":{
             "type":"announcement",
             "data":"kontra",
-         }
-         7:{
+         },
+         "c259418f-4912-444b-8f93-0f3d6c0b209b":{
             "type":"card",
             "data":"cq",
-         }
-      }
+         },
+         ...
+      },
+      "accused": "e421c337-70f6-409a-bdcf-acf1b3c3c6e0",
+      "type": "wrong_announcement",
    }
 
 ``moves`` is a dictionary containing all the moves the player has done so far. Each move is
-represented by its ID, followed by a dictionary declaring its ``type`` (``announcement``, ``card``
+represented by its :term:`UUID`, followed by a dictionary declaring its ``type`` (``announcement``, ``card``
 or ``accusation``) and ``data`` specifying the kind of the announcement or the value of the card.
 
-The client will respond with following data: ::
+.. note::
+   Only the accuser will receive the ``moves`` field. All other clients will still get all
+   other fields, however.
+
+The client will respond with the following data: ::
 
    {
       "accused":"e421c337-70f6-409a-bdcf-acf1b3c3c6e0",
       "type":"wrong_announcement",
       "move":{
-         6:{"type":"announcement", "data":"kontra"},
+         "98fd442d-4ee0-4d96-bf51-12917e36a001":{"type":"announcement", "data":"kontra"},
       },
    }
 
 ``accused`` and ``type`` remain the same as in the first packet.
 
-``move`` is the move housing the misconduct, represented as described above.
+``move`` is the move representing the misconduct, stored as described above.

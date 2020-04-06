@@ -13,7 +13,7 @@ This packet is used to request and retrieve user information and status updates.
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |All States                                  |
+|Valid States           |All States                                  |
 +-----------------------+--------------------------------------------+
 
 Purpose

@@ -13,7 +13,7 @@ This packet is used to announce something. It is only used for the game :term:`D
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
-|Valid Modes            |``game_dk`` only                            |
+|Valid States           |``game_dk`` only                            |
 +-----------------------+--------------------------------------------+
 
 Purpose
@@ -22,13 +22,14 @@ Purpose
 Using this packet, a player can make an announcement. This announcement will be sent to
 all the other players. This packet is only available for the game :term:`Doppelkopf`\ .
 
-This packet will be used to answer to a *Vorbehalt*\ , *solo*\ , *Schmeissen*\ , *Schweinchen*\ ,
+This packet will be used to answer to a *Vorbehalt*\ , *Solo*\ , *Schmeissen*\ , *Schweinchen*\ ,
 *Superschweine*\ , *Hyperschweine*\ , *Armut* and *Hochzeit*\ . In case of a *Hochzeit*\ , it will
-convey the clarification trick and in case of an *Armut*\ , it will be used to tell the
+transfer the clarification trick and in case of an *Armut*\ , it will be used to tell the
 amount of returned trumps.
-As the game goes along, it will be used to announce *Re* and *Kontra* as well as denials
-like *Unter 90* etc. Furthermore, it will be used to announce a *Schweinchen*\ . In case of
-an accusation with external misconduct it will be used to transmit the votes of the players.
+During the course of the game, it will be used to announce *Re* and *Kontra* as well as
+denials like *Unter 90* etc. Furthermore, it will be used to announce a *Schweinchen*\ .
+In case of an accusation with external misconduct it will be used to transmit the votes
+of the players.
 
 .. seealso::
    See :doc:`../../doppelkopf/rules` for further information on special rules.
