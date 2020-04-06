@@ -39,7 +39,6 @@ This is the data sent by the client to the server to request information on a us
       "uuid": "61cf5d06-8d01-4fb3-a4a8-ea7a0633b0b8",
    }
 
-
 ``username`` is the name of the user that the client wants information on.
 
 ``uuid`` is the :term:`UUID` that the client wants more information on.

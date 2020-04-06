@@ -44,6 +44,7 @@ The server will answer to the inviting client with this: ::
    {
       "user_found":True,
    }
+
 ``user_found`` is a boolean informing the inviter whether the invited user has been found.
 
 Additionally, it will send following data to the invited client: ::
@@ -51,6 +52,7 @@ Additionally, it will send following data to the invited client: ::
    {
       "inviter":"e2639d1f-a7b3-409f-87e4-595a85444d30 ",
    }
+
 ``inviter`` is the :term:`UUID` of the inviting user.
 
 .. seealso::

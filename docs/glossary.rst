@@ -11,6 +11,9 @@ Glossary
       individually. Furthermore, users can be manually added and removed as players and
       as spectators.
 
+   Doppelkopf
+      TODO
+
    Lobby
       A :term:`lobby` is a submenu used for the creation of :term:`custom game`\ . In it,
       settings for the game can be specified and other players can be invited to join the
@@ -24,6 +27,9 @@ Glossary
    Party
       A :term:`party` is a group of players that joined to play together, either a
       :term:`custom game` or a game created by the :term:`matchmaking` system.
+
+   Slot
+      TODO
 
    user database
       TODO

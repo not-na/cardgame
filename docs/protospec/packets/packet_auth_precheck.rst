@@ -33,7 +33,6 @@ This is the data sent by the client to the server: ::
       "username": "notna",
    }
 
-
 ``username`` is just the user name entered by the user on the prompt displayed by
 the client.
 

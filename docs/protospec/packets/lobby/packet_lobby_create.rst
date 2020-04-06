@@ -33,5 +33,5 @@ The package should not contain any data.
 
 
 .. seealso::
-   See the :cg:packet:`cg:lobby.join` packet for further information on the response of
+   See the :cg:packet:`lobby joining packet<cg:lobby.join>` for further information on the response of
    the server.

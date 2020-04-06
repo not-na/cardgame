@@ -11,3 +11,11 @@ Packets
    :maxdepth: 1
 
    packet_game_start
+
+   game_dk/packet_game_dk_question
+   game_dk/packet_game_dk_announce
+   game_dk/packet_game_dk_card_intent
+   game_dk/packet_game_dk_card_transfer
+   game_dk/packet_game_dk_complaint
+   game_dk/packet_game_dk_turn
+   game_dk/packet_game_dk_scoreboard

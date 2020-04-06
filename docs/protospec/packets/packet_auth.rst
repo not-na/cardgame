@@ -36,7 +36,6 @@ This is the data sent by the client to the server: ::
       "create": false,
    }
 
-
 ``username`` is the user name of the account to login as or create.
 
 ``pwd`` is the encrypted password of the given account.

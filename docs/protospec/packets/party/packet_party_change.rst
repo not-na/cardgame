@@ -32,4 +32,5 @@ This is the data sent by the server to the client: ::
    {
       "userlist":["e2639d1f-a7b3-409f-87e4-595a85444d30", "e2639d1f-a7b3-409f-87e4-595a85444d30"],
    }
-``userlist`` is a list containing the :term:`UUID`s of the users in the :term:`party`\ .
+
+``userlist`` is a list containing the :term:`UUID`\ s of the users in the :term:`party`\ .

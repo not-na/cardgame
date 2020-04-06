@@ -1,13 +1,13 @@
 
-``cg:lobby.invite.accept`` - Accept invitation to lobby
+``cg:party.invite.accept`` - Accept invitation to party
 =======================================================
 
-.. cg:packet:: cg:lobby.invite.accept
+.. cg:packet:: cg:party.invite.accept
 
-This packet is used to accept the invitation to a :term:`lobby`.
+This packet is used to accept the invitation to a :term:`party`.
 
 +-----------------------+--------------------------------------------+
-|Internal Name          |:cg:packet:`cg:lobby.invite.accept`         |
+|Internal Name          |:cg:packet:`cg:party.invite.accept`         |
 +-----------------------+--------------------------------------------+
 |Direction              |Serverbound                                 |
 +-----------------------+--------------------------------------------+
@@ -19,10 +19,10 @@ This packet is used to accept the invitation to a :term:`lobby`.
 Purpose
 -------
 
-Upon being invited to a :term:`lobby`\ , this packet is used to inform the server on
+Upon being invited to a :term:`party`\ , this packet is used to inform the server on
 whether the client has accepted or denied the invitation.
 
-If it accepts the invitation, the client will receive a :cg:packet:`cg:lobby.join` packet.
+If it accepts the invitation, the client will receive a :cg:packet:`cg:party.join` packet.
 Furthermore, the inviter will be informed via a :cg:packet:`cg:status.message` packet,
 if the invited client accepted the invitation.
 
@@ -40,5 +40,7 @@ This is the data sent by the server to the client: ::
 ``accepted`` is a boolean declaring whether the invitation has been accepted.
 
 .. seealso::
-   See the :cg:packet:`cg:lobby.invite` packet for further information on inviting to lobbies.
-   See the :cg:packet:`cg:lobby.join` packet for further information on joining a lobby.
+   See the :cg:packet:`cg:party.invite` packet for further information on inviting to parties.
+
+.. seealso::
+   See the :cg:packet:`cg:party.join` packet for further information on joining a party.

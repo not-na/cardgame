@@ -41,7 +41,8 @@ This is the data sent by the server to the client: ::
                   "armut":false,
                },
    }
-``userlist`` is a list containing the :term:`UUID`s of the users in the :term:`lobby`\ .
+
+``userlist`` is a list containing the :term:`UUID`\ s of the users in the :term:`lobby`\ .
 
 ``readylist`` is a list containing the UUIDs of the users that signalised their
 readiness to begin the game.
