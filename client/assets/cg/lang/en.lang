@@ -1,0 +1,10 @@
+# English Translation File
+# Language Code: en
+meta.lang=en
+meta.name.native=English
+meta.name.en=English
+meta.name.de=Englisch
+
+window.caption=Card Game
+
+gui.menu.load.progress.loading=Loading...

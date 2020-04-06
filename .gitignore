@@ -135,5 +135,7 @@ cardgame-py/
 
 client/crash_reports/
 client/logs/
+client/events.txt
 server/crash_reports/
 server/logs/
+server/events.txt

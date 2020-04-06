@@ -1,0 +1,13 @@
+name: server
+visiblename: CG Server
+is_public: false
+maxplayers: 20
+address: 0.0.0.0
+port: 11224
+slogan: |
+  A CG Server
+  Default Slogan
+default_privilege_level: 100
+default_permissions:
+  - cg:chat.lobby.write
+  - cg:chat.lobby.read

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  version
+#  version.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  

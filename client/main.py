@@ -69,8 +69,7 @@ class CardgameApp(cli.Application):
         c.init_client(username=self.username, pwd=self.pwd, default_server=self.addr)
 
         c.info("Starting GUI main loop...")
-        # TODO: enable this when the main loop is implemented
-        #c.client.gui.start_main_loop()
+        c.client.gui.start_main_loop()
 
         c.info("GUI Main loop stopped")
         sys.stdout.flush()

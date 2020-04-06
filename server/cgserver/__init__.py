@@ -22,3 +22,7 @@
 #
 
 from . import version
+from . import server
+
+import cg
+cg.version = version

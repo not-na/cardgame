@@ -57,7 +57,7 @@ class CardgameApp(cli.Application):
         c.init_server(addr=self.addr)
 
         c.info("Starting server")
-        # TODO: actually implement c.server.start
+        c.server.start()
 
         c.info("Server stopped")
         sys.stdout.flush()

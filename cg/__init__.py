@@ -23,7 +23,6 @@
 
 from .core import *
 
-from . import version
 from . import constants
 from . import error
 from . import logging

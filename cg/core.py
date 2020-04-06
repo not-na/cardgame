@@ -36,6 +36,10 @@ class CardGame(object):
         c = self
         cg.c = self
 
+        # Define these here to prevent IDE from complaining
+        self.client = None
+        self.server = None
+
         self.config_manager = cg.config.ConfigManager(self)
         self.crash_reporter = cg.logging.CrashReporter(self)
 
@@ -96,14 +100,22 @@ class CardGame(object):
         import cgclient
 
         self.info("Initializing client")
-        #self.client = cgclient.client.Client(self, username, pwd, default_server)
-        #self.client.init_gui()
+        self.client = cgclient.client.Client(self, username, pwd, default_server)
+        self.client.init_gui()
 
     def init_server(self, addr=None):
         import cgserver
 
         self.info("Initializing Server")
-        # TODO: actually start server
+        self.server = cgserver.server.DedicatedServer(self, addr)
+
+        try:
+            self.server.load_server_data()
+        except Exception:
+            self.error("Could not load saved server data, re-initializing everything")
+            self.exception("Exception while loading saved server data: ")
+
+        self.info("Initialized Server")
 
     # Event Handlers
 

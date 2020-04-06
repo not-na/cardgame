@@ -24,4 +24,8 @@
 from . import version
 from . import constants
 from . import error
+from . import client
 from . import gui
+
+import cg
+cg.version = version

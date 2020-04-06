@@ -33,9 +33,14 @@ from . import serverselect
 
 
 class PengGUI(object):
+    loadingscreen: loadingscreen.LoadingScreenMenu
+    serverselect: serverselect.ServerSelectMenu
+
     def __init__(self, client, c: cg.CardGame):
         self.client = client
         self.cg = c
+
+        self.run = False
 
         self.peng = peng3d.Peng()
         self.peng.cg = self.cg
@@ -52,7 +57,7 @@ class PengGUI(object):
             fullscreen=self.cg.get_config_option("cg:graphics.fullscreen"),
         )
 
-        pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
+        #pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
         pyglet.clock.schedule_interval(self.update, 1 / 60)
 
         self.t = self.peng.t
@@ -61,10 +66,32 @@ class PengGUI(object):
         self.register_event_handlers()
 
     def init(self):
-        pass
+        self.register_menus()
+
+    def register_menus(self):
+        self.loadingscreen = loadingscreen.LoadingScreenMenu(
+            "loadingscreen",
+            self.window, self.peng, self,
+        )
+        self.window.addMenu(self.loadingscreen)
+
+        #self.serverselect = serverselect.ServerSelectMenu(
+        #    "serverselect",
+        #    self.window, self.peng, self,
+        #)
+        #self.window.addMenu(self.serverselect)
+
+        # Change to loadingscreen after everything is initialized
+        self.window.changeMenu("loadingscreen")
 
     def update(self, dt=None):
         pass
+
+    def start_main_loop(self):
+        self.run = True
+        self.peng.run()
+
+    # Event Handlers
 
     def register_event_handlers(self):
         self.cg.add_event_listener("cg:shutdown.do", self.handler_shutdowndo)

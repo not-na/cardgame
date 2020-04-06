@@ -27,8 +27,30 @@ import cgclient.gui
 
 
 class LoadingScreenMenu(peng3d.gui.GUIMenu):
-    pass
+    def __init__(self, name, window, peng, gui):
+        super().__init__(name, window, peng)
+
+        self.gui = gui
+        self.cg = gui.cg
+
+        self.s_loadingscreen = LoadingScreenSubMenu("loadingscreen", self, self.window, self.peng)
+        self.addSubMenu(self.s_loadingscreen)
+
+        self.changeSubMenu("loadingscreen")
 
 
 class LoadingScreenSubMenu(peng3d.gui.SubMenu):
-    pass
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.setBackground([242, 241, 240])
+
+        self.label = peng3d.gui.Label("progress_label", self, self.window, self.peng,
+                                      pos=(lambda sw, sh, bw, bh: (sw/2, sh/2)),
+                                      size=[0, 0],  #(lambda sw, sh: (sw, sh)),
+                                      label=self.peng.tl("cg:gui.menu.load.progress.loading"),
+                                      #font_size=20,
+                                      anchor_x="center",
+                                      anchor_y="center",
+                                      )
+        self.addWidget(self.label)
