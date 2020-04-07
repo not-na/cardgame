@@ -82,8 +82,12 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
 
 
 class DedicatedServer(object):
+    command_manager = cgserver.command.CommandManager
+
     def __init__(self, c: cg.CardGame, addr=None, port=None):
         self.cg = c
+
+        self.command_manager = cgserver.command.CommandManager(self.cg)
 
         self.server = CGServer(
             addr=[
@@ -149,11 +153,19 @@ class DedicatedServer(object):
 
     # Event Handlers
     def register_event_handlers(self):
-        self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop)
+        self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop, cg.event.F_RAISE_ERRORS)
+        self.cg.add_event_listener("cg:console.stdin.recvline", self.handler_consolerecvline, cg.event.F_RAISE_ERRORS)
 
     def handler_commandstop(self, event: str, data: Dict):
         # TODO: implement server stop
 
         # Ensure that the server console loop exits if a stop command is issued via the network
-        sys.stdin.write("__stop")
-        sys.stdin.flush()
+        self.run_console = False
+        # TODO: actually interrupt the console loop
+
+    def handler_consolerecvline(self, event: str, data: Dict):
+        if data["data"].startswith("/"):
+            # Removes a leading extraneous slash, while leaving double-slashes intact
+            data["data"] = data["data"][1:]
+
+        self.command_manager.exec_command(data["data"], self.command_manager.local_ctx)

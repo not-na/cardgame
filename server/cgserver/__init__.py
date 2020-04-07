@@ -22,6 +22,7 @@
 #
 
 from . import version
+from . import command
 from . import server
 
 import cg

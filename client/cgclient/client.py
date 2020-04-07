@@ -20,6 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import time
 from typing import Union
 
 import peng3dnet
@@ -31,7 +32,22 @@ import cgclient.gui
 
 
 class CGClient(peng3dnet.net.Client):
-    pass
+    def __init__(self, c: cg.CardGame, cgc, *args, **kwargs):
+        self.start_time = time.time()
+        super().__init__(*args, **kwargs)
+
+        self.cg = c
+        self.cgclient = cgc
+
+    def on_handshake_complete(self):
+        super().on_handshake_complete()
+
+        # TODO: implement handshaking
+
+    def on_close(self, reason=None):
+        super().on_close(reason)
+
+        self.cg.send_event("cg:network.client.close_conn", {"reason": reason})
 
 
 class Client(object):
@@ -57,11 +73,40 @@ class Client(object):
         self.gui = cgclient.gui.PengGUI(self, self.cg)
         self.gui.init()
 
-    def connect_to(self, addr):
+    def connect_to(self, addr, ref=None):
         self.cg.info(f"Connecting to server {addr}")
-        # TODO: actually connect
+
+        self.server = peng3dnet.util.normalize_addr_socketstyle(addr, self.cg.get_config_option("cg:network.default_port"))
+        self.cg.debug(f"Normalized address {self.server[0]}:{self.server[1]}")
+        # TODO: save the last server we connected to
+
+        self._client = CGClient(self.cg, self, self.gui.peng, self.server)
+
+        # For last-minute changes and monkeypatches
+        self.cg.send_event("cg:network.client.create", {"client": self, "peer": self._client, "ref": ref})
+
+        # Register all packets
+        self.cg.send_event("cg:network.packets.register.do", {
+            "reg": self._client.registry,
+            "registrar": self._client.register_packet,
+            "server": self.server,
+            "mode": "client",
+            "peer": self._client,
+        })
+
+        # Start the network loop
+        self.cg.debug("Starting main networking loop in separate thread")
+        self.cg.send_event("cg:network.client.startloop", {"client": self, "peer": self._client, "ref": ref})
+        self._client.runAsync()
+
+        # TODO: implement processing in main loop
+        self.cg.send_event("cg:network.client.startproc", {"client": self, "peer": self._client, "ref": ref})
+        self.cg.send_event("cg:network.client.waitforconn", {"client": self, "peer": self._client, "ref": ref})
 
     # Event Handlers
 
     def register_event_handlers(self):
-        pass
+        self.cg.add_event_listener("cg:network.client.conn_establish", self.handler_connestablish)
+
+    def handler_connestablish(self, event: str, data: dict):
+        self.cg.info(f"Connection established after {(time.time()-data['peer'].start_time)*1000:.2f}ms!")
