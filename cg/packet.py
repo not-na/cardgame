@@ -22,9 +22,11 @@
 #
 from typing import List, Union, Dict
 
-import cg
 import peng3dnet
-from peng3dnet.constants import SIDE_CLIENT, SIDE_SERVER
+from peng3dnet.constants import SIDE_CLIENT, SIDE_SERVER, CONNTYPE_CLASSIC
+
+import cg
+from cg.constants import MODE_CG
 
 MAX_IGNORE_RECV = 10
 MAX_IGNORE_SEND = 10
@@ -36,6 +38,12 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
     required_keys: List = []
     allowed_keys: List = []
+
+    conntype = CONNTYPE_CLASSIC
+    mode = MODE_CG
+    side = None
+
+    peer: Union[peng3dnet.net.Server, peng3dnet.net.Client]
 
     def __init__(self,
                  reg: peng3dnet.PacketRegistry,
@@ -56,6 +64,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
         if cid is None and (self.side is None or self.side == SIDE_CLIENT):
             # On the Client
+            #self.cg.info(f"State: {self.peer.remote_state} Mode: {self.peer.mode} Conntype: {self.peer.conntype}")
             if (
                     self.peer.remote_state == self.state
                     and (self.mode is None or self.peer.mode == self.mode)
@@ -119,7 +128,6 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                     self.peer.remote_state == self.state
                     and (self.mode is None or self.peer.mode == self.mode)
                     and (self.conntype is None or self.peer.conntype == self.conntype)
-                    and self.check_keys(msg, self.required_keys, self.allowed_keys)
                     ):
                 self.cg.send_event("cg:network.packet.send", d)
                 self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
@@ -135,7 +143,6 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                     self.peer.clients[cid].state == self.state
                     and (self.mode is None or self.peer.clients[cid].mode == self.mode)
                     and (self.conntype is None or self.peer.clients[cid].conntype == self.conntype)
-                    and self.check_keys(msg, self.required_keys, self.allowed_keys)
                     ):
                 self.cg.send_event("cg:network.packet.send", d)
                 self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)

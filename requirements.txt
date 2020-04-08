@@ -1,5 +1,5 @@
 git+https://github.com/not-na/peng3d.git@a1bf883430958f038b25610c5a4fcfa66e21410b
-peng3dnet==0.1.2a1
+peng3dnet==0.1.3a0
 psutil==5.7.0
 sphinx_rtd_theme==0.2.4
 plumbum==1.6.9

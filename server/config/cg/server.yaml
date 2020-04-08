@@ -2,8 +2,8 @@ name: server
 visiblename: CG Server
 is_public: false
 maxplayers: 20
-address: 0.0.0.0
-port: 11224
+address: localhost
+port: 11225
 slogan: |
   A CG Server
   Default Slogan

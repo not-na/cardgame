@@ -139,3 +139,4 @@ client/events.txt
 server/crash_reports/
 server/logs/
 server/events.txt
+server/serverdat.csd

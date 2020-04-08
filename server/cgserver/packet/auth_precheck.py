@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  auth_precheck.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,12 +20,36 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import re
 
-from . import version
-from . import command
-from . import user
-from . import server
-from . import packet
+from cg.constants import STATE_AUTH
+from cg.packet import CGPacket
 
-import cg
-cg.version = version
+
+USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]+")
+
+
+class AuthPrecheckPacket(CGPacket):
+    state = STATE_AUTH
+    required_keys = [
+        "username",
+    ]
+    allowed_keys = [
+        "username",
+        "valid",
+        "exists",
+        "key",
+    ]
+
+    def receive(self, msg, cid=None):
+        user = msg["username"]
+
+        valid = USER_PATTERN.fullmatch(user) is not None
+        exists = user.lower() in self.cg.server.users
+
+        self.peer.send_message("cg:auth.precheck", {
+            "username": user,
+            "valid": valid,
+            "exists": exists,
+            "key": "",  # TODO: implement password encryption
+        }, cid)

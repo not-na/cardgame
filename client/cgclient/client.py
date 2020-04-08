@@ -30,6 +30,8 @@ import cg
 import cgclient
 import cgclient.gui
 
+from cg.constants import STATE_AUTH, MODE_CG
+
 
 class CGClient(peng3dnet.net.Client):
     def __init__(self, c: cg.CardGame, cgc, *args, **kwargs):
@@ -42,15 +44,29 @@ class CGClient(peng3dnet.net.Client):
     def on_handshake_complete(self):
         super().on_handshake_complete()
 
-        # TODO: implement handshaking
+        self.remote_state = STATE_AUTH
+        self.mode = MODE_CG
+
+        self.cg.info("Handshake with server complete, proceeding to login")
+
+        self.cg.client.gui.servermain.changeSubMenu("login")
+
+        self.conntype = peng3dnet.CONNTYPE_CLASSIC
 
     def on_close(self, reason=None):
         super().on_close(reason)
+
+        if reason in ["packetregmismatch", "socketclose", "smartpacketinvalid"]:
+            self.cg.error(f"Connection closed due to '{reason}'")
+        else:
+            self.cg.info(f"Connection closed due to '{reason}'")
 
         self.cg.send_event("cg:network.client.close_conn", {"reason": reason})
 
 
 class Client(object):
+    gui: cgclient.gui.PengGUI
+
     def __init__(self, cg: cg.CardGame, username=None, pwd=None, default_server=None):
         self.cg = cg
 
@@ -94,19 +110,28 @@ class Client(object):
             "peer": self._client,
         })
 
+        self.cg.debug(f"Packet Registry: {dict(self._client.registry.reg_int_str.inv)}")
+
         # Start the network loop
         self.cg.debug("Starting main networking loop in separate thread")
         self.cg.send_event("cg:network.client.startloop", {"client": self, "peer": self._client, "ref": ref})
         self._client.runAsync()
 
-        # TODO: implement processing in main loop
         self.cg.send_event("cg:network.client.startproc", {"client": self, "peer": self._client, "ref": ref})
         self.cg.send_event("cg:network.client.waitforconn", {"client": self, "peer": self._client, "ref": ref})
+
+    def send_message(self, ptype, data: dict):
+        self._client.send_message(ptype, data)
 
     # Event Handlers
 
     def register_event_handlers(self):
         self.cg.add_event_listener("cg:network.client.conn_establish", self.handler_connestablish)
 
+        self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister)
+
     def handler_connestablish(self, event: str, data: dict):
         self.cg.info(f"Connection established after {(time.time()-data['peer'].start_time)*1000:.2f}ms!")
+
+    def handler_dopacketregister(self, event: str, data: dict):
+        cgclient.packet.register_default_packets(data["reg"], data["peer"], self.cg, data["registrar"])

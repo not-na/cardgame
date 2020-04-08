@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  user.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,12 +20,24 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-from . import version
-from . import command
-from . import user
-from . import server
-from . import packet
+import uuid
 
 import cg
-cg.version = version
+
+
+class User(object):
+    def __init__(self, server, c: cg.CardGame, user: str, udat: dict):
+        self.server = server
+        self.cg = c
+
+        self.username: str = user
+        self.pwd: str = udat.get("pwd", "")
+        self.uuid: uuid.UUID = cg.util.uuidify(udat.get("uuid", uuid.uuid4()))
+
+        # TODO: add more user data here
+
+    def serialize(self):
+        return {
+            "pwd": self.pwd,
+            "uuid": self.uuid.hex,
+        }

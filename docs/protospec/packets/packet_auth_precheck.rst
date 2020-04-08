@@ -57,6 +57,7 @@ be used by the client to ask the user if they want to create a new account.
 
 ``key`` is a binary key to be used to encrypt the password before sending it to the
 server. It is specific to the connection, user name and will expire after some time.
+If the key is the empty string, no encryption should be applied.
 
 .. seealso::
    See the :cg:packet:`cg:auth` packet for further information on password exchange.

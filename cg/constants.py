@@ -54,3 +54,5 @@ The ``game_dk`` state signals that this client is currently playing :term:`Doppe
 
 This state is usually followed by either :py:data:`STATE_LOBBY` or :py:data:`STATE_ACTIVE`\\ .
 """
+
+MODE_CG = 100

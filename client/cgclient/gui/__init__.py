@@ -97,6 +97,9 @@ class PengGUI(object):
         if self.window.menu.name == "loadingscreen":
             self.window.changeMenu("serverselect")
 
+        if self.client._client is not None:
+            self.client._client.process()
+
     def start_main_loop(self):
         self.run = True
         self.peng.run()
@@ -106,5 +109,10 @@ class PengGUI(object):
     def register_event_handlers(self):
         self.cg.add_event_listener("cg:shutdown.do", self.handler_shutdowndo)
 
+        self.peng.addEventListener("peng3d:i18n.miss", self.handler_i18nmiss)
+
     def handler_shutdowndo(self, event: str, data: dict):
         pyglet.app.exit()
+
+    def handler_i18nmiss(self, event: str, data: dict):
+        self.cg.debug(f"Missing i18n key {data['key']} for language {data['lang']}")

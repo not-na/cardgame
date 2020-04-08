@@ -747,7 +747,10 @@ def main(stdscr):
                 pass
             elif c == ord("q"):
                 # Quit
-                run = False
+                if not (any([s.running for s in servers.values()]) or any([c.running for c in clients.values()])):
+                    run = False
+                else:
+                    in_status = "There are still processes running"
             elif c == ord("s"):
                 # Spawn Client/Server
                 # Multi-staged

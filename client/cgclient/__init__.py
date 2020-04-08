@@ -26,6 +26,7 @@ from . import constants
 from . import error
 from . import client
 from . import gui
+from . import packet
 
 import cg
 cg.version = version

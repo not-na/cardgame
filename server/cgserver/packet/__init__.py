@@ -21,11 +21,24 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import version
-from . import command
-from . import user
-from . import server
-from . import packet
 
-import cg
-cg.version = version
+def register_default_packets(reg, peer, cg, add):
+    cg.info("Registering packets")
+    # AUTH CONNECTION STATE
+
+    from . import auth_precheck
+    # Auth Precheck Packet
+    add("cg:auth.precheck",
+        auth_precheck.AuthPrecheckPacket(
+            reg, peer, c=cg,
+        )
+        )
+
+    from . import auth
+    # Auth Packet
+    add("cg:auth",
+        auth.AuthPacket(
+            reg, peer, c=cg,
+        )
+        )
+
