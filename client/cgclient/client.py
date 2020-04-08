@@ -21,7 +21,8 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import time
-from typing import Union
+import uuid
+from typing import Union, Dict
 
 import peng3dnet
 
@@ -79,7 +80,9 @@ class Client(object):
 
         self.username = username
         self.pwd = pwd
-        # TODO: implement default_server
+
+        self.users: Dict[str, cgclient.user.User] = {}
+        self.users_uuid: Dict[uuid.UUID, cgclient.user.User] = {}
 
         # TODO: implement async ping
 

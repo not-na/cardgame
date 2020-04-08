@@ -225,8 +225,14 @@ class DedicatedServer(object):
 
     def send_user_data(self, user: Union[uuid.UUID, str], cid):
         if isinstance(user, uuid.UUID):
+            if user not in self.users_uuid:
+                self.cg.warn(f"Could not find user with UUID {user}")
+                return
             u = self.users_uuid[user]
         else:
+            if user not in self.users:
+                self.cg.warn(f"Could not find user with name {user}")
+                return
             u = self.users[user]
 
         self.server.send_message("cg:status.user", {

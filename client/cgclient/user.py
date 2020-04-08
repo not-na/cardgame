@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  user.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -21,34 +21,24 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import uuid
+from typing import Dict, Any
 
-def register_default_packets(reg, peer, cg, add):
-    cg.info("Registering packets")
-    # AUTH CONNECTION STATE
+import cg
 
-    from . import auth_precheck
-    # Auth Precheck Packet
-    add("cg:auth.precheck",
-        auth_precheck.AuthPrecheckPacket(
-            reg, peer, c=cg,
-        )
-        )
 
-    from . import auth
-    # Auth Packet
-    add("cg:auth",
-        auth.AuthPacket(
-            reg, peer, c=cg,
-        )
-        )
+class User(object):
+    def __init__(self, c: cg.CardGame, dat: dict):
+        self.cg = c
 
-    # STATUS PACKETS
+        self.username: str = "<unknown>"
+        self.uuid: uuid.UUID = uuid.UUID(int=0)
+        self.status: str = "unknown"
 
-    from . import status_user
-    # Status User Packet
-    add("cg:status.user",
-        status_user.StatusUserPacket(
-            reg, peer, c=cg,
-        )
-        )
+        self.update(dat)
 
+    def update(self, dat: Dict[str, Any]):
+        self.username = dat["username"]
+        self.uuid = cg.util.uuidify(dat["uuid"])
+
+        self.status = dat["status"]

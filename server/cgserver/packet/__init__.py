@@ -42,3 +42,13 @@ def register_default_packets(reg, peer, cg, add):
         )
         )
 
+    # STATUS PACKETS
+
+    from . import status_user
+    # Status User Packet
+    add("cg:status.user",
+        status_user.StatusUserPacket(
+            reg, peer, c=cg,
+        )
+        )
+

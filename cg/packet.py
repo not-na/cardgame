@@ -20,7 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any
 
 import peng3dnet
 from peng3dnet.constants import SIDE_CLIENT, SIDE_SERVER, CONNTYPE_CLASSIC
@@ -36,11 +36,11 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
     _ignorecount_recv: int = 0
     _ignorecount_send: int = 0
 
-    required_keys: List = []
-    allowed_keys: List = []
+    required_keys: List[str] = []
+    allowed_keys: List[str] = []
 
-    conntype = CONNTYPE_CLASSIC
-    mode = MODE_CG
+    conntype: str = CONNTYPE_CLASSIC
+    mode: Union[int, None] = MODE_CG
     side = None
 
     peer: Union[peng3dnet.net.Server, peng3dnet.net.Client]
@@ -66,9 +66,9 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
             # On the Client
             #self.cg.info(f"State: {self.peer.remote_state} Mode: {self.peer.mode} Conntype: {self.peer.conntype}")
             if (
-                    self.peer.remote_state == self.state
-                    and (self.mode is None or self.peer.mode == self.mode)
-                    and (self.conntype is None or self.peer.conntype == self.conntype)
+                    self.check(self.peer.remote_state, self.state)
+                    and self.check(self.peer.mode, self.mode)
+                    and self.check(self.peer.conntype, self.conntype)
                     and self.check_keys(msg, self.required_keys, self.allowed_keys)
                     ):
                 self.cg.send_event("cg:network.packet.recv", d)
@@ -82,9 +82,9 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
         elif cid is not None and (self.side is None or self.side == SIDE_SERVER):
             # On the server
             if (
-                    self.peer.clients[cid].state == self.state
-                    and (self.mode is None or self.peer.clients[cid].mode == self.mode)
-                    and (self.conntype is None or self.peer.clients[cid].conntype == self.conntype)
+                    self.check(self.peer.clients[cid].state, self.state)
+                    and self.check(self.peer.clients[cid].mode, self.mode)
+                    and self.check(self.peer.clients[cid].conntype, self.conntype)
                     and self.check_keys(msg, self.required_keys, self.allowed_keys)
                     ):
                 self.cg.send_event("cg:network.packet.recv", d)
@@ -125,8 +125,8 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
         if cid is None and (self.side is None or self.side == SIDE_CLIENT):
             # On the Client
             if (
-                    self.peer.remote_state == self.state
-                    and (self.mode is None or self.peer.mode == self.mode)
+                    self.check(self.peer.remote_state, self.state)
+                    and self.check(self.peer.mode, self.mode)
                     and (self.conntype is None or self.peer.conntype == self.conntype)
                     ):
                 self.cg.send_event("cg:network.packet.send", d)
@@ -140,9 +140,9 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
         elif cid is not None and (self.side is None or self.side == SIDE_SERVER):
             # On the server
             if (
-                    self.peer.clients[cid].state == self.state
-                    and (self.mode is None or self.peer.clients[cid].mode == self.mode)
-                    and (self.conntype is None or self.peer.clients[cid].conntype == self.conntype)
+                    self.check(self.peer.clients[cid].state, self.state)
+                    and self.check(self.peer.clients[cid].mode, self.mode)
+                    and self.check(self.peer.clients[cid].conntype, self.conntype)
                     ):
                 self.cg.send_event("cg:network.packet.send", d)
                 self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
@@ -196,3 +196,20 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                     return False
 
         return True
+
+    @staticmethod
+    def check(current: Any, allowed: Union[Any, List[Any]]) -> bool:
+        """
+        Helper method to check if a criteria is met.
+
+        If ``allowed`` is a list, ``current`` must be in it. If it is not a list, ``allowed``
+        must be either ``None`` or equal to ``current``\ .
+
+        :param current: Current value
+        :param allowed: Allowed value(s)
+        :return: bool
+        """
+        if isinstance(allowed, list):
+            return current in allowed
+        else:
+            return allowed is None or current == allowed

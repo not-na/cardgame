@@ -33,7 +33,7 @@ USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]+")
 
 
 class AuthPacket(CGPacket):
-    state = STATE_AUTH
+    state = [STATE_AUTH, STATE_ACTIVE]
     required_keys = [
         "username",
     ]
@@ -70,9 +70,8 @@ class AuthPacket(CGPacket):
 
                 self.peer.clients[cid].user = u
                 self.peer.clients[cid].state = STATE_ACTIVE
-                # TODO: fix smartpacket warning due to invalid state
 
-                #self.cg.server.send_user_data(u.uuid, cid)
+                self.cg.server.send_user_data(u.uuid, cid)
 
                 self.cg.send_event("cg:network.client.register", {"client": cid})
                 self.cg.send_event("cg:network.client.login", {"client": cid})
@@ -97,7 +96,7 @@ class AuthPacket(CGPacket):
                 self.peer.clients[cid].user = u
                 self.peer.clients[cid].state = STATE_ACTIVE
 
-                #self.cg.server.send_user_data(u.uuid, cid)
+                self.cg.server.send_user_data(u.uuid, cid)
 
                 self.cg.send_event("cg:network.client.login", {"client": cid})
 

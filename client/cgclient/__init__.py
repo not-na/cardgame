@@ -24,6 +24,7 @@
 from . import version
 from . import constants
 from . import error
+from . import user
 from . import client
 from . import gui
 from . import packet
