@@ -150,3 +150,19 @@ class MainSubMenu(peng3d.gui.SubMenu):
                                       anchor_y="center",
                                       )
         self.addWidget(self.label)
+
+        # Create Lobby Button
+        self.createbtn = peng3d.gui.Button(
+            "createbtn", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
+            size=(lambda sw, sh: (sw / 2, 32)),
+            label=self.peng.tl("cg:gui.menu.smain.main.createbtn.label"),
+            borderstyle="oldshadow",
+        )
+        self.addWidget(self.createbtn)
+
+        def f():
+            self.menu.cg.client.send_message("cg:lobby.create", {})
+            self.menu.cg.info("Sent lobby creation request")
+            self.createbtn.enabled = False
+        self.createbtn.addAction("click", f)

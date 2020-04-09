@@ -81,6 +81,12 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
     def on_close(self, reason=None):
         super().on_close(reason)
 
+        if self.user is not None:
+            self.user.cid = None
+
+            if self.user.lobby is not None:
+                self.server.cgserver.lobbies[self.user.lobby].remove_user(self.user.uuid, left=True)
+
         self.server.cg.info(f"Connection to client {self.cid} closed due to '{reason}'")
 
         self.server.cg.send_event("cg:network.server.closeconn",
@@ -112,6 +118,8 @@ class DedicatedServer(object):
         )
         self.server.cg = self.cg
         self.server.cgserver = self
+
+        self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
 
         self.serverid: Union[None, uuid.UUID] = None
 
@@ -223,7 +231,7 @@ class DedicatedServer(object):
         with open(fname, "wb") as f:
             msgpack.dump(data, f)
 
-    def send_user_data(self, user: Union[uuid.UUID, str], cid):
+    def send_user_data(self, user: Union[uuid.UUID, str], client: Union[int, uuid.UUID]):
         if isinstance(user, uuid.UUID):
             if user not in self.users_uuid:
                 self.cg.warn(f"Could not find user with UUID {user}")
@@ -235,12 +243,34 @@ class DedicatedServer(object):
                 return
             u = self.users[user]
 
+        if isinstance(client, uuid.UUID):
+            if client not in self.users_uuid:
+                self.cg.warn(f"Could not find client with UUID {client}")
+                return
+            if self.users_uuid[client].cid is None:
+                self.cg.warn(f"User {self.users_uuid[client].username} is not logged in, cannot send anything to them")
+                return
+            client = self.users_uuid[client].cid
+
         self.server.send_message("cg:status.user", {
             "username": u.username,
             "uuid": u.uuid.hex,
 
             "status": "offline",  # TODO: implement correctly
-        }, cid)
+        }, client)
+
+    def send_to_user(self, user: Union[uuid.UUID, cgserver.user.User], packet: str, data: dict):
+        if isinstance(user, uuid.UUID):
+            if user not in self.users_uuid:
+                self.cg.error(f"Could not send packet {packet} to user {user} because it does not exist")
+                return
+            user = self.users_uuid[user]
+
+        if user.cid is None:
+            self.cg.error(f"Could not send packet {packet} to user {user.username} because they are not connected")
+
+        self.server.send_message(packet, data, user.cid)
+
 
     # Event Handlers
     def register_event_handlers(self):

@@ -21,12 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import version
-from . import command
-from . import user
-from . import lobby
-from . import server
-from . import packet
-
-import cg
-cg.version = version
+from . import create
+from . import join
+from . import change
+from . import ready

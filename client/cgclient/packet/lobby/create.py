@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  create.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,13 +20,16 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+from peng3dnet import SIDE_SERVER
 
-from . import version
-from . import command
-from . import user
-from . import lobby
-from . import server
-from . import packet
+from cg.constants import STATE_ACTIVE
+from cg.packet import CGPacket
 
-import cg
-cg.version = version
+
+class CreatePacket(CGPacket):
+    state = STATE_ACTIVE
+    required_keys = []
+    allowed_keys = []
+    side = SIDE_SERVER
+
+    # No actual code, since this packet is only serverbound

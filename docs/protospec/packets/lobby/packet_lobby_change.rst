@@ -31,35 +31,35 @@ Note that all examples shown here contain placeholder data and will have differe
 This is the data sent by the server to the client: ::
 
    {
-      "userlist":["e2639d1f-a7b3-409f-87e4-595a85444d30", "e2639d1f-a7b3-409f-87e4-595a85444d30"],
-      "readylist":["e2639d1f-a7b3-409f-87e4-595a85444d30"],
-      "spectators":["e2639d1f-a7b3-409f-87e4-595a85444d30"],
+      "users":{
+         "e2639d1f-a7b3-409f-87e4-595a85444d30": {"ready": true, "role": 1},
+         "e70d98cd-a33b-41f2-9cb4-8c6e3aeadbb7": {"ready": false, "role": 2},
+         },
       "game":"doppelkopf",
-      "rules":{
+      "gamerules":{
                   "fuechse":true,
                   "feigheit":true,
                   "armut":false,
                },
    }
 
-``userlist`` is a list containing the :term:`UUID`\ s of the users in the :term:`lobby`\ .
-
-``readylist`` is a list containing the UUIDs of the users that signalised their
-readiness to begin the game.
-
-``spectators`` is a list containing the UUIDs of the users that wont play but only watch.
+``userlist`` is a dictionary mapping the :term:`UUID`\ s of players to their metadata.
+This metadata currently contains the ``ready`` and ``role`` keys. All players must have
+their ``ready`` flag set to true to begin the game. ``role`` determines what the player
+can do. If the ``role`` is ``-1``\ , the player should be removed.
 
 ``game`` is the name of the game that will be played.
 
-``rules`` are the rules by which the game will be played.
+``rules`` are the rules by which the game will be played. Note that only updated rules will
+be sent.
 
 .. note::
-   All the parameters are optional. However, they should be all sent upon joining for
+   All the parameters are optional. However, they should be all sent upon joining so
    the client knows what information to show.
 
 .. note::
-   The keywords for the different ``rules`` will change depending on the ``game``. Also,
-   multiple of the games being of german origin, many rules will have german names. Note,
-   that the umlauts and special characters are written as ae, oe, ue and ss, not as ä,
-   ö, ü and ß.
+   The keywords for the different ``gamerule``\ s will change depending on the ``game``. Also,
+   multiple of the games being of german origin, many rules will have german names. All
+   gamerule names should be ASCII only for maximum compatibility. This does not however
+   apply to the displayed translated names.
 

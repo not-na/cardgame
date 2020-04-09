@@ -84,6 +84,8 @@ class Client(object):
         self.users: Dict[str, cgclient.user.User] = {}
         self.users_uuid: Dict[uuid.UUID, cgclient.user.User] = {}
 
+        self.lobby: Union[None, cgclient.lobby.Lobby] = None
+
         # TODO: implement async ping
 
         self.register_event_handlers()

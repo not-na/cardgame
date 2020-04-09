@@ -71,6 +71,8 @@ class AuthPacket(CGPacket):
                 self.peer.clients[cid].user = u
                 self.peer.clients[cid].state = STATE_ACTIVE
 
+                u.cid = cid
+
                 self.cg.server.send_user_data(u.uuid, cid)
 
                 self.cg.send_event("cg:network.client.register", {"client": cid})
@@ -95,6 +97,8 @@ class AuthPacket(CGPacket):
                 u = self.cg.server.users[username.lower()]
                 self.peer.clients[cid].user = u
                 self.peer.clients[cid].state = STATE_ACTIVE
+
+                u.cid = cid
 
                 self.cg.server.send_user_data(u.uuid, cid)
 

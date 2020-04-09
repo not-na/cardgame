@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  ready.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,13 +20,20 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+from peng3dnet import SIDE_SERVER
 
-from . import version
-from . import command
-from . import user
-from . import lobby
-from . import server
-from . import packet
+from cg.constants import STATE_LOBBY
+from cg.packet import CGPacket
 
-import cg
-cg.version = version
+
+class ReadyPacket(CGPacket):
+    state = STATE_LOBBY
+    required_keys = [
+        "ready",
+    ]
+    allowed_keys = [
+        "ready",
+    ]
+    side = SIDE_SERVER
+
+    # No code here
