@@ -229,6 +229,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             )
         )
+        self.bg.vlist_layer = -1
 
         self.label = peng3d.gui.Label("load_label", self, self.window, self.peng,
                                       pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),

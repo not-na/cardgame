@@ -30,3 +30,9 @@ gui.menu.smain.loginerr.wrongcred=Wrong Credentials or invalid Username!
 gui.menu.smain.loginerr.userexists=Username is already taken!
 
 gui.menu.smain.main.createbtn.label=Create Lobby
+
+gamerule.general.wrongmove.name=Illegal Move Handling
+gamerule.general.wrongmove.description=Action to be taken upon a wrong move
+gamerule.general.wrongmove.opt.disallow=Do not accept wrong moves
+gamerule.general.wrongmove.opt.allow_points=Allow, and remove points when caught by other players
+gamerule.general.wrongmove.opt.allow_stopgame=Allow, and stop the game when caught by other players

@@ -106,16 +106,33 @@ class Lobby(object):
                 self.cg.server.send_to_user(u, packet, data)
 
     def set_gamerule(self, rule: str, value):
-        self.gamerules[rule] = value
+        if rule not in self.cg.server.game_reg[self.game].GAMERULES:
+            # Ignore unknown rule
+            return
+
+        valid, out = cg.util.validate(value, self.cg.server.game_reg[self.game].GAMERULES[rule])
+        # Ignore valid flag for now
+
+        self.gamerules[rule] = out
 
         self.send_to_all("cg:lobby.change", {
-            "gamerules": {rule: value},
+            "gamerules": {rule: out},
         })
 
     def update_gamerules(self, new: Dict[str, Any]):
-        self.gamerules.update(new)
+        ch = {}
+
+        for rule, value in new.items():
+            if rule not in self.cg.server.game_reg[self.game].GAMERULES:
+                # Ignore unknown rule
+                continue
+
+            valid, out = cg.util.validate(value, self.cg.server.game_reg[self.game].GAMERULES[rule])
+            # Ignore valid flag for now
+            self.gamerules[rule] = out
+            ch[rule] = out
 
         self.send_to_all("cg:lobby.change", {
-            "gamerules": new,
+            "gamerules": ch,
         })
 

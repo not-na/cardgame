@@ -27,7 +27,7 @@ import sys
 import time
 import threading
 import uuid
-from typing import Dict, Union
+from typing import Dict, Union, Type
 
 import peng3dnet
 
@@ -85,6 +85,8 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
             self.user.cid = None
 
             if self.user.lobby is not None:
+                self.user.lobby = None
+                self.server.cg.info(f"Removed user {self.user.username} from lobby due to disconnect")
                 self.server.cgserver.lobbies[self.user.lobby].remove_user(self.user.uuid, left=True)
 
         self.server.cg.info(f"Connection to client {self.cid} closed due to '{reason}'")
@@ -119,10 +121,6 @@ class DedicatedServer(object):
         self.server.cg = self.cg
         self.server.cgserver = self
 
-        self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
-
-        self.serverid: Union[None, uuid.UUID] = None
-
         # Allow for last-minute changes and monkeypatches
         self.cg.send_event("cg:network.server.create", {"server": self, "peer": self})
 
@@ -136,6 +134,18 @@ class DedicatedServer(object):
         })
 
         self.cg.debug(f"Packet Registry: {dict(self.server.registry.reg_int_str.inv)}")
+
+        self.game_reg: Dict[str, cgserver.game.CGame] = {}
+
+        self.cg.send_event("cg:game.register.do", {
+            "registrar": self.game_reg,
+        })
+
+        self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
+
+        self.serverid: Union[None, uuid.UUID] = None
+
+        self.games: Dict[uuid.UUID, cgserver.game.CGame] = {}
 
         self.users: Dict[str, cgserver.user.User] = {}
         self.users_uuid: Dict[uuid.UUID, cgserver.user.User] = {}
@@ -231,6 +241,9 @@ class DedicatedServer(object):
         with open(fname, "wb") as f:
             msgpack.dump(data, f)
 
+    def register_game(self, name: str, cls: Type[cgserver.game.CGame]):
+        self.game_reg[name] = cls
+
     def send_user_data(self, user: Union[uuid.UUID, str], client: Union[int, uuid.UUID]):
         if isinstance(user, uuid.UUID):
             if user not in self.users_uuid:
@@ -280,6 +293,8 @@ class DedicatedServer(object):
         self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister, cg.event.F_RAISE_ERRORS)
         self.cg.add_event_listener("cg:network.client.login", self.handler_netclientlogin)
 
+        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
+
     def handler_commandstop(self, event: str, data: Dict):
         # TODO: implement server stop
 
@@ -299,3 +314,6 @@ class DedicatedServer(object):
 
     def handler_netclientlogin(self, event: str, data: Dict):
         pass
+
+    def handler_dogameregister(self, event: str, data: Dict):
+        cgserver.game.register_games(data["registrar"])

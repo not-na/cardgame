@@ -41,6 +41,9 @@ This is the data sent by the server to the client: ::
                   "feigheit":true,
                   "armut":false,
                },
+      "gamerule_validators":{
+                  ...
+      }
    }
 
 ``userlist`` is a dictionary mapping the :term:`UUID`\ s of players to their metadata.
@@ -50,8 +53,13 @@ can do. If the ``role`` is ``-1``\ , the player should be removed.
 
 ``game`` is the name of the game that will be played.
 
-``rules`` are the rules by which the game will be played. Note that only updated rules will
+``gamerules`` are the rules by which the game will be played. Note that only updated rules will
 be sent.
+
+``gamerule_validators`` is a dictionary containing the :term:`validator`\ s for the current game.
+
+.. todo::
+   Document the validator concept
 
 .. note::
    All the parameters are optional. However, they should be all sent upon joining so

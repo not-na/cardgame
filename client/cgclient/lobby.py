@@ -40,6 +40,8 @@ class Lobby(object):
 
         self.gamerules: Dict[str, Any] = {}
 
+        self.gamerule_validators: Dict[str, Dict] = {}
+
     def add_user(self, uid: uuid.UUID, udat: dict):
         if uid in self.users:
             self.cg.error(f"User {uid} already in lobby, ignoring")

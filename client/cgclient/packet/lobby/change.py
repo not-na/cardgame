@@ -33,6 +33,7 @@ class ChangePacket(CGPacket):
         "users",
         "game",
         "gamerules",
+        "gamerule_validators",
     ]
 
     def receive(self, msg, cid=None):
@@ -66,3 +67,8 @@ class ChangePacket(CGPacket):
             self.cg.client.lobby.gamerules.update(msg["gamerules"])
 
             self.cg.send_event("cg:lobby.gamerules.change", {"gamerules": msg["gamerules"]})
+
+        if "gamerule_validators" in msg:
+            self.cg.client.lobby.gamerule_validators = msg["gamerule_validators"]
+            # No update, just overwrite it
+            self.cg.send_event("cg:lobby.gameruleval.change", {"validators": msg["gamerule_validators"]})

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  doppelkopf.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,14 +20,27 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+from game import CGame
 
-from . import version
-from . import command
-from . import user
-from . import lobby
-from . import game
-from . import server
-from . import packet
 
-import cg
-cg.version = version
+class DoppelkopfGame(CGame):
+    GAMERULES = {
+        "general.wrongmove": {
+            "type": "strselect",
+            "default": "disallow",
+            "options": [
+                "disallow",
+                "allow_points",
+                "allow_stopgame",
+            ],
+        },
+    }
+
+    def start(self):
+        pass
+
+    def register_event_handlers(self):
+        super().register_event_handlers()
+
+        # Add event handler registration here
+
