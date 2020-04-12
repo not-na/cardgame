@@ -28,7 +28,11 @@ import cgclient.gui
 
 class ServerSelectMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
-        super().__init__(name, window, peng)
+        super().__init__(name, window, peng,
+                         font="Times New Roman",
+                         font_size=30,
+                         font_color=[255, 255, 255, 100]
+                         )
 
         self.gui = gui
         self.cg = gui.cg
@@ -104,9 +108,6 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
             frame=[249, 502, 249],
-            font="Times New Roman",
-            font_size=30,
-            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.playbtn)
 
@@ -126,9 +127,6 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
             frame=[249, 502, 249],
-            font="Times New Roman",
-            font_size=30,
-            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.settingsbtn)
 
@@ -157,9 +155,7 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_addr,
             borderstyle="oldshadow",
-            font="Times New Roman",
             font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.addr.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
             self.addr,
@@ -182,9 +178,7 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
             frame=[249, 502, 249],
-            font="Times New Roman",
             font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.okbtn)
 

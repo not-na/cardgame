@@ -28,7 +28,11 @@ import cgclient.gui
 
 class ServerMainMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
-        super().__init__(name, window, peng)
+        super().__init__(name, window, peng,
+                         font="Times New Roman",
+                         font_size=20,
+                         font_color=[255, 255, 255, 100],
+                         )
 
         self.gui = gui
         self.cg = gui.cg
@@ -45,9 +49,6 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.d_load = peng3d.gui.TextSubMenu(
             "load", self, self.window, self.peng,
             label_main=self.peng.tl("cg:gui.menu.smain.load.load"),
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100],
             timeout=-1
         )
         self.addSubMenu(self.d_load)
@@ -58,9 +59,6 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             label_confirm=self.peng.tl("cg:gui.menu.smain.create_acc.confirm"),
             label_cancel=self.peng.tl("cg:gui.menu.smain.create_acc.cancel"),
             label_main=self.peng.tl("cg:gui.menu.smain.create_acc.label_main"),
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100],
         )
         self.d_create_acc.wbtn_confirm.setBackground(cgclient.gui.custombuttons.RepeatBackground(
             self.d_create_acc.wbtn_confirm,
@@ -97,9 +95,6 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             "login_err", self, self.window, self.peng,
             label_main=self.peng.tl("cg:gui.menu.smain.loginerr.unknown"),
             label_ok=self.peng.tl("cg:gui.menu.smain.loginerr.ok"),
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.d_login_err.wbtn_ok.setBackground(cgclient.gui.custombuttons.RepeatBackground(
             self.d_login_err.wbtn_ok,
@@ -141,9 +136,6 @@ class LoginSubMenu(peng3d.gui.SubMenu):
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*1.5+5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_user,
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.user.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
             self.user,
@@ -164,9 +156,6 @@ class LoginSubMenu(peng3d.gui.SubMenu):
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*0.5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_pwd,
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.pwd.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
             self.pwd,
@@ -189,9 +178,6 @@ class LoginSubMenu(peng3d.gui.SubMenu):
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
             frame=[249, 502, 249],
-            font="Times New Roman",
-            font_size=20,
-            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.okbtn)
 
@@ -219,9 +205,6 @@ class MainSubMenu(peng3d.gui.SubMenu):
                                       label="Hello World!",
                                       anchor_x="center",
                                       anchor_y="center",
-                                      font="Times New Roman",
-                                      font_size=20,
-                                      font_color=[255, 255, 255, 100]
                                       )
         self.addWidget(self.label)
 
@@ -255,7 +238,5 @@ class LobbySubMenu(peng3d.gui.SubMenu):
                                       font_size=40,
                                       anchor_x="center",
                                       anchor_y="center",
-                                      font="Times New Roman",
-                                      font_color=[255, 255, 255, 100]
                                       )
         self.addWidget(self.label)

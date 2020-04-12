@@ -44,7 +44,7 @@ class CGame(object, metaclass=abc.ABCMeta):
     The value must be a dictionary like follows:
     
     ``type`` defines the type of gamerule. This may be one of ``bool``\\ , ``number``\\ ,
-    ``strselect`` or ``str``\\ .
+    ``select``\\ , ``active`` or ``str``\\ .
     
     ``default`` defines the default value to be used in case the validation fails. It is also
     used as a placeholder if a rule has not been defined.
@@ -65,6 +65,9 @@ class CGame(object, metaclass=abc.ABCMeta):
     For ``select``\\ , there is only the list ``options`` that lists all valid strings.
     Note that these are usually internal names and must be added to translation keys for
     proper display. Note that ``default`` should be on this list.
+    
+    For ``active``\\ , there is only the list ``options`` that lists all valid options.
+    Any number of these can be activated and thus the ``default`` should be a list.
     
     For ``str`` there are two additional fields, ``minlen`` and ``maxlen``\\ . They are
     inclusive limits.

@@ -31,7 +31,10 @@ from pyglet.gl import *
 class StretchBackground(peng3d.gui.widgets.Background):
     vlist_layer = 0
 
-    def __init__(self, widget,bg_idle=[GL_TEXTURE_2D,GL_TEXTURE1,[0]*12],bg_hover=None,bg_disabled=None,bg_pressed=None, frame=[2,10,2]):
+    def __init__(self, widget,
+                 bg_idle,bg_hover=None,bg_disabled=None,bg_pressed=None,
+                 frame=[2,10,2],
+                 ):
         tc = bg_idle[2]
         tsx, tsy = tc[3] - tc[0], tc[10] - tc[1]  # Texture Size
 
@@ -119,9 +122,14 @@ class StretchBackground(peng3d.gui.widgets.Background):
 
 
 class StretchButton(peng3d.gui.button.Button):
-    def __init__(self, name, submenu, window, peng, pos=None, size=[100, 24], bg=None, label="Button", min_size=None,
-                 bg_idle=None, bg_hover=None, bg_pressed=None, bg_disabled=None, frame=[2,10,2],
-                 font="Arial", font_size=16, font_color=[0, 0, 0, 255], border=[0, 0]):
+    def __init__(self, name, submenu, window, peng,
+                 pos=None, size=[100, 24], bg=None,
+                 label="Button", min_size=None,
+                 bg_idle=None, bg_hover=None, bg_pressed=None, bg_disabled=None,
+                 frame=[2,10,2],
+                 font=None, font_size=None, font_color=None,
+                 border=[0, 0],
+                 ):
         if bg is None:
             bg = StretchBackground(self, bg_idle, bg_hover, bg_disabled, bg_pressed, frame)
         super().__init__(name, submenu, window, peng, pos, size, bg, label=label, font=font, font_size=font_size,
@@ -131,7 +139,10 @@ class StretchButton(peng3d.gui.button.Button):
 class RepeatBackground(peng3d.gui.widgets.Background):
     vlist_layer = 0
 
-    def __init__(self, widget,bg_idle=[GL_TEXTURE_2D,GL_TEXTURE1,[0]*12],bg_hover=None,bg_disabled=None,bg_pressed=None, frame=[2,10,2]):
+    def __init__(self, widget,
+                 bg_idle,bg_hover=None,bg_disabled=None,bg_pressed=None,
+                 frame=[2,10,2],
+                 ):
         tc = bg_idle[2]
         tsx, tsy = tc[3] - tc[0], tc[10] - tc[1]  # Texture Size
 
@@ -258,9 +269,14 @@ class RepeatBackground(peng3d.gui.widgets.Background):
 
 
 class RepeatButton(peng3d.gui.button.Button):
-    def __init__(self, name, submenu, window, peng, pos=None, size=[100, 24], bg=None, label="Button", min_size=None,
-                 bg_idle=None, bg_hover=None, bg_pressed=None, bg_disabled=None, frame=[2,10,2],
-                 font="Arial", font_size=16, font_color=[0, 0, 0, 255], border=[0, 0]):
+    def __init__(self, name, submenu, window, peng,
+                 pos=None, size=[100, 24], bg=None,
+                 label="Button", min_size=None,
+                 bg_idle=None, bg_hover=None, bg_pressed=None, bg_disabled=None,
+                 frame=[2,10,2],
+                 font=None, font_size=None, font_color=None,
+                 border=[0, 0],
+                 ):
         if bg is None:
             bg = RepeatBackground(self, bg_idle, bg_hover, bg_disabled, bg_pressed, frame)
         super().__init__(name, submenu, window, peng, pos, size, bg, label=label, font=font, font_size=font_size,
@@ -270,7 +286,10 @@ class RepeatButton(peng3d.gui.button.Button):
 class TiledImageBackground(peng3d.gui.widgets.Background):
     vlist_layer = 0
 
-    def __init__(self, widget, bg_idle=[GL_TEXTURE_2D,GL_TEXTURE1,[0]*12],bg_hover=None,bg_disabled=None,bg_pressed=None, scale=1):
+    def __init__(self, widget,
+                 bg_idle,bg_hover=None,bg_disabled=None,bg_pressed=None,
+                 scale=1,
+                 ):
         super().__init__(widget)
 
         bg = bg_idle
@@ -387,8 +406,10 @@ class TiledImageBackground(peng3d.gui.widgets.Background):
 
 
 class RepeatTextBackground(RepeatBackground):
-    def __init__(self, widget, bg_idle=[GL_TEXTURE_2D,GL_TEXTURE1,[0]*12],bg_hover=None,bg_disabled=None,bg_pressed=None,
-                 frame=[2,10,2], border=[0, 0]):
+    def __init__(self, widget,
+                 bg_idle, bg_hover=None,bg_disabled=None,bg_pressed=None,
+                 frame=[2,10,2], border=[0, 0],
+                 ):
         super().__init__(widget, bg_idle, bg_hover, bg_disabled, bg_pressed, frame)
 
         self.border = border
