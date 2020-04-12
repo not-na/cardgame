@@ -62,7 +62,7 @@ def validate(data: Union[float, bool, str], validator: Dict) -> Tuple[bool, Unio
             return False, validator["default"]
         else:
             return True, data
-    elif validator["type"] == "num":
+    elif validator["type"] == "number":
         if not (isinstance(data, float) or isinstance(data, int)):
             return False, validator["default"]
         else:

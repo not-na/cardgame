@@ -46,3 +46,5 @@ class JoinPacket(CGPacket):
         self.cg.send_event("cg:lobby.join", {"lobby": self.cg.client.lobby})
         self.cg.info(f"Joined lobby {self.cg.client.lobby.uuid}")
 
+        self.cg.client.gui.servermain.changeSubMenu("lobby")
+

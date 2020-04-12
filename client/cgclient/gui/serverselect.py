@@ -33,6 +33,13 @@ class ServerSelectMenu(peng3d.gui.GUIMenu):
         self.gui = gui
         self.cg = gui.cg
 
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]]
+        )
+        )
+
         self.s_titlescreen = TitleScreenSubMenu("titlescreen", self, self.window, self.peng)
         self.addSubMenu(self.s_titlescreen)
 
@@ -139,13 +146,8 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
         self.register_event_handlers()
 
         # Background
-        self.setBackground(peng3d.gui.button.FramedImageBackground(
-            self,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]]
-            )
-        )
-        self.bg.vlist_layer = -1
+
+        #self.bg.vlist_layer = -1
 
         # Address Field
         default_addr = self.peng.cg.client.default_server

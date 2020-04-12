@@ -33,6 +33,14 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.gui = gui
         self.cg = gui.cg
 
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+        )
+        )
+        #self.bg.vlist_layer = -1
+
         # Loading Screen
         self.d_load = peng3d.gui.TextSubMenu(
             "load", self, self.window, self.peng,
@@ -42,17 +50,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             font_color=[255, 255, 255, 100],
             timeout=-1
         )
-        self.d_load.setBackground(peng3d.gui.button.FramedImageBackground(
-            self.d_load,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]],
-            )
-        )
         self.addSubMenu(self.d_load)
-
-        # Login Menu
-        self.s_login = LoginSubMenu("login", self, self.window, self.peng)
-        self.addSubMenu(self.s_login)
 
         # Create Account Dialog
         self.d_create_acc = peng3d.gui.menus.ConfirmSubMenu(
@@ -63,12 +61,6 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             font="Times New Roman",
             font_size=20,
             font_color=[255, 255, 255, 100],
-        )
-        self.d_create_acc.setBackground(peng3d.gui.button.FramedImageBackground(
-            self.d_create_acc,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]],
-            )
         )
         self.d_create_acc.wbtn_confirm.setBackground(cgclient.gui.custombuttons.RepeatBackground(
             self.d_create_acc.wbtn_confirm,
@@ -109,12 +101,6 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             font_size=20,
             font_color=[255, 255, 255, 100]
         )
-        self.d_login_err.setBackground(peng3d.gui.button.FramedImageBackground(
-            self.d_login_err,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]],
-            )
-        )
         self.d_login_err.wbtn_ok.setBackground(cgclient.gui.custombuttons.RepeatBackground(
             self.d_login_err.wbtn_ok,
             bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
@@ -125,8 +111,17 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         )
         self.addSubMenu(self.d_login_err)
 
+        # Login Menu
+        self.s_login = LoginSubMenu("login", self, self.window, self.peng)
+        self.addSubMenu(self.s_login)
+
+        # Main Menu
         self.s_main = MainSubMenu("main", self, self.window, self.peng)
         self.addSubMenu(self.s_main)
+
+        # Lobby Menu
+        self.s_lobby = LobbySubMenu("lobby", self, self.window, self.peng)
+        self.addSubMenu(self.s_lobby)
 
         self.changeSubMenu("load")
 
@@ -137,15 +132,10 @@ class LoginSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground(peng3d.gui.button.FramedImageBackground(
-            self,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]],
-            )
-        )
+        self.setBackground(None)
 
         # Username Field
-        default_user = self.menu.cg.client.username
+        default_user = self.menu.cg.client.username if self.menu.cg.client.username is not None else ""
         self.user = peng3d.gui.TextInput(
             "user", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*1.5+5)),
@@ -168,7 +158,7 @@ class LoginSubMenu(peng3d.gui.SubMenu):
 
         # Password Field
         # TODO: use an actual password field
-        default_pwd = self.menu.cg.client.pwd
+        default_pwd = self.menu.cg.client.pwd if self.menu.cg.client.pwd is not None else ""
         self.pwd = peng3d.gui.TextInput(
             "pwd", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*0.5)),
@@ -223,19 +213,10 @@ class MainSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground(peng3d.gui.button.FramedImageBackground(
-            self,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]],
-            )
-        )
-        self.bg.vlist_layer = -1
-
         self.label = peng3d.gui.Label("load_label", self, self.window, self.peng,
                                       pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),
                                       size=[0, 0],  # (lambda sw, sh: (sw, sh)),
                                       label="Hello World!",
-                                      # font_size=20,
                                       anchor_x="center",
                                       anchor_y="center",
                                       font="Times New Roman",
@@ -259,3 +240,22 @@ class MainSubMenu(peng3d.gui.SubMenu):
             self.menu.cg.info("Sent lobby creation request")
             self.createbtn.enabled = False
         self.createbtn.addAction("click", f)
+
+
+class LobbySubMenu(peng3d.gui.SubMenu):
+    menu: ServerMainMenu
+
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.label = peng3d.gui.Label("lobby_label", self, self.window, self.peng,
+                                      pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),
+                                      size=[0, 0],  # (lambda sw, sh: (sw, sh)),
+                                      label="Hello Lobby!",
+                                      font_size=40,
+                                      anchor_x="center",
+                                      anchor_y="center",
+                                      font="Times New Roman",
+                                      font_color=[255, 255, 255, 100]
+                                      )
+        self.addWidget(self.label)

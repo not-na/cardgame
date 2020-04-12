@@ -49,6 +49,12 @@ class CGame(object, metaclass=abc.ABCMeta):
     ``default`` defines the default value to be used in case the validation fails. It is also
     used as a placeholder if a rule has not been defined.
     
+    ``requirements`` is a mapping of gamerule to a list of valid options for that gamerule.
+    The given gamerule is only able to be changed if all requirements are fulfilled.
+    
+    Note that the requirements are not actually verified on the server. They are only used
+    to disable options on the client.
+    
     Depending on the type, several other fields are expected.
     
     For ``bool`` there are no additional fields.
@@ -61,7 +67,7 @@ class CGame(object, metaclass=abc.ABCMeta):
     proper display. Note that ``default`` should be on this list.
     
     For ``str`` there are two additional fields, ``minlen`` and ``maxlen``\\ . They are
-    inclusive limits
+    inclusive limits.
     """
 
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
@@ -83,7 +89,7 @@ class CGame(object, metaclass=abc.ABCMeta):
                     self.cg.warn(f"Gamerule {rule} had an invalid value on game start, resetting it")
                 self.gamerules[rule] = out
 
-        for rule, _ in self.GAMERULES:
+        for rule in self.GAMERULES:
             if rule not in self.gamerules:
                 self.gamerules[rule] = self.GAMERULES[rule]["default"]
 
@@ -94,6 +100,14 @@ class CGame(object, metaclass=abc.ABCMeta):
     @classmethod
     def check_gamerule(cls, name: str, value: Union[float, bool, str]) -> Tuple[bool, Union[float, bool, str]]:
         return cg.util.validate(value, cls.GAMERULES[name])
+
+    @classmethod
+    def check_requirements(cls, name: str, value: Union[float, bool, str], gamerules: Dict):
+        for req, valid in cls.GAMERULES[name]["requirements"].items():
+            value = gamerules.get(req, cls.GAMERULES[req]["default"])
+            if value not in valid:
+                return False
+        return True
 
     def register_event_handlers(self):
         pass
