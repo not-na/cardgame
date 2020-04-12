@@ -23,7 +23,7 @@
 import os
 from typing import Callable, Dict
 
-MAX_IGNORE = 3
+MAX_IGNORE = 2
 """
 Defines how many times a debug message should be output per unhandled event.
 

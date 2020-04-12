@@ -56,3 +56,10 @@ This state is usually followed by either :py:data:`STATE_LOBBY` or :py:data:`STA
 """
 
 MODE_CG = 100
+
+ROLE_REMOVE = -1
+ROLE_NONE = 0
+ROLE_SPECTATOR = 1
+ROLE_PLAYER = 10
+ROLE_CREATOR = 100
+

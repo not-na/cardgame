@@ -21,13 +21,14 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import uuid
+from typing import Union
 
 from . import cache
 from . import serializer
 from . import time
 
 
-def uuidify(uuid_in):
+def uuidify(uuid_in: Union[str, uuid.UUID]):
     if isinstance(uuid_in, str):
         return uuid.UUID(uuid_in)
     elif isinstance(uuid_in, uuid.UUID):

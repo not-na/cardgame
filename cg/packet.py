@@ -122,7 +122,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
             "type": self.reg.getName(self),
         }
 
-        if cid is None and (self.side is None or self.side == SIDE_CLIENT):
+        if cid is None and (self.side is None or self.side == SIDE_SERVER):
             # On the Client
             if (
                     self.check(self.peer.remote_state, self.state)
@@ -137,7 +137,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                 self.send(msg, cid)
 
                 return True
-        elif cid is not None and (self.side is None or self.side == SIDE_SERVER):
+        elif cid is not None and (self.side is None or self.side == SIDE_CLIENT):
             # On the server
             if (
                     self.check(self.peer.clients[cid].state, self.state)
@@ -158,7 +158,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
         if self.invalid_action == "ignore":
             if self._ignorecount_recv < MAX_IGNORE_RECV:
-                self.cg.warn(f"Packet {self.reg.getName(self)} with message {msg} ignored on send due to SmartPacket mismatch")
+                self.cg.warn(f"Packet {self.reg.getName(self)} ignored on send due to SmartPacket mismatch")
                 self._ignorecount_recv += 1
 
             self.cg.send_event("cg:network.packet.ignore", d)

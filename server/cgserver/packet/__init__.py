@@ -24,31 +24,38 @@
 
 def register_default_packets(reg, peer, cg, add):
     cg.info("Registering packets")
+
+    def r(name: str, packet):
+        add(name, packet(reg, peer, c=cg))
+
     # AUTH CONNECTION STATE
 
     from . import auth_precheck
     # Auth Precheck Packet
-    add("cg:auth.precheck",
-        auth_precheck.AuthPrecheckPacket(
-            reg, peer, c=cg,
-        )
-        )
+    r("cg:auth.precheck", auth_precheck.AuthPrecheckPacket)
 
     from . import auth
     # Auth Packet
-    add("cg:auth",
-        auth.AuthPacket(
-            reg, peer, c=cg,
-        )
-        )
+    r("cg:auth", auth.AuthPacket)
 
     # STATUS PACKETS
 
     from . import status_user
     # Status User Packet
-    add("cg:status.user",
-        status_user.StatusUserPacket(
-            reg, peer, c=cg,
-        )
-        )
+    r("cg:status.user", status_user.StatusUserPacket)
+
+    # LOBBY PACKETS
+    from . import lobby
+
+    # Lobby Create Packet
+    r("cg:lobby.create", lobby.create.CreatePacket)
+
+    # Lobby Join Packet
+    r("cg:lobby.join", lobby.join.JoinPacket)
+
+    # Lobby Change Packet
+    r("cg:lobby.change", lobby.change.ChangePacket)
+
+    # Lobby Ready Packet
+    r("cg:loby.ready", lobby.ready.ReadyPacket)
 

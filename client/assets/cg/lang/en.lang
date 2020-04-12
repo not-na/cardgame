@@ -18,6 +18,8 @@ gui.menu.smain.load.connect=Connecting...
 gui.menu.smain.load.load=Loading...
 gui.menu.smain.load.login=Logging in...
 
+gui.menu.smain.login.okbtn.label=Login
+
 gui.menu.smain.create_acc.confirm=Create Account
 gui.menu.smain.create_acc.cancel=Cancel
 gui.menu.smain.create_acc.label_main=The account does not yet exist. Do you want to create it?
@@ -26,3 +28,5 @@ gui.menu.smain.loginerr.unknown=Unknown Error during login
 gui.menu.smain.loginerr.ok=OK
 gui.menu.smain.loginerr.wrongcred=Wrong Credentials or invalid Username!
 gui.menu.smain.loginerr.userexists=Username is already taken!
+
+gui.menu.smain.main.createbtn.label=Create Lobby

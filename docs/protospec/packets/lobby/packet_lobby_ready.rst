@@ -28,4 +28,12 @@ to all clients in the lobby containing the updated list of ready players.
 Structure
 ---------
 
-The package ought not to contain any data.
+Note that all examples shown here contain placeholder data and will have different content in actual packets.
+
+This is the data sent by the client to the server: ::
+
+   {
+      "ready": true,
+   }
+
+``ready`` defines whether or not the client is ready to play.
