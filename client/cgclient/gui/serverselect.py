@@ -48,16 +48,58 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240])
+        # Background
+        self.setBackground(cgclient.gui.custombuttons.TiledImageBackground(
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg", "bg"),
+            scale=0.5
+            )
+        )
+        self.bg.vlist_layer = -2
+
+        # Left sidebar (background)
+        self.sidebar = peng3d.gui.Widget(
+            "sidebar", self, self.window, self.peng,
+            pos=(0, 0),
+            size=(lambda sw, sh: (sw/3, sh)),
+        )
+        self.sidebar.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.sidebar,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.sidebar", "gui"),
+            frame=[[1, 1, 10], [0, 1, 0]]
+            )
+        )
+        self.sidebar.bg.vlist_layer = -1
+        self.addWidget(self.sidebar)
+
+        # Screen Edge
+        self.screen_edge = peng3d.gui.Widget(
+            "screen_edge", self, self.window, self.peng,
+            pos=(0, 0),
+            size=(lambda sw, sh: (sw, sh))
+        )
+        self.screen_edge.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.screen_edge,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.trans_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
+        )
+        self.addWidget(self.screen_edge)
 
         # Play Button
         # This button switches to the serverselect submenu
-        self.playbtn = peng3d.gui.Button(
+        self.playbtn = cgclient.gui.custombuttons.RepeatButton(
             "playbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+5)),
-            size=(lambda sw, sh: (sw*0.3, sh*0.2)),
+            pos=(lambda sw, sh, bw, bh: (sw/6-bw/2-6, sh/2 + 15)),
+            size=(lambda sw, sh: (sw*0.3, sh*0.1)),
             label=self.peng.tl("cg:gui.menu.serverselect.title.playbtn.label"),
-            borderstyle="oldshadow",
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249],
+            font="Times New Roman",
+            font_size=30,
+            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.playbtn)
 
@@ -68,12 +110,18 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
 
         # Settings Button
         # This button switches to the settings submenu
-        self.settingsbtn = peng3d.gui.Button(
+        self.settingsbtn = cgclient.gui.custombuttons.RepeatButton(
             "settingsbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh-5)),
-            size=(lambda sw, sh: (sw*0.3, sh*0.1)),
+            pos=(lambda sw, sh, bw, bh: (sw/6 - bw/2 - 6, sh/2 - bh - 5)),
+            size=(lambda sw, sh: (sw * 0.3, sh * 0.1)),
             label=self.peng.tl("cg:gui.menu.serverselect.title.settingsbtn.label"),
-            borderstyle="oldshadow",
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249],
+            font="Times New Roman",
+            font_size=30,
+            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.settingsbtn)
 
@@ -90,27 +138,51 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
 
         self.register_event_handlers()
 
-        self.setBackground([242, 241, 240])
+        # Background
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]]
+            )
+        )
+        self.bg.vlist_layer = -1
 
         # Address Field
         default_addr = self.peng.cg.client.default_server
         self.addr = peng3d.gui.TextInput(
             "addr", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh/2+5)),
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh/2)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_addr,
             borderstyle="oldshadow",
-            font_size=16,
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
+        )
+        self.addr.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
+            self.addr,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.fld_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.fld_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.fld_press", "gui"),
+            frame=[150, 700, 150],
+            border=[6, 0]
+            )
         )
         self.addWidget(self.addr)
 
         # OK Button
-        self.okbtn = peng3d.gui.Button(
+        self.okbtn = cgclient.gui.custombuttons.RepeatButton(
             "okbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh/2-5)),
-            size=(lambda sw, sh: (sw/2, 32)),
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh-5)),
+            size=(lambda sw, sh: (sw/2, 64)),
             label=self.peng.tl("cg:gui.menu.serverselect.serverselect.okbtn.label"),
-            borderstyle="oldshadow",
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249],
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.okbtn)
 
@@ -127,4 +199,3 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
     # Event Handlers
     def register_event_handlers(self):
         pass
-

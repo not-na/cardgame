@@ -33,27 +33,60 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.gui = gui
         self.cg = gui.cg
 
+        # Loading Screen
         self.d_load = peng3d.gui.TextSubMenu(
             "load", self, self.window, self.peng,
             label_main=self.peng.tl("cg:gui.menu.smain.load.load"),
-            timeout=-1,
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100],
+            timeout=-1
+        )
+        self.d_load.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.d_load,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
         )
         self.addSubMenu(self.d_load)
 
-        self.d_load.setBackground([242, 241, 240])
-
+        # Login Menu
         self.s_login = LoginSubMenu("login", self, self.window, self.peng)
         self.addSubMenu(self.s_login)
 
+        # Create Account Dialog
         self.d_create_acc = peng3d.gui.menus.ConfirmSubMenu(
             "create_acc", self, self.window, self.peng,
             label_confirm=self.peng.tl("cg:gui.menu.smain.create_acc.confirm"),
             label_cancel=self.peng.tl("cg:gui.menu.smain.create_acc.cancel"),
             label_main=self.peng.tl("cg:gui.menu.smain.create_acc.label_main"),
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100],
+        )
+        self.d_create_acc.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.d_create_acc,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
+        )
+        self.d_create_acc.wbtn_confirm.setBackground(cgclient.gui.custombuttons.RepeatBackground(
+            self.d_create_acc.wbtn_confirm,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249]
+            )
+        )
+        self.d_create_acc.wbtn_cancel.setBackground(cgclient.gui.custombuttons.RepeatBackground(
+            self.d_create_acc.wbtn_cancel,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249]
+            )
         )
         self.addSubMenu(self.d_create_acc)
-
-        self.d_create_acc.setBackground([242, 241, 240])
 
         def f():
             self.cg.client.send_message("cg:auth", {
@@ -63,14 +96,34 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             })
         self.d_create_acc.addAction("confirm", f)
 
+        def f():
+            self.d_create_acc.prev_submenu = "login"
+        self.d_create_acc.addAction("cancel", f)
+
+        # Error Dialog
         self.d_login_err = peng3d.gui.menus.DialogSubMenu(
             "login_err", self, self.window, self.peng,
             label_main=self.peng.tl("cg:gui.menu.smain.loginerr.unknown"),
             label_ok=self.peng.tl("cg:gui.menu.smain.loginerr.ok"),
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
+        )
+        self.d_login_err.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.d_login_err,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
+        )
+        self.d_login_err.wbtn_ok.setBackground(cgclient.gui.custombuttons.RepeatBackground(
+            self.d_login_err.wbtn_ok,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249]
+            )
         )
         self.addSubMenu(self.d_login_err)
-
-        self.d_login_err.setBackground([242, 241, 240])
 
         self.s_main = MainSubMenu("main", self, self.window, self.peng)
         self.addSubMenu(self.s_main)
@@ -84,17 +137,32 @@ class LoginSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240])
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
+        )
 
         # Username Field
         default_user = self.menu.cg.client.username
         self.user = peng3d.gui.TextInput(
             "user", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh/2+5)),
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*1.5+5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_user,
-            borderstyle="oldshadow",
-            font_size=16,
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
+        )
+        self.user.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
+            self.user,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.fld_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.fld_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.fld_press", "gui"),
+            frame=[150, 700, 150],
+            border=[6, 0]
+            )
         )
         self.addWidget(self.user)
 
@@ -103,21 +171,37 @@ class LoginSubMenu(peng3d.gui.SubMenu):
         default_pwd = self.menu.cg.client.pwd
         self.pwd = peng3d.gui.TextInput(
             "pwd", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*1.5+5)),
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*0.5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_pwd,
-            borderstyle="oldshadow",
-            font_size=16,
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
+        )
+        self.pwd.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
+            self.pwd,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.fld_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.fld_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.fld_press", "gui"),
+            frame=[150, 700, 150],
+            border=[6, 0]
+            )
         )
         self.addWidget(self.pwd)
 
         # OK Button
-        self.okbtn = peng3d.gui.Button(
+        self.okbtn = cgclient.gui.custombuttons.RepeatButton(
             "okbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh/2-5)),
-            size=(lambda sw, sh: (sw/2, 32)),
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh-5)),
+            size=(lambda sw, sh: (sw/2, 64)),
             label=self.peng.tl("cg:gui.menu.smain.login.okbtn.label"),
-            borderstyle="oldshadow",
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
+            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            frame=[249, 502, 249],
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100]
         )
         self.addWidget(self.okbtn)
 
@@ -139,7 +223,12 @@ class MainSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240])
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            )
+        )
 
         self.label = peng3d.gui.Label("load_label", self, self.window, self.peng,
                                       pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),
@@ -148,5 +237,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
                                       # font_size=20,
                                       anchor_x="center",
                                       anchor_y="center",
+                                      font="Times New Roman",
+                                      font_size=20,
+                                      font_color=[255, 255, 255, 100]
                                       )
         self.addWidget(self.label)

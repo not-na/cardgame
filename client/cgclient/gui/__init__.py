@@ -24,6 +24,7 @@
 import peng3d
 import peng3dnet
 import pyglet
+from pyglet.gl import *
 
 import cg
 import cgclient
@@ -31,6 +32,7 @@ import cgclient
 from . import loadingscreen
 from . import serverselect
 from . import servermain
+from . import custombuttons
 
 
 class PengGUI(object):
@@ -59,6 +61,16 @@ class PengGUI(object):
             fullscreen=self.cg.get_config_option("cg:graphics.fullscreen"),
         )
         self.window.maximize()
+
+        self.peng.resourceMgr.addCategory("gui")
+        self.peng.resourceMgr.addCategory("bg")
+
+        self.peng.resourceMgr.categoriesSettings["gui"]["minfilter"] = GL_NEAREST
+
+        self.peng.resourceMgr.loadTex("cg:img.cursor.cursor20p", "gui")
+        self.window.set_mouse_cursor(pyglet.window.ImageMouseCursor(
+            self.peng.resourceMgr.categories["gui"]["cg:img.cursor.cursor20p"], 0, 20
+        ))
 
         #pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
         pyglet.clock.schedule_interval(self.update, 1 / 60)

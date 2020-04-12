@@ -43,7 +43,13 @@ class LoadingScreenSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240])
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]]
+            )
+        )
+        self.bg.vlist_layer = -1
 
         self.label = peng3d.gui.Label("progress_label", self, self.window, self.peng,
                                       pos=(lambda sw, sh, bw, bh: (sw/2, sh/2)),
@@ -52,5 +58,8 @@ class LoadingScreenSubMenu(peng3d.gui.SubMenu):
                                       #font_size=20,
                                       anchor_x="center",
                                       anchor_y="center",
+                                      font="Times New Roman",
+                                      font_size=20,
+                                      font_color=[255, 255, 255, 100]
                                       )
         self.addWidget(self.label)
