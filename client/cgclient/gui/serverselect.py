@@ -43,6 +43,7 @@ class ServerSelectMenu(peng3d.gui.GUIMenu):
             frame=[[10, 1, 10], [10, 1, 10]]
         )
         )
+        self.bg.vlist_layer = -1
 
         self.s_titlescreen = TitleScreenSubMenu("titlescreen", self, self.window, self.peng)
         self.addSubMenu(self.s_titlescreen)

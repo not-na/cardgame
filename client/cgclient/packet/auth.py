@@ -28,7 +28,7 @@ from cg.packet import CGPacket
 class AuthPacket(CGPacket):
     state = STATE_AUTH
     required_keys = [
-        "username",
+        "status",
     ]
     allowed_keys = [
         "pwd",
@@ -51,15 +51,15 @@ class AuthPacket(CGPacket):
         elif status == "wrong_credentials":
             self.cg.info("Wrong credentials, redirecting to login")
             self.cg.client.gui.servermain.changeSubMenu("login")
-            self.cg.client.gui.servermain.d_loginerr.label_main = self.cg.client.gui.peng.tl(
-                "cg:menu.smain.loginerr.wrongcred"
+            self.cg.client.gui.servermain.d_login_err.label_main = self.cg.client.gui.peng.tl(
+                "cg:gui.menu.smain.loginerr.wrongcred"
             )
-            self.cg.client.gui.servermain.d_loginerr.activate()
+            self.cg.client.gui.servermain.d_login_err.activate()
         elif status == "user_exists":
             self.cg.info("User exists, redirecting to login")
             self.cg.client.gui.servermain.changeSubMenu("login")
             self.cg.client.gui.servermain.d_loginerr.label_main = self.cg.client.gui.peng.tl(
-                "cg:menu.smain.loginerr.userexists"
+                "cg:gui.menu.smain.loginerr.userexists"
             )
             self.cg.client.gui.servermain.d_loginerr.activate()
         elif status == "logged_out":

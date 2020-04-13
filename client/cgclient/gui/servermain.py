@@ -43,7 +43,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
         )
         )
-        #self.bg.vlist_layer = -1
+        self.bg.vlist_layer = -1
 
         # Loading Screen
         self.d_load = peng3d.gui.TextSubMenu(
