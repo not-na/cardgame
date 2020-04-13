@@ -132,7 +132,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.settingsbtn)
 
         def f():
-            self.peng.cg.error("Settings not yet implemented!")
+            self.peng.cg.error("1; 2; Du bist dran!")
         self.settingsbtn.addAction("click", f)
 
 

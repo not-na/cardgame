@@ -76,6 +76,10 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             frame=[249, 502, 249]
             )
         )
+        self.d_create_acc.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw/2-bw-5, sh/2-bh*2)
+        self.d_create_acc.wbtn_confirm.size = lambda sw, sh: (sw/5, 32)
+        self.d_create_acc.wbtn_cancel.pos = lambda sw, sh, bw, bh: (sw/2+5, sh/2 - bh*2)
+        self.d_create_acc.wbtn_cancel.size = lambda sw, sh: (sw / 5, 32)
         self.addSubMenu(self.d_create_acc)
 
         def f():
