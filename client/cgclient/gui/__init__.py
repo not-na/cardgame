@@ -62,6 +62,8 @@ class PengGUI(object):
         )
         self.window.maximize()
 
+        self.peng.i18n.setLang("de")
+
         self.peng.resourceMgr.addCategory("gui")
         self.peng.resourceMgr.addCategory("bg")
 
@@ -122,9 +124,17 @@ class PengGUI(object):
         self.cg.add_event_listener("cg:shutdown.do", self.handler_shutdowndo)
 
         self.peng.addEventListener("peng3d:i18n.miss", self.handler_i18nmiss)
+        self.peng.addEventListener("peng3d:rsrc.missing.category", self.handler_rsrccat)
+        self.peng.addEventListener("peng3d:rsrc.missing.tex", self.handler_rsrctex)
 
     def handler_shutdowndo(self, event: str, data: dict):
         pyglet.app.exit()
 
     def handler_i18nmiss(self, event: str, data: dict):
-        self.cg.debug(f"Missing i18n key {data['key']} for language {data['lang']}")
+        self.cg.info(f"Missing i18n key {data['key']} for language {data['lang']}")
+
+    def handler_rsrccat(self, event: str, data: dict):
+        self.cg.info(f"Missing resource category {data['cat']} for resource {data['name']}")
+
+    def handler_rsrctex(self, event: str, data: dict):
+        self.cg.info(f"Missing resource {data['cat']} for resource {data['name']}")

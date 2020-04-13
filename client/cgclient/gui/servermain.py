@@ -118,6 +118,10 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.s_lobby = LobbySubMenu("lobby", self, self.window, self.peng)
         self.addSubMenu(self.s_lobby)
 
+        # Gamerule Menu
+        self.s_gamerule = GameruleSubMenu("gamerules", self, self.window, self.peng)
+        self.addSubMenu(self.s_gamerule)
+
         self.changeSubMenu("load")
 
 
@@ -240,3 +244,48 @@ class LobbySubMenu(peng3d.gui.SubMenu):
                                       anchor_y="center",
                                       )
         self.addWidget(self.label)
+
+        # Gamerule Button
+        self.gamerulebtn = peng3d.gui.Button(
+            "gamerulebtn", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
+            size=(lambda sw, sh: (sw / 2, 32)),
+            label=self.peng.tl("cg:gui.menu.smain.lobby.gamerulebtn.label"),
+            borderstyle="oldshadow",
+        )
+        self.addWidget(self.gamerulebtn)
+
+        def f():
+            self.menu.changeSubMenu("gamerules")
+        self.gamerulebtn.addAction("click", f)
+
+
+class GameruleSubMenu(peng3d.gui.SubMenu):
+    menu: ServerMainMenu
+
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.label = peng3d.gui.Label("label", self, self.window, self.peng,
+                                      pos=(lambda sw, sh, bw, bh: (sw / 2, sh/2-bh*2)),
+                                      size=[0, 0],  # (lambda sw, sh: (sw, sh)),
+                                      label="Gamerules here",
+                                      font_size=40,
+                                      anchor_x="center",
+                                      anchor_y="center",
+                                      )
+        self.addWidget(self.label)
+
+        # Back Button
+        self.backbtn = peng3d.gui.Button(
+            "backbtn", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
+            size=(lambda sw, sh: (sw / 2, 32)),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.backbtn.label"),
+            borderstyle="oldshadow",
+        )
+        self.addWidget(self.backbtn)
+
+        def f():
+            self.menu.changeSubMenu("lobby")
+        self.backbtn.addAction("click", f)
