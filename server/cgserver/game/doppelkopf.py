@@ -165,6 +165,7 @@ class DoppelkopfGame(CGame):
             "type": "select",
             "default": "None",
             "options": [
+                "None",
                 "over_h10",  # dk.heart10: True
                 "over_pigs",  # dk.pigs: not None
                 "over_superpigs",  # dk.superpigs: not None
@@ -187,14 +188,18 @@ class DoppelkopfGame(CGame):
             ],
             "requirements": {},
         },
-        "dk.poverty_no_partner": {
+        "dk.poverty_consequence": {
             "type": "select",
             "default": "None",
             "options": [
                 "None",
+                "redeal"
                 "black_sow",
                 "ramsch",
             ],
+            "requirements": {
+                "dk.poverty": ["sell", "circulate"]
+            }
         },
         "dk.throw": {
             "type": "select",
@@ -215,8 +220,8 @@ class DoppelkopfGame(CGame):
                 "9_all_c",
                 "k_all_c",
                 "7full",
-                "t<=jd",
-                "t<=ad"
+                "t<hj",
+                "t<dj"
             ],
             "requirements": {
                 "dk.throw": ["reservation", "throw"],
@@ -286,6 +291,13 @@ class DoppelkopfGame(CGame):
                 "dk.buck_round": ["succession", "parallel"],
             },
         },
+        "dk.buck_amount": {
+            "type": "number",
+            "default": 4,
+            "min": 1,
+            "max": 4,
+            "step": 1,
+        },
         "dk.solo_shift_h10": {
             "type": "bool",
             "default": False,
@@ -294,6 +306,11 @@ class DoppelkopfGame(CGame):
             },
         },
         "dk.solo.null": {
+            "type": "bool",
+            "default": False,
+            "requirements": {},
+        },
+        "dk.solo.boneless": {
             "type": "bool",
             "default": False,
             "requirements": {},
@@ -324,6 +341,11 @@ class DoppelkopfGame(CGame):
             "requirements": {},
         },
         "dk.solo.monastery": {
+            "type": "bool",
+            "default": False,
+            "requirements": {},
+        },
+        "dk.solo.aces": {
             "type": "bool",
             "default": False,
             "requirements": {},

@@ -45,8 +45,10 @@ class LoadingScreenSubMenu(peng3d.gui.SubMenu):
 
         self.setBackground(peng3d.gui.button.FramedImageBackground(
             self,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]]
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(1, 1),
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_brown", "gui")
             )
         )
         self.bg.vlist_layer = -1

@@ -27,9 +27,7 @@ from cg.packet import CGPacket
 
 class AuthPacket(CGPacket):
     state = STATE_AUTH
-    required_keys = [
-        "status",
-    ]
+    required_keys = []
     allowed_keys = [
         "pwd",
         "create",

@@ -38,12 +38,14 @@ class ServerSelectMenu(peng3d.gui.GUIMenu):
         self.cg = gui.cg
 
         self.setBackground(peng3d.gui.button.FramedImageBackground(
-            peng3d.gui.FakeWidget(self),
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.brown_bg", "gui"),
-            frame=[[10, 1, 10], [10, 1, 10]]
+            self,
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(1, 1),
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_brown", "gui")
+            )
         )
-        )
-        self.bg.vlist_layer = -1
+        self.bg.vlist_layer = -3
 
         self.s_titlescreen = TitleScreenSubMenu("titlescreen", self, self.window, self.peng)
         self.addSubMenu(self.s_titlescreen)
@@ -61,10 +63,13 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         super().__init__(name, menu, window, peng)
 
         # Background
-        self.setBackground(cgclient.gui.custombuttons.TiledImageBackground(
+        self.setBackground(peng3d.gui.FramedImageBackground(
             self,
             bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg", "bg"),
-            scale=0.5
+            frame=[[0, 1, 0], [0, 1, 0]],
+            scale=(.3, .3),
+            repeat_edge=True, repeat_center=True,
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg", "bg")
             )
         )
         self.bg.vlist_layer = -2
@@ -75,10 +80,12 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             pos=(0, 0),
             size=(lambda sw, sh: (sw/3, sh)),
         )
-        self.sidebar.setBackground(peng3d.gui.button.FramedImageBackground(
+        self.sidebar.setBackground(peng3d.gui.FramedImageBackground(
             self.sidebar,
             bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.sidebar", "gui"),
-            frame=[[1, 1, 10], [0, 1, 0]]
+            frame=[[1, 1, 10], [0, 1, 0]],
+            scale=(1, 0),
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.sidebar", "gui")
             )
         )
         self.sidebar.bg.vlist_layer = -1
@@ -90,25 +97,30 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             pos=(0, 0),
             size=(lambda sw, sh: (sw, sh))
         )
-        self.screen_edge.setBackground(peng3d.gui.button.FramedImageBackground(
+        self.screen_edge.setBackground(peng3d.gui.FramedImageBackground(
             self.screen_edge,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.trans_bg", "gui"),
+            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_trans", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(1, 1),
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_trans", "gui")
             )
         )
         self.addWidget(self.screen_edge)
 
         # Play Button
         # This button switches to the serverselect submenu
-        self.playbtn = cgclient.gui.custombuttons.RepeatButton(
+        self.playbtn = peng3d.gui.FramedImageButton(
             "playbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/6-bw/2-6, sh/2 + 15)),
+            pos=(lambda sw, sh, bw, bh: (sw/6-bw/2, sh/2 + 15)),
             size=(lambda sw, sh: (sw*0.3, sh*0.1)),
             label=self.peng.tl("cg:gui.menu.serverselect.title.playbtn.label"),
             bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
-            frame=[249, 502, 249],
+            frame=[[1, 2, 1], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
         )
         self.addWidget(self.playbtn)
 
@@ -119,15 +131,18 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
 
         # Settings Button
         # This button switches to the settings submenu
-        self.settingsbtn = cgclient.gui.custombuttons.RepeatButton(
+        self.settingsbtn = peng3d.gui.FramedImageButton(
             "settingsbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/6 - bw/2 - 6, sh/2 - bh - 5)),
+            pos=(lambda sw, sh, bw, bh: (sw/6 - bw/2, sh/2 - bh - 5)),
             size=(lambda sw, sh: (sw * 0.3, sh * 0.1)),
             label=self.peng.tl("cg:gui.menu.serverselect.title.settingsbtn.label"),
             bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
-            frame=[249, 502, 249],
+            frame=[[1, 2, 1], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
         )
         self.addWidget(self.settingsbtn)
 
@@ -144,9 +159,7 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
 
         self.register_event_handlers()
 
-        # Background
-
-        #self.bg.vlist_layer = -1
+        self.setBackground(None)
 
         # Address Field
         default_addr = self.peng.cg.client.default_server
@@ -170,16 +183,18 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.addr)
 
         # OK Button
-        self.okbtn = cgclient.gui.custombuttons.RepeatButton(
+        self.okbtn = peng3d.gui.FramedImageButton(
             "okbtn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh-5)),
-            size=(lambda sw, sh: (sw/2, 64)),
+            size=(lambda sw, sh: (sw * 0.5, sh * 0.1)),
             label=self.peng.tl("cg:gui.menu.serverselect.serverselect.okbtn.label"),
             bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
             bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
             bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
-            frame=[249, 502, 249],
-            font_size=20,
+            frame=[[1, 2, 1], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
         )
         self.addWidget(self.okbtn)
 

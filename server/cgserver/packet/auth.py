@@ -34,9 +34,7 @@ USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]+")
 
 class AuthPacket(CGPacket):
     state = [STATE_AUTH, STATE_ACTIVE]
-    required_keys = [
-        "status",
-    ]
+    required_keys = []
     allowed_keys = [
         "pwd",
         "create",
