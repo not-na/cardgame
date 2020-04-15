@@ -9,10 +9,10 @@ window.caption=Card Game
 
 gui.menu.load.progress.loading=Laden...
 
-gui.menu.serverselect.title.playbtn.label=1
-gui.menu.serverselect.title.settingsbtn.label=2
+gui.menu.serverselect.title.playbtn.label=Spielen
+gui.menu.serverselect.title.settingsbtn.label=Einstellungen
 
-gui.menu.serverselect.serverselect.okbtn.label=Du bist dran...
+gui.menu.serverselect.serverselect.okbtn.label=OK
 
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
@@ -30,6 +30,10 @@ gui.menu.smain.loginerr.wrongcred=Falsche Anmeldeinformationen oder ungültiger 
 gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
 
 gui.menu.smain.main.createbtn.label=Lobby erstellen
+
+gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
+
+gui.menu.smain.gamerule.backbtn.label=Zurück
 
 
 gamerule.general.wrongmove.name=Handhabung ungültiger Spielzüge

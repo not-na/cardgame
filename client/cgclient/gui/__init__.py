@@ -21,6 +21,8 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import functools
+
 import peng3d
 import peng3dnet
 import pyglet
@@ -32,7 +34,31 @@ import cgclient
 from . import loadingscreen
 from . import serverselect
 from . import servermain
-from . import custombuttons
+
+
+CGTextInput = functools.partial(peng3d.gui.TextInput,
+                                parent_bgcls=peng3d.gui.button.FramedImageBackground,
+                                bg_idle=("cg:img.btn.fld_idle", "gui"),
+                                bg_hover=("cg:img.btn.fld_hov", "gui"),
+                                bg_pressed=("cg:img.btn.fld_press", "gui"),
+                                frame=[
+                                    [150, 700, 150],
+                                    [0, 1, 0],
+                                ],
+                                repeat_edge=True,
+                                repeat_center=True,
+                                scale=[None, 0],
+                                border=[6, 0],
+                                )
+
+CGButton = functools.partial(peng3d.gui.FramedImageButton,
+                             bg_idle=("cg:img.btn.btn_idle", "gui"),
+                             bg_hover=("cg:img.btn.btn_hov", "gui"),
+                             bg_pressed=("cg:img.btn.btn_press", "gui"),
+                             frame=[[1, 2, 1], [0, 1, 0]],
+                             scale=(None, 0),
+                             repeat_edge=True, repeat_center=True,
+                             )
 
 
 class PengGUI(object):

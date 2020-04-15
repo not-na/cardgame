@@ -33,16 +33,14 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
                          font_size=20,
                          font_color=[255, 255, 255, 100],
                          )
-
         self.gui = gui
         self.cg = gui.cg
 
         self.setBackground(peng3d.gui.button.FramedImageBackground(
-            self,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_brown", "gui"),
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(1, 1),
-            tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_brown", "gui")
             )
         )
         self.bg.vlist_layer = -1
@@ -64,24 +62,22 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         )
         self.d_create_acc.wbtn_confirm.setBackground(peng3d.gui.FramedImageBackground(
             self.d_create_acc.wbtn_confirm,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            bg_idle=("cg:img.btn.btn_idle", "gui"),
+            bg_hover=("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=("cg:img.btn.btn_press", "gui"),
             frame=[[249, 502, 249], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
-            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
             )
         )
         self.d_create_acc.wbtn_cancel.setBackground(peng3d.gui.FramedImageBackground(
             self.d_create_acc.wbtn_cancel,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            bg_idle=("cg:img.btn.btn_idle", "gui"),
+            bg_hover=("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=("cg:img.btn.btn_press", "gui"),
             frame=[[249, 502, 249], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
-            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
             )
         )
         self.d_create_acc.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw/2-bw-5, sh/2-bh*2)
@@ -110,14 +106,13 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         )
         self.d_login_err.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
             self.d_login_err.wbtn_ok,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
+            bg_idle=("cg:img.btn.btn_idle", "gui"),
+            bg_hover=("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=("cg:img.btn.btn_press", "gui"),
             frame=[[249, 502, 249], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True,
             repeat_center=True,
-            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
             )
         )
         self.addSubMenu(self.d_login_err)
@@ -151,56 +146,31 @@ class LoginSubMenu(peng3d.gui.SubMenu):
 
         # Username Field
         default_user = self.menu.cg.client.username if self.menu.cg.client.username is not None else ""
-        self.user = peng3d.gui.TextInput(
+        self.user = cgclient.gui.CGTextInput(
             "user", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*1.5+5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_user,
-        )
-        self.user.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
-            self.user,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.fld_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.fld_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.fld_press", "gui"),
-            frame=[150, 700, 150],
-            border=[6, 0]
-            )
         )
         self.addWidget(self.user)
 
         # Password Field
         # TODO: use an actual password field
         default_pwd = self.menu.cg.client.pwd if self.menu.cg.client.pwd is not None else ""
-        self.pwd = peng3d.gui.TextInput(
+        self.pwd = cgclient.gui.CGTextInput(
             "pwd", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2+bh*0.5)),
             size=(lambda sw, sh: (sw/2, 32)),
             text=default_pwd,
         )
-        self.pwd.setBackground(cgclient.gui.custombuttons.RepeatTextBackground(
-            self.pwd,
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.fld_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.fld_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.fld_press", "gui"),
-            frame=[150, 700, 150],
-            border=[6, 0]
-            )
-        )
         self.addWidget(self.pwd)
 
         # OK Button
-        self.okbtn = peng3d.gui.FramedImageButton(
+        self.okbtn = cgclient.gui.CGButton(
             "okbtn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh-5)),
             size=(lambda sw, sh: (sw/2, 64)),
             label=self.peng.tl("cg:gui.menu.smain.login.okbtn.label"),
-            bg_idle=self.peng.resourceMgr.getTex("cg:img.btn.btn_idle", "gui"),
-            bg_hover=self.peng.resourceMgr.getTex("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=self.peng.resourceMgr.getTex("cg:img.btn.btn_press", "gui"),
-            frame=[[1, 2, 1], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
-            tex_size=self.peng.resourceMgr.getTexSize("cg:img.btn.btn_idle", "gui")
         )
         self.addWidget(self.okbtn)
 
@@ -232,12 +202,11 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.label)
 
         # Create Lobby Button
-        self.createbtn = peng3d.gui.Button(
+        self.createbtn = cgclient.gui.CGButton(
             "createbtn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
             size=(lambda sw, sh: (sw / 2, 32)),
             label=self.peng.tl("cg:gui.menu.smain.main.createbtn.label"),
-            borderstyle="oldshadow",
         )
         self.addWidget(self.createbtn)
 
@@ -265,12 +234,11 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.label)
 
         # Gamerule Button
-        self.gamerulebtn = peng3d.gui.Button(
+        self.gamerulebtn = cgclient.gui.CGButton(
             "gamerulebtn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
             size=(lambda sw, sh: (sw / 2, 32)),
             label=self.peng.tl("cg:gui.menu.smain.lobby.gamerulebtn.label"),
-            borderstyle="oldshadow",
         )
         self.addWidget(self.gamerulebtn)
 
@@ -296,12 +264,11 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.label)
 
         # Back Button
-        self.backbtn = peng3d.gui.Button(
+        self.backbtn = cgclient.gui.CGButton(
             "backbtn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
             size=(lambda sw, sh: (sw / 2, 32)),
             label=self.peng.tl("cg:gui.menu.smain.gamerule.backbtn.label"),
-            borderstyle="oldshadow",
         )
         self.addWidget(self.backbtn)
 

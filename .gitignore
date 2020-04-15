@@ -140,3 +140,5 @@ server/crash_reports/
 server/logs/
 server/events.txt
 server/serverdat.csd
+
+cardgame_apitrace.trace
