@@ -73,6 +73,8 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         )
         self.bg.vlist_layer = -2
 
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [3, 8], [60, 30])
+
         # Left sidebar (background)
         self.sidebar = peng3d.gui.Widget(
             "sidebar", self, self.window, self.peng,
@@ -108,8 +110,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         # This button switches to the serverselect submenu
         self.playbtn = cgclient.gui.CGButton(
             "playbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/6-bw/2, sh/2 + 15)),
-            size=(lambda sw, sh: (sw*0.3, sh*0.1)),
+            pos=self.grid.get_cell([0, 4], [1, 1]),
             label=self.peng.tl("cg:gui.menu.serverselect.title.playbtn.label"),
         )
         self.addWidget(self.playbtn)
@@ -123,8 +124,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         # This button switches to the settings submenu
         self.settingsbtn = cgclient.gui.CGButton(
             "settingsbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw/6 - bw/2, sh/2 - bh - 5)),
-            size=(lambda sw, sh: (sw * 0.3, sh * 0.1)),
+            pos=self.grid.get_cell([0, 3], [1, 1]),
             label=self.peng.tl("cg:gui.menu.serverselect.title.settingsbtn.label"),
         )
         self.addWidget(self.settingsbtn)
@@ -142,7 +142,8 @@ class ServerSelectSubMenu(peng3d.gui.SubMenu):
 
         self.register_event_handlers()
 
-        self.setBackground(None)
+        # TODO: switch this over to GridLayout once finalised
+        #self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [], [20, 20])
 
         # Address Field
         default_addr = self.peng.cg.client.default_server
