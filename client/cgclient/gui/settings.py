@@ -30,7 +30,7 @@ class SettingsMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
         super().__init__(name, window, peng,
                          font="Times New Roman",
-                         font_size=30,
+                         font_size=25,
                          font_color=[255, 255, 255, 100]
                          )
 
@@ -43,7 +43,7 @@ class SettingsMenu(peng3d.gui.GUIMenu):
             peng3d.gui.FakeWidget(self),
             bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(1, 1),
+            scale=(.3, .3),
             tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_brown", "gui")
         )
         )

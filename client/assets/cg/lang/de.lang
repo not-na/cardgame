@@ -36,6 +36,31 @@ gui.menu.smain.main.lbbtn.label=Bestenliste
 gui.menu.smain.main.profilebtn.label=Mein Profil
 gui.menu.smain.main.settingsbtn.label=Einstellungen
 
+gui.menu.smain.play.sks.label.0=Skat
+gui.menu.smain.play.sks.label.1=Tournierregeln
+gui.menu.smain.play.skm.label.0=Skat
+gui.menu.smain.play.skm.label.1=Sonderregeln
+gui.menu.smain.play.skc.label.0=Skat
+gui.menu.smain.play.skc.label.1=Eigenes Spiel
+gui.menu.smain.play.dks.label.0=Doppelkopf
+gui.menu.smain.play.dks.label.1=Tournierregeln
+gui.menu.smain.play.dkm.label.0=Doppelkopf
+gui.menu.smain.play.dkm.label.1=Sonderregeln
+gui.menu.smain.play.dkc.label.0=Doppelkopf
+gui.menu.smain.play.dkc.label.1=Eigenes Spiel
+gui.menu.smain.play.rms.label.0=Rommé
+gui.menu.smain.play.rms.label.1=Tournierregeln
+gui.menu.smain.play.rmm.label.0=Rommé
+gui.menu.smain.play.rmm.label.1=Sonderregeln
+gui.menu.smain.play.rmc.label.0=Rommé
+gui.menu.smain.play.rmc.label.1=Eigenes Spiel
+gui.menu.smain.play.cns.label.0=Canasta
+gui.menu.smain.play.cns.label.1=Tournierregeln
+gui.menu.smain.play.cnm.label.0=Canasta
+gui.menu.smain.play.cnm.label.1=Sonderregeln
+gui.menu.smain.play.cnc.label.0=Canasta
+gui.menu.smain.play.cnc.label.1=Eigenes Spiel
+
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 
 gui.menu.smain.gamerule.backbtn.label=Zurück

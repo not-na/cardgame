@@ -240,10 +240,15 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         self.subgrid_1 = peng3d.gui.layout.GridLayout(self.peng, self.grid.get_cell([0, 5], [1, 3]),
                                                       [4, 4], [60, 20])
+
+        w = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[0] / self.window.width
+        h = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[1] / self.window.height
+        sx = self.subgrid_1.get_cell([1, 1], [2, 3]).size[0] / self.window.width
         # Profile Image
         self.profile_img = peng3d.gui.ImageButton(
             "profileimg", self, self.window, self.peng,
-            pos=self.subgrid_1.get_cell([1, 1], [2, 3]),
+            pos=(lambda sw, sh, bw, bh: (sw*w - bw/2, sh*h - bh/2)),
+            size=(lambda sw, sh: (sw*sx, sw*sx)),
             bg_idle=("cg:img.profilbild", "gui"),
             label="",
         )
@@ -284,7 +289,14 @@ class MainSubMenu(peng3d.gui.SubMenu):
             repeat_edge=True, repeat_center=True,
         ))
 
+        def f():
+            self.c_play.visible = True
         self.playbtn.addAction("press_down", g, self.playbtn)
+        self.playbtn.addAction("press_down", f)
+
+        def f():
+            self.c_play.visible = False
+        self.playbtn.addAction("press_up", f)
         self.addWidget(self.playbtn)
 
         # Create Party Button
@@ -369,6 +381,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
                                     pos=(lambda sw, sh, bw, bh: (sw/3, 0)),
                                     size=(lambda sw, sh: (sw*2/3, sh))
                                     )
+        self.addWidget(self.c_play)
 
         # Party Container
 
@@ -451,6 +464,423 @@ class PlayContainer(peng3d.gui.Container):
                          pos, size,
                          font_size=20)
 
-        self.setBackground([67, 51, 12])
+        self.visible = False
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, peng3d.gui.layout.DumbLayoutCell(
+            self, pos=(20, 20), size=(lambda w, h: (w-40, h-40))),
+                                                 [15, 14], [0, 0])
+
+        self.bg_widget = peng3d.gui.Widget("container_bg", self, self.window, self.peng,
+                                           pos=(0, 0),
+                                           size=(lambda sw, sh: (sw, sh)))
+        self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.bg_widget,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg_widget.bg.vlist_layer = -1
+        self.addWidget(self.bg_widget)
+
+        # Game Buttons
+        # Skat
+        # tournament rules
+        self.sks_btn = cgclient.gui.CGButton2(
+            "sks_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 10], [3, 4]),
+            label="",
+        )
+        self.sks_btn.enabled = False
+        self.addWidget(self.sks_btn)
+        self.sks_img = peng3d.gui.ImageButton(
+            "sks_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 12], [3, 2]),
+            bg_idle=("cg:img.game_icons.sks", "icn"),
+            label="",
+        )
+        self.sks_img.bg.vlist_layer = 1
+        self.addWidget(self.sks_img)
+        self.sks_lbl1 = peng3d.gui.Label(
+            "sks_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 11], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.sks.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.sks_lbl1)
+        self.sks_lbl2 = peng3d.gui.Label(
+            "sks_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 10], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.sks.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.sks_lbl2)
+
+        # Modified Rules
+        self.skm_btn = cgclient.gui.CGButton2(
+            "skm_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [3, 4]),
+            label=""
+        )
+        self.skm_btn.enabled = False
+        self.addWidget(self.skm_btn)
+        self.skm_img = peng3d.gui.ImageButton(
+            "skm_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 7], [3, 2]),
+            bg_idle=("cg:img.game_icons.skm", "icn"),
+            label="",
+        )
+        self.skm_img.bg.vlist_layer = 1
+        self.addWidget(self.skm_img)
+        self.skm_lbl1 = peng3d.gui.Label(
+            "skm_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 6], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.skm.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.skm_lbl1)
+        self.skm_lbl2 = peng3d.gui.Label(
+            "skm_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.skm.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.skm_lbl2)
+
+        # Custom Game
+        self.skc_btn = cgclient.gui.CGButton2(
+            "skc_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [3, 4]),
+            label=""
+        )
+        self.skc_btn.enabled = False
+        self.addWidget(self.skc_btn)
+        self.skc_img = peng3d.gui.ImageButton(
+            "skc_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 2], [3, 2]),
+            bg_idle=("cg:img.game_icons.skc", "icn"),
+            label="",
+        )
+        self.skc_img.bg.vlist_layer = 1
+        self.addWidget(self.skc_img)
+        self.skc_lbl1 = peng3d.gui.Label(
+            "skc_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 1], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.skc.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.skc_lbl1)
+        self.skc_lbl2 = peng3d.gui.Label(
+            "skc_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.skc.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.skc_lbl2)
+
+        # Doppelkopf
+        # tournament rules
+        self.dks_btn = cgclient.gui.CGButton2(
+            "dks_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 10], [3, 4]),
+            label=""
+        )
+        self.dks_btn.enabled = False
+        self.addWidget(self.dks_btn)
+        self.dks_img = peng3d.gui.ImageButton(
+            "dks_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 12], [3, 2]),
+            bg_idle=("cg:img.game_icons.dks", "icn"),
+            label="",
+        )
+        self.dks_img.bg.vlist_layer = 1
+        self.addWidget(self.dks_img)
+        self.dks_lbl1 = peng3d.gui.Label(
+            "dks_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 11], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dks.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.dks_lbl1)
+        self.dks_lbl2 = peng3d.gui.Label(
+            "dks_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 10], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dks.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.dks_lbl2)
+
+        # modified rules
+        self.dkm_btn = cgclient.gui.CGButton2(
+            "dkm_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 5], [3, 4]),
+            label=""
+        )
+        self.dkm_btn.enabled = False
+        self.addWidget(self.dkm_btn)
+        self.dkm_img = peng3d.gui.ImageButton(
+            "dkm_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 7], [3, 2]),
+            bg_idle=("cg:img.game_icons.dkm", "icn"),
+            label="",
+        )
+        self.dkm_img.bg.vlist_layer = 1
+        self.addWidget(self.dkm_img)
+        self.dkm_lbl1 = peng3d.gui.Label(
+            "dkm_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 6], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dkm.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.dkm_lbl1)
+        self.dkm_lbl2 = peng3d.gui.Label(
+            "dkm_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 5], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dkm.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.dkm_lbl2)
+
+        # custom game
+        self.dkc_btn = cgclient.gui.CGButton2(
+            "dkc_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 0], [3, 4]),
+            label=""
+        )
+        self.addWidget(self.dkc_btn)
+        self.dkc_img = peng3d.gui.ImageButton(
+            "dkc_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 2], [3, 2]),
+            bg_idle=("cg:img.game_icons.dkc", "icn"),
+            label="",
+        )
+        self.dkc_img.bg.vlist_layer = 1
+        self.addWidget(self.dkc_img)
+        self.dkc_lbl1 = peng3d.gui.Label(
+            "dkc_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 1], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dkc.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.dkc_lbl1)
+        self.dkc_lbl2 = peng3d.gui.Label(
+            "dkc_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 0], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.dkc.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.dkc_lbl2)
+
+        # Rummy
+        # tournament rules
+        self.rms_btn = cgclient.gui.CGButton2(
+            "rms_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 10], [3, 4]),
+            label=""
+        )
+        self.rms_btn.enabled = False
+        self.addWidget(self.rms_btn)
+        self.rms_img = peng3d.gui.ImageButton(
+            "rms_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 12], [3, 2]),
+            bg_idle=("cg:img.game_icons.rms", "icn"),
+            label="",
+        )
+        self.rms_img.bg.vlist_layer = 1
+        self.addWidget(self.rms_img)
+        self.rms_lbl1 = peng3d.gui.Label(
+            "rms_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 11], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rms.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.rms_lbl1)
+        self.rms_lbl2 = peng3d.gui.Label(
+            "rms_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 10], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rms.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.rms_lbl2)
+
+        # modified rules
+        self.rmm_btn = cgclient.gui.CGButton2(
+            "rmm_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 5], [3, 4]),
+            label=""
+        )
+        self.rmm_btn.enabled = False
+        self.addWidget(self.rmm_btn)
+        self.rmm_img = peng3d.gui.ImageButton(
+            "rmm_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 7], [3, 2]),
+            bg_idle=("cg:img.game_icons.rmm", "icn"),
+            label="",
+        )
+        self.rmm_img.bg.vlist_layer = 1
+        self.addWidget(self.rmm_img)
+        self.rmm_lbl1 = peng3d.gui.Label(
+            "rmm_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 6], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rmm.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.rmm_lbl1)
+        self.rmm_lbl2 = peng3d.gui.Label(
+            "rmm_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 5], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rmm.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.rmm_lbl2)
+
+        # custom game
+        self.rmc_btn = cgclient.gui.CGButton2(
+            "rmc_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 0], [3, 4]),
+            label=""
+        )
+        self.rmc_btn.enabled = False
+        self.addWidget(self.rmc_btn)
+        self.rmc_img = peng3d.gui.ImageButton(
+            "rmc_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 2], [3, 2]),
+            bg_idle=("cg:img.game_icons.rmc", "icn"),
+            label="",
+        )
+        self.rmc_img.bg.vlist_layer = 1
+        self.addWidget(self.rmc_img)
+        self.rmc_lbl1 = peng3d.gui.Label(
+            "rmc_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 1], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rmc.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.rmc_lbl1)
+        self.rmc_lbl2 = peng3d.gui.Label(
+            "rmc_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 0], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.rmc.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.rmc_lbl2)
+
+        # Canasta
+        # tournament rules
+        self.cns_btn = cgclient.gui.CGButton2(
+            "cns_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 10], [3, 4]),
+            label=""
+        )
+        self.cns_btn.enabled = False
+        self.addWidget(self.cns_btn)
+        self.cns_img = peng3d.gui.ImageButton(
+            "cns_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 12], [3, 2]),
+            bg_idle=("cg:img.game_icons.cns", "icn"),
+            label="",
+        )
+        self.cns_img.bg.vlist_layer = 1
+        self.addWidget(self.cns_img)
+        self.cns_lbl1 = peng3d.gui.Label(
+            "cns_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 11], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cns.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.cns_lbl1)
+        self.cns_lbl2 = peng3d.gui.Label(
+            "cns_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 10], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cns.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.cns_lbl2)
+
+        # modified rules
+        self.cnm_btn = cgclient.gui.CGButton2(
+            "cnm_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 5], [3, 4]),
+            label=""
+        )
+        self.cnm_btn.enabled = False
+        self.addWidget(self.cnm_btn)
+        self.cnm_img = peng3d.gui.ImageButton(
+            "cnm_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 7], [3, 2]),
+            bg_idle=("cg:img.game_icons.cnm", "icn"),
+            label="",
+        )
+        self.cnm_img.bg.vlist_layer = 1
+        self.addWidget(self.cnm_img)
+        self.cnm_lbl1 = peng3d.gui.Label(
+            "cnm_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 6], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cnm.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.cnm_lbl1)
+        self.cnm_lbl2 = peng3d.gui.Label(
+            "cnm_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 5], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cnm.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.cnm_lbl2)
+
+        # custom game
+        self.cnc_btn = cgclient.gui.CGButton2(
+            "cnc_btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 0], [3, 4]),
+            label=""
+        )
+        self.cnc_btn.enabled = False
+        self.addWidget(self.cnc_btn)
+        self.cnc_img = peng3d.gui.ImageButton(
+            "cnc_img", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 2], [3, 2]),
+            bg_idle=("cg:img.game_icons.cnc", "icn"),
+            label="",
+        )
+        self.cnc_img.bg.vlist_layer = 1
+        self.addWidget(self.cnc_img)
+        self.cnc_lbl1 = peng3d.gui.Label(
+            "cnc_lbl1", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 1], [3, 1], "center", "center"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cnc.label.0"),
+            font_size=22,
+        )
+        self.addWidget(self.cnc_lbl1)
+        self.cnc_lbl2 = peng3d.gui.Label(
+            "cnc_lbl2", self, self.window, self.peng,
+            pos=self.grid.get_cell([12, 0], [3, 1], "center", "top"),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.smain.play.cnc.label.1"),
+            font_size=16,
+        )
+        self.addWidget(self.cnc_lbl2)
 
 

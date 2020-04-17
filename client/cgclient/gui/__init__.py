@@ -52,7 +52,7 @@ CGTextInput = functools.partial(peng3d.gui.TextInput,
                                 border=[6, 0],
                                 )
 
-CGButton = functools.partial(peng3d.gui.FramedImageButton,
+CGButton = functools.partial(peng3d.gui.FramedImageButton,  # Button like on the titlescreen
                              bg_idle=("cg:img.btn.btn_idle", "gui"),
                              bg_hover=("cg:img.btn.btn_hov", "gui"),
                              bg_pressed=("cg:img.btn.btn_press", "gui"),
@@ -60,6 +60,15 @@ CGButton = functools.partial(peng3d.gui.FramedImageButton,
                              scale=(None, 0),
                              repeat_edge=True, repeat_center=True,
                              )
+
+CGButton2 = functools.partial(peng3d.gui.FramedImageButton,  # Button like in the Play Menu
+                              bg_idle=("cg:img.bg.rbg_idle", "gui"),
+                              bg_hover=("cg:img.bg.rbg_hov", "gui"),
+                              bg_pressed=("cg:img.bg.rbg_press", "gui"),
+                              bg_disabled=("cg:img.bg.rbg_disab", "gui"),
+                              frame=[[21, 2, 21], [21, 2, 21]],
+                              scale=(.3, .3),
+                              )
 
 
 class PengGUI(object):
@@ -94,6 +103,7 @@ class PengGUI(object):
 
         self.peng.resourceMgr.addCategory("gui")
         self.peng.resourceMgr.addCategory("bg")
+        self.peng.resourceMgr.addCategory("icn")  # Game icons for play menu
 
         self.peng.resourceMgr.categoriesSettings["gui"]["minfilter"] = GL_NEAREST
 
