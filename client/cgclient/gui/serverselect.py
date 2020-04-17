@@ -30,7 +30,7 @@ class ServerSelectMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
         super().__init__(name, window, peng,
                          font="Times New Roman",
-                         font_size=30,
+                         font_size=25,
                          font_color=[255, 255, 255, 100]
                          )
 
@@ -41,7 +41,7 @@ class ServerSelectMenu(peng3d.gui.GUIMenu):
             peng3d.gui.FakeWidget(self),
             bg_idle=self.peng.resourceMgr.getTex("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(1, 1),
+            scale=(0.3, 0.3),
             tex_size=self.peng.resourceMgr.getTexSize("cg:img.bg.bg_brown", "gui")
             )
         )
@@ -62,18 +62,18 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [3, 8], [60, 30])
+
         # Background
         self.setBackground(peng3d.gui.FramedImageBackground(
             self,
             bg_idle=("cg:img.bg.bg", "bg"),
             frame=[[0, 1, 0], [0, 1, 0]],
-            scale=(.3, .3),
+            scale=(.5, .5),
             repeat_edge=True, repeat_center=True,
             )
         )
         self.bg.vlist_layer = -2
-
-        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [3, 8], [60, 30])
 
         # Left sidebar (background)
         self.sidebar = peng3d.gui.Widget(
@@ -85,7 +85,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             self.sidebar,
             bg_idle=("cg:img.bg.sidebar", "gui"),
             frame=[[1, 1, 10], [0, 1, 0]],
-            scale=(1, 0),
+            scale=(.3, 0),
             )
         )
         self.sidebar.bg.vlist_layer = -1
@@ -101,7 +101,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
             self.screen_edge,
             bg_idle=("cg:img.bg.bg_trans", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(1, 1),
+            scale=(.3, .3),
             )
         )
         self.addWidget(self.screen_edge)

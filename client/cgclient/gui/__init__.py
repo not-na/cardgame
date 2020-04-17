@@ -98,7 +98,8 @@ class PengGUI(object):
         self.peng.resourceMgr.loadTex("cg:img.cursor.cursor20p", "gui")
         self.window.set_mouse_cursor(pyglet.window.ImageMouseCursor(
             self.peng.resourceMgr.categories["gui"]["cg:img.cursor.cursor20p"], 0, 20
-        ))
+            )
+        )
 
         #pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
         pyglet.clock.schedule_interval(self.update, 1 / 60)

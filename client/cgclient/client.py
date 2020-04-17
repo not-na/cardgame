@@ -22,7 +22,7 @@
 #
 import time
 import uuid
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 
 import peng3dnet
 
@@ -80,6 +80,8 @@ class Client(object):
 
         self.username = username
         self.pwd = pwd
+
+        self.user_id: Optional = None
 
         self.users: Dict[str, cgclient.user.User] = {}
         self.users_uuid: Dict[uuid.UUID, cgclient.user.User] = {}

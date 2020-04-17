@@ -12,7 +12,7 @@ gui.menu.load.progress.loading=Laden...
 gui.menu.serverselect.title.playbtn.label=Spielen
 gui.menu.serverselect.title.settingsbtn.label=Einstellungen
 
-gui.menu.serverselect.serverselect.okbtn.label=OK
+gui.menu.serverselect.serverselect.okbtn.label=Verbinden...
 
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
@@ -30,6 +30,11 @@ gui.menu.smain.loginerr.wrongcred=Falsche Anmeldeinformationen oder ungültiger 
 gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
 
 gui.menu.smain.main.createbtn.label=Lobby erstellen
+gui.menu.smain.main.playbtn.label=Spielen
+gui.menu.smain.main.partybtn.label=Party erstellen
+gui.menu.smain.main.lbbtn.label=Bestenliste
+gui.menu.smain.main.profilebtn.label=Mein Profil
+gui.menu.smain.main.settingsbtn.label=Einstellungen
 
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 
