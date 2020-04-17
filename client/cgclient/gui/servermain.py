@@ -253,7 +253,6 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.profile_label = peng3d.gui.Label(
             "profilelbl", self, self.window, self.peng,
             pos=self.subgrid_1.get_cell([1, 0], [2, 1]),
-            size=[0, 0],
             label="",  # This should be the username
             anchor_x="center",
             anchor_y="center",
