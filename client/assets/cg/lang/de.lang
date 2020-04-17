@@ -12,7 +12,7 @@ gui.menu.load.progress.loading=Laden...
 gui.menu.serverselect.title.playbtn.label=Spielen
 gui.menu.serverselect.title.settingsbtn.label=Einstellungen
 
-gui.menu.serverselect.serverselect.okbtn.label=Verbinden...
+gui.menu.serverselect.serverselect.okbtn.label=Verbinden
 
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
@@ -40,6 +40,7 @@ gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 
 gui.menu.smain.gamerule.backbtn.label=Zurück
 
+gui.menu.settings.exitbtn.label=Zurück
 
 gamerule.general.wrongmove.name=Handhabung ungültiger Spielzüge
 gamerule.general.wrongmove.description=Was passiert im Falle eines ungültigen Spielzugs?

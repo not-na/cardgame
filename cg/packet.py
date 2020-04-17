@@ -74,7 +74,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                 self.cg.send_event("cg:network.packet.recv", d)
                 self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv", d)
                 self.cg.send_event("cg:network.packet.recv.client", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.server", d)
+                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.client", d)
 
                 self.receive(msg, cid)
 
@@ -132,7 +132,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
                 self.cg.send_event("cg:network.packet.send", d)
                 self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
                 self.cg.send_event("cg:network.packet.send.client", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.server", d)
+                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.client", d)
 
                 self.send(msg, cid)
 

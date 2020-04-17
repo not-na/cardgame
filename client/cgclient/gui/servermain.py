@@ -245,7 +245,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             "profileimg", self, self.window, self.peng,
             pos=self.subgrid_1.get_cell([1, 1], [2, 3]),
             bg_idle=("cg:img.profilbild", "gui"),
-            label=""
+            label="",
         )
         self.addWidget(self.profile_img)
 
@@ -256,7 +256,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             size=[0, 0],
             label="",  # This should be the username
             anchor_x="center",
-            anchor_y="center"
+            anchor_y="center",
         )
         self.addWidget(self.profile_label)
 
@@ -357,6 +357,10 @@ class MainSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.settingsbtn)
 
+        def f():
+            self.window.changeMenu("settings")
+            self.window.menu.prev_menu = "servermain"
+        self.settingsbtn.addAction("click", f)
         self.settingsbtn.addAction("click", g, self.settingsbtn)
 
         self.togglebuttons = [self.playbtn, self.partybtn, self.lbbtn, self.profilebtn]

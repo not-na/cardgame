@@ -130,7 +130,8 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.settingsbtn)
 
         def f():
-            self.peng.cg.error("Settings not yet implemented!")
+            self.window.changeMenu("settings")
+            self.window.menu.prev_menu = "serverselect"
         self.settingsbtn.addAction("click", f)
 
 
