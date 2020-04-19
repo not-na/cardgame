@@ -35,6 +35,7 @@ from . import loadingscreen
 from . import serverselect
 from . import servermain
 from . import settings
+from . import ingame
 
 
 CGTextInput = functools.partial(peng3d.gui.TextInput,
@@ -76,6 +77,7 @@ class PengGUI(object):
     serverselect: serverselect.ServerSelectMenu
     servermain: servermain.ServerMainMenu
     settings: settings.SettingsMenu
+    ingame: ingame.IngameMenu
 
     def __init__(self, client, c: cg.CardGame):
         self.client = client
@@ -148,6 +150,12 @@ class PengGUI(object):
             self.window, self.peng, self,
         )
         self.window.addMenu(self.settings)
+
+        self.ingame = ingame.IngameMenu(
+            "ingame",
+            self.window, self.peng, self,
+        )
+        self.window.addMenu(self.ingame)
 
         # Change to loadingscreen after everything is initialized
         self.window.changeMenu("loadingscreen")
