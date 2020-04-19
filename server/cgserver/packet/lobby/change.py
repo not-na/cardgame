@@ -62,7 +62,7 @@ class ChangePacket(CGPacket):
                 if oldgame is None:
                     # Invite all other party members
                     # TODO: add this after parties are implemented
-                    pass
+                    self.cg.warn("Invite of other players of party is not yet implemented")
 
                 self.cg.send_event("cg:lobby.game.change", {"old": oldgame, "lobby": u.lobby})
                 self.cg.send_event(f"cg:lobby.game.change.{u.lobby.game}", {"old": oldgame, "lobby": u.lobby})

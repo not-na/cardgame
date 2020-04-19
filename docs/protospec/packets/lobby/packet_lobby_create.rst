@@ -29,8 +29,21 @@ a :cg:packet:`cg:lobby.join` packet.
 Structure
 ---------
 
-The package should not contain any data.
+Note that all examples shown here contain placeholder data and will have different content in actual packets.
 
+This is the data sent by the server to the client: ::
+
+   {
+      "game": "doppelkopf",
+      "variant": "c",
+   }
+
+``game`` may be a string declaring the type of game the lobby creator wants to play.
+This field is optional.
+
+``variant`` may be a string declaring the variant of ``game`` that the lobby creator wants
+to play. Available variants differ from game to game. This field is required if ``game``
+is given.
 
 .. seealso::
    See the :cg:packet:`cg:lobby.join` packet for further information on the response of

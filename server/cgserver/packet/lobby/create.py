@@ -30,7 +30,10 @@ from cg.packet import CGPacket
 class CreatePacket(CGPacket):
     state = STATE_ACTIVE
     required_keys = []
-    allowed_keys = []
+    allowed_keys = [
+        "game",
+        "variant",
+    ]
     side = SIDE_SERVER
 
     def receive(self, msg, cid=None):
@@ -51,7 +54,18 @@ class CreatePacket(CGPacket):
 
         self.cg.info(f"Created lobby with UUID {l.uuid} on behalf of user {u.username}")
 
-        # Other party members are not yet invited
-        # They will be invited once the game has been set
+        if msg.get("game", None) is not None:
+            self.cg.info(f"Game for lobby {l.uuid} is {msg['game']} with variant {msg.get('variant', 'c')}")
+            l.game = msg["game"]
+            self.cg.send_event("cg:lobby.game.change", {"old": None, "lobby": l})
+            self.cg.send_event(f"cg:lobby.game.change.{l.game}", {"old": None, "lobby": l})
+
+            l.set_variant(msg.get('variant', 'c'))
+
+            self.cg.warn("Invite of other players of party is not yet implemented")
+        else:
+            self.cg.info(f"Game for lobby {l.uuid} not yet set, delaying user invite")
+            # Other party members are not yet invited
+            # They will be invited once the game has been set
 
 

@@ -85,9 +85,9 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
             self.user.cid = None
 
             if self.user.lobby is not None:
-                self.user.lobby = None
-                self.server.cg.info(f"Removed user {self.user.username} from lobby due to disconnect")
+                self.server.cg.info(f"Removing user {self.user.username} from lobby due to disconnect")
                 self.server.cgserver.lobbies[self.user.lobby].remove_user(self.user.uuid, left=True)
+                self.user.lobby = None
 
         self.server.cg.info(f"Connection to client {self.cid} closed due to '{reason}'")
 
@@ -138,7 +138,7 @@ class DedicatedServer(object):
         self.game_reg: Dict[str, cgserver.game.CGame] = {}
 
         self.cg.send_event("cg:game.register.do", {
-            "registrar": self.game_reg,
+            "registrar": self.register_game,
         })
 
         self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
@@ -293,7 +293,7 @@ class DedicatedServer(object):
         self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister, cg.event.F_RAISE_ERRORS)
         self.cg.add_event_listener("cg:network.client.login", self.handler_netclientlogin)
 
-        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
+        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister, cg.event.F_RAISE_ERRORS)
 
     def handler_commandstop(self, event: str, data: Dict):
         # TODO: implement server stop

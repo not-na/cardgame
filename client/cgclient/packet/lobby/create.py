@@ -29,7 +29,10 @@ from cg.packet import CGPacket
 class CreatePacket(CGPacket):
     state = STATE_ACTIVE
     required_keys = []
-    allowed_keys = []
+    allowed_keys = [
+        "game",
+        "variant",
+    ]
     side = SIDE_SERVER
 
     # No actual code, since this packet is only serverbound

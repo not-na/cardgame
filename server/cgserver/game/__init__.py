@@ -112,6 +112,11 @@ class CGame(object, metaclass=abc.ABCMeta):
                 return False
         return True
 
+    @classmethod
+    @abc.abstractmethod
+    def check_playercount(cls, count: int):
+        pass
+
     def register_event_handlers(self):
         pass
 

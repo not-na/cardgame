@@ -136,3 +136,6 @@ class Lobby(object):
             "gamerules": ch,
         })
 
+    def set_variant(self, variant: str):
+        self.cg.warn(f"Setting Variants is currently not implemented")
+

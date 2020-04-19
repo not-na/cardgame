@@ -52,8 +52,15 @@ class ReadyPacket(CGPacket):
 
         ready = all([user.lobby.user_ready[u] for u in user.lobby.users]) and user.lobby.game is not None
 
+        ready = ready and self.cg.server.game_reg[user.lobby.game].check_playercount(len(user.lobby.users))
+
         if ready:
             self.cg.info(f"All players of lobby {user.lobby.uuid} are ready, starting game '{user.lobby.game}'")
 
             self.cg.send_event("cg:lobby.ready", {"lobby": user.lobby})
             self.cg.send_event(f"cg:lobby.ready.{user.lobby.game}", {"lobby": user.lobby})
+
+            g = self.cg.server.game_reg[user.lobby.game](self.cg, user.lobby.uuid)
+            self.cg.server.games[g.game_id] = g
+
+            g.start()

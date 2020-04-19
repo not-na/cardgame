@@ -45,6 +45,13 @@ ALLOWED_GAMES = [
     "dkc",
 ]
 
+GAME_TO_NAME = {
+    "sk": "skat",
+    "dk": "doppelkopf",
+    "rm": "romme",
+    "cn": "canasta",
+}
+
 
 class ServerMainMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
@@ -520,6 +527,7 @@ class PlayContainer(peng3d.gui.Container):
 
 
 class GameSelectButton(peng3d.gui.LayeredWidget):
+    submenu: PlayContainer
     def __init__(self, name, submenu, window, peng,
                  game, variant,
                  pos=None, size=None,
@@ -598,5 +606,12 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.label2_layer)
 
-
-
+        def f():
+            self.peng.cg.client.send_message("cg:lobby.create",
+                                             {
+                                                 "game": GAME_TO_NAME[self.game],
+                                                 "variant": self.variant,
+                                             })
+            self.peng.cg.info("Sent lobby creation request")
+            # TODO: add loading screen here
+        self.addAction("click", f)
