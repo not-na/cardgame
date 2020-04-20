@@ -81,6 +81,9 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
     def on_close(self, reason=None):
         super().on_close(reason)
 
+        if not hasattr(self, "user"):
+            self.server.cg.error(f"Client {self.cid} has no user on exit!")
+
         if self.user is not None:
             self.user.cid = None
 

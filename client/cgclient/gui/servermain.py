@@ -36,9 +36,9 @@ GAMES = [
 ]
 
 GAME_VARIANTS = [
-    "s",        # Standard
-    "m",        # Modified
     "c",        # Custom
+    "m",        # Modified
+    "s",        # Standard
 ]
 
 ALLOWED_GAMES = [
@@ -528,6 +528,7 @@ class PlayContainer(peng3d.gui.Container):
 
 class GameSelectButton(peng3d.gui.LayeredWidget):
     submenu: PlayContainer
+
     def __init__(self, name, submenu, window, peng,
                  game, variant,
                  pos=None, size=None,
@@ -592,7 +593,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
             font="Times New Roman",
             font_size=22,
             font_color=[255, 255, 255, 100],
-            offset=[0, -40-22],
+            offset=[0, -20]
         )
         self.addLayer(self.label1_layer)
 
@@ -602,7 +603,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
             font="Times New Roman",
             font_size=16,
             font_color=[255, 255, 255, 100],
-            offset=[0, -40-22*2-16],
+            offset=[0, -20-22-8],
         )
         self.addLayer(self.label2_layer)
 
