@@ -76,7 +76,7 @@ reply like this: ::
       "moves":{
          "a2b227a1-5b19-49e4-bca4-0c473f3e7ba1":{
             "type":"announcement",
-            "data":"vorbehalt_no",
+            "data":"reservation_no",
          },
          "98fd442d-4ee0-4d96-bf51-12917e36a001":{
             "type":"announcement",

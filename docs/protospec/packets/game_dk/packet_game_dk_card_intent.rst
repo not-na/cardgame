@@ -23,7 +23,7 @@ Using this packet, a player can perform an action with a card. Usually this is p
 the card. Subsequently, the server will sned a :cg:packet:`game.dk.card.transfer`
 packet to all clients. This packet is only available for the game :term:`Doppelkopf`\ .
 
-In case of an *Armut*\ , this packet will be used to choose the cards that should be
+In case of a *poverty*\ , this packet will be used to choose the cards that should be
 exchanged. Otherwise, it's used to play a card over the course of the game.
 
 .. seealso::
@@ -42,10 +42,10 @@ This is the data sent by the client to the server: ::
       "card":"91eb5e2c-b7e8-4d8a-b865-7e9eaf2e6469",
    }
 
-``intent`` is the action that the player wants performed. It can be either ``play`` or
-``exchange``\ .
+``intent`` is the action that the player wants performed. It can be ``play``\ , ``pass_card`` or
+``return_card``\ .
 
-``card`` is the card that the player wants to use for the given intent. If an intent requires
+``card`` is the :term:`UUID` of the card the player wants to use for the given intent. If an intent requires
 multiple cards, this field may be a list.
 
 .. seealso::

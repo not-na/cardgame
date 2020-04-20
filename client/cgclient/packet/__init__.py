@@ -59,3 +59,27 @@ def register_default_packets(reg, peer, cg, add):
     # Lobby Ready Packet
     r("cg:loby.ready", lobby.ready.ReadyPacket)
 
+    # GAME DK PACKETS
+    from . import game_dk
+
+    # Request an answer from a client
+    r("cg:game.dk.question", game_dk.question.QuestionPacket)
+
+    # Make an announcement
+    r("cg:game.dk.announce", game_dk.announce.AnnouncePacket)
+
+    # Do something with a card
+    r("cg:game.dk.card.intent", game_dk.card_intent.CardIntentPacket)
+
+    # Transfer a card
+    r("cg:game.dk.card.transfer", game_dk.card_transfer.CardTransferPacket)
+
+    # Point out a wrong move
+    r("cg:game.dk.complaint", game_dk.complaint.ComplaintPacket)
+
+    # Turn update
+    r("cg:game.dk.turn", game_dk.turn.TurnPacket)
+
+    # Update the scoreboard
+    r("cg:game.dk.scoreboard", game_dk.scoreboard.ScoreboardPacket)
+

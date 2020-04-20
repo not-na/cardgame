@@ -32,13 +32,13 @@ content in actual packets.
 This is the data sent by the server to the client: ::
 
    {
-      "current_round":1,
-      "total_rounds":12,
+      "current_trick":1,
+      "total_tricks":12,
       "current_player":"7eb1c06d-2f66-46c7-8eef-6aa5a2ff85aa",
    }
 
-``current_round`` is the round that is currently being played.
+``current_trick`` is the trick that is currently being played.
 
-``total_rounds`` is the amount of rounds in one game.
+``total_tricks`` is the amount of tricks in one game.
 
 ``current_player`` is the :term:`UUID` of the player that should play next.

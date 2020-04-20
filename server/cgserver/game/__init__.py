@@ -78,6 +78,8 @@ class CGame(object, metaclass=abc.ABCMeta):
 
         self.register_event_handlers()
 
+        self.game_id = uuid.uuid4()
+
         self.lobby_id = lobby
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]
 
