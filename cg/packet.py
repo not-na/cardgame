@@ -20,7 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, Optional
 
 import peng3dnet
 from peng3dnet.constants import SIDE_CLIENT, SIDE_SERVER, CONNTYPE_CLASSIC
@@ -55,7 +55,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
         self.cg = c
 
-    def _receive(self, msg: Dict, cid: Union[int, None] = None):
+    def _receive(self, msg: Dict, cid: Optional[int] = None):
         d = {
             "msg": msg,
             "cid": cid,
@@ -64,58 +64,46 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
         if cid is None and (self.side is None or self.side == SIDE_CLIENT):
             # On the Client
-            #self.cg.info(f"State: {self.peer.remote_state} Mode: {self.peer.mode} Conntype: {self.peer.conntype}")
-            if (
-                    self.check(self.peer.remote_state, self.state)
-                    and self.check(self.peer.mode, self.mode)
-                    and self.check(self.peer.conntype, self.conntype)
-                    and self.check_keys(msg, self.required_keys, self.allowed_keys)
-                    ):
-                self.cg.send_event("cg:network.packet.recv", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv", d)
-                self.cg.send_event("cg:network.packet.recv.client", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.client", d)
+            if not self.check(self.peer.remote_state, self.state):
+                return self.invalid_recv("incorrect SmartPacket remote state", msg, cid)
+            if not self.check(self.peer.mode, self.mode):
+                return self.invalid_recv("incorrect SmartPacket mode", msg, cid)
+            if not self.check(self.peer.conntype, self.conntype):
+                return self.invalid_recv("incorrect SmartPacket conntype", msg, cid)
+            if not self.check_keys(msg, self.required_keys, self.allowed_keys):
+                return self.invalid_recv("incorrect SmartPacket allowed/required keys", msg, cid)
 
-                self.receive(msg, cid)
+            self.cg.send_event("cg:network.packet.recv", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv", d)
+            self.cg.send_event("cg:network.packet.recv.client", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.client", d)
 
-                return True
+            self.receive(msg, cid)
+
+            return True
         elif cid is not None and (self.side is None or self.side == SIDE_SERVER):
             # On the server
-            if (
-                    self.check(self.peer.clients[cid].state, self.state)
-                    and self.check(self.peer.clients[cid].mode, self.mode)
-                    and self.check(self.peer.clients[cid].conntype, self.conntype)
-                    and self.check_keys(msg, self.required_keys, self.allowed_keys)
-                    ):
-                self.cg.send_event("cg:network.packet.recv", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv", d)
-                self.cg.send_event("cg:network.packet.recv.server", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.server", d)
+            if not self.check(self.peer.clients[cid].state, self.state):
+                return self.invalid_recv("incorrect SmartPacket state", msg, cid)
+            if not self.check(self.peer.clients[cid].mode, self.mode):
+                return self.invalid_recv("incorrect SmartPacket mode", msg, cid)
+            if not self.check(self.peer.clients[cid].conntype, self.conntype):
+                return self.invalid_recv("incorrect SmartPacket conntype", msg, cid)
+            if not self.check_keys(msg, self.required_keys, self.allowed_keys):
+                return self.invalid_recv("incorrect SmartPacket allowed/required keys", msg, cid)
 
-                self.receive(msg, cid)
+            self.cg.send_event("cg:network.packet.recv", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv", d)
+            self.cg.send_event("cg:network.packet.recv.server", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.server", d)
 
-                return True
+            self.receive(msg, cid)
 
-        # If the packet was valid, it would have been handled by now
-        # A fall-through means that invalid_action has to be executed
-
-        if self.invalid_action == "ignore":
-            if self._ignorecount_recv < MAX_IGNORE_RECV:
-                self.cg.warn(f"Packet {self.reg.getName(self)} with message {msg} ignored on recv due to SmartPacket mismatch")
-                self._ignorecount_recv += 1
-
-            self.cg.send_event("cg:network.packet.ignore", d)
-            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].ignore", d)
-            self.cg.send_event("cg:network.packet.recv.ignore", d)
-            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.ignore", d)
-        elif self.invalid_action == "close":
-            self.peer.close_connection(cid, "smartpacketinvalid")
+            return True
         else:
-            raise peng3dnet.errors.InvalidSmartPacketActionError(f"Invalid Action '{self.invalid_action}'")
+            return self.invalid_recv("unknown side", msg, cid)
 
-        return False
-
-    def _send(self, msg: Dict, cid: Union[int, None] = None):
+    def _send(self, msg: Dict, cid: Optional[int] = None):
         d = {
             "msg": msg,
             "cid": cid,
@@ -124,42 +112,81 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
 
         if cid is None and (self.side is None or self.side == SIDE_SERVER):
             # On the Client
-            if (
-                    self.check(self.peer.remote_state, self.state)
-                    and self.check(self.peer.mode, self.mode)
-                    and (self.conntype is None or self.peer.conntype == self.conntype)
-                    ):
-                self.cg.send_event("cg:network.packet.send", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
-                self.cg.send_event("cg:network.packet.send.client", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.client", d)
+            if not self.check(self.peer.remote_state, self.state):
+                return self.invalid_send("incorrect SmartPacket remote state", msg, cid)
+            if not self.check(self.peer.mode, self.mode):
+                return self.invalid_send("incorrect SmartPacket mode", msg, cid)
+            if not self.check(self.peer.conntype, self.conntype):
+                return self.invalid_send("incorrect SmartPacket conntype", msg, cid)
 
-                self.send(msg, cid)
+            self.cg.send_event("cg:network.packet.send", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
+            self.cg.send_event("cg:network.packet.send.client", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.client", d)
 
-                return True
+            self.send(msg, cid)
+
+            return True
         elif cid is not None and (self.side is None or self.side == SIDE_CLIENT):
             # On the server
-            if (
-                    self.check(self.peer.clients[cid].state, self.state)
-                    and self.check(self.peer.clients[cid].mode, self.mode)
-                    and self.check(self.peer.clients[cid].conntype, self.conntype)
-                    ):
-                self.cg.send_event("cg:network.packet.send", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
-                self.cg.send_event("cg:network.packet.send.server", d)
-                self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.server", d)
+            if not self.check(self.peer.clients[cid].state, self.state):
+                return self.invalid_send("incorrect SmartPacket state", msg, cid)
+            if not self.check(self.peer.clients[cid].mode, self.mode):
+                return self.invalid_send("incorrect SmartPacket mode", msg, cid)
+            if not self.check(self.peer.clients[cid].conntype, self.conntype):
+                return self.invalid_send("incorrect SmartPacket conntype", msg, cid)
 
-                self.send(msg, cid)
+            self.cg.send_event("cg:network.packet.send", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send", d)
+            self.cg.send_event("cg:network.packet.send.server", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.server", d)
 
-                return True
+            self.send(msg, cid)
 
-        # If the packet was valid, it would have been handled by now
-        # A fall-through means that invalid_action has to be executed
+            return True
+        else:
+            return self.invalid_send("unknown side", msg, cid)
+
+    def invalid_recv(self, msg: str, data: Dict, cid: Optional[int] = None):
+        d = {
+            "msg": msg,
+            "cid": cid,
+            "type": self.reg.getName(self),
+        }
 
         if self.invalid_action == "ignore":
             if self._ignorecount_recv < MAX_IGNORE_RECV:
-                self.cg.warn(f"Packet {self.reg.getName(self)} ignored on send due to SmartPacket mismatch")
+                self.cg.warn(f"Packet {self.reg.getName(self)} invalid on receive due to {msg}")
                 self._ignorecount_recv += 1
+
+            self.cg.debug(f"Packet Data: {data}")
+
+            self.cg.send_event("cg:network.packet.ignore", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].ignore", d)
+            self.cg.send_event("cg:network.packet.recv.ignore", d)
+            self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].recv.ignore", d)
+        elif self.invalid_action == "close":
+            self.peer.close_connection(cid, "smartpacketinvalid")
+            self.cg.debug(f"Packet Data: {data}")
+        else:
+            raise peng3dnet.errors.InvalidSmartPacketActionError(f"Invalid Action '{self.invalid_action}'"
+                                                                 f"for packet {self.reg.getName(self)}")
+
+        return False
+
+    def invalid_send(self, msg: str, data: Dict, cid: Optional[int] = None):
+        d = {
+            "msg": msg,
+            "cid": cid,
+            "type": self.reg.getName(self),
+        }
+
+        if self.invalid_action == "ignore":
+            if self._ignorecount_send < MAX_IGNORE_SEND:
+                self.cg.warn(f"Packet {self.reg.getName(self)} invalid on send due to {msg}")
+                self._ignorecount_send += 1
+
+            self.cg.debug(f"Packet Data: {data}")
 
             self.cg.send_event("cg:network.packet.ignore", d)
             self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].ignore", d)
@@ -167,8 +194,10 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
             self.cg.send_event(f"cg:network.packet.[{self.reg.getName(self)}].send.ignore", d)
         elif self.invalid_action == "close":
             self.peer.close_connection(cid, "smartpacketinvalid")
+            self.cg.debug(f"Packet Data: {data}")
         else:
-            raise peng3dnet.errors.InvalidSmartPacketActionError(f"Invalid Action '{self.invalid_action}'")
+            raise peng3dnet.errors.InvalidSmartPacketActionError(f"Invalid Action '{self.invalid_action}'"
+                                                                 f"for packet {self.reg.getName(self)}")
 
         return False
 
