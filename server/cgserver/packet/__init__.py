@@ -59,6 +59,13 @@ def register_default_packets(reg, peer, cg, add):
     # Lobby Ready Packet
     r("cg:loby.ready", lobby.ready.ReadyPacket)
 
+    # GAME PACKETS
+
+    from . import game_start
+
+    # Game Starting Packet
+    r("cg:game.start", game_start.GameStartPacket)
+
     # GAME DK PACKETS
 
     from . import game_dk

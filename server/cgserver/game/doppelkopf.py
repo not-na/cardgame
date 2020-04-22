@@ -414,7 +414,8 @@ class DoppelkopfGame(CGame):
     def start(self):
         self.send_to_all("cg:game.start", {
             "game_type": "doppelkopf",
-            "game_id": self.game_id.hex
+            "game_id": self.game_id.hex,
+            "player_list": [p.hex for p in self.players]
         })
 
         for player in self.players:
@@ -458,6 +459,15 @@ class DoppelkopfRound(object):
             "kontra": [],
             "none": []
         }
+        self.obvious_parties: Dict[str, List[uuid.UUID]] = {
+            "re": [],
+            "kontra": [],
+            "none": [],
+            "unknown": []
+        }
+
+        # TODO Implement obvious parties
+
         self.player_eyes: Dict[uuid.UUID, int] = dict((p, 0) for p in self.players)
 
         self.modifiers: Dict[str, List[str]] = {
@@ -489,15 +499,13 @@ class DoppelkopfRound(object):
         self.poverty_cards: List[uuid.UUID] = []
         self.poverty_player: Optional[uuid.UUID] = None
 
-        self.pigs: Tuple[bool, Optional[uuid.UUID]] = (False, None)
-        self.superpigs: Tuple[bool, Optional[uuid.UUID]] = (False, None)
-        self.pig_call: bool = True
-        self.superpig_call: bool = True
+        self.pigs: List[bool, Optional[uuid.UUID]] = [False, None]
+        self.superpigs: List[bool, Optional[uuid.UUID]] = [False, None]
 
         self.trick_num: int = 0
         self.current_trick: List[Tuple[uuid.UUID, uuid.UUID]] = []
 
-        self.start_hands = self.hands
+        self.start_hands: Dict[uuid.UUID, List[uuid.UUID]] = {}
 
     @property
     def hands(self) -> Dict[uuid.UUID, List[uuid.UUID]]:
@@ -524,7 +532,7 @@ class DoppelkopfRound(object):
         }
         self.move_counter += 1
 
-    def transfer_card(self, card: Card, from_slot: str, to_slot: str):
+    def transfer_card(self, card: Card, from_slot: Optional[str], to_slot: str):
         if from_slot == "stack":
             if "hand" in to_slot:
                 receiver = self.players[int(to_slot.strip("hand"))]
@@ -608,6 +616,21 @@ class DoppelkopfRound(object):
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
+
+            else:
+                raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
+
+        elif from_slot is None:
+            if to_slot == "stack":
+                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                    "card_id": card.card_id,
+                    "card_value": "",
+                    "from_slot": from_slot,
+                    "to_slot": to_slot
+                })
+                self.slots[to_slot].append(card.card_id)
+            else:
+                raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
         else:
             raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
@@ -781,7 +804,7 @@ class DoppelkopfRound(object):
 
         if card.card_value == "dk":
             if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_fleshless", "solo_boneless","solo_pure_hearts",
+                                  "solo_brothel", "solo_fleshless", "solo_boneless", "solo_pure_hearts",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
                 return "diamonds"
 
@@ -872,38 +895,38 @@ class DoppelkopfRound(object):
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "solo_diamonds", "solo_null"]:
                 if card.card_value == "d9" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 10
                 elif card.card_value == "dk" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
                 elif card.card_value == "d10":
                     return 12
-                elif card.card_value == "da" and not self.pig_call:
+                elif card.card_value == "da" and not self.pigs[0]:
                     return 13
 
                 elif card.card_value == "h10" and self.game.gamerules["dk.heart10"]:
                     return 100
-                elif card.card_value == "da" and self.pig_call:
+                elif card.card_value == "da" and self.pigs[0]:
                     return 200
                 elif card.card_value == "d9" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 300
                 elif card.card_value == "dk" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 300
 
             # 9, king, 10, ace of hearts in hearts solo
             elif self.game_type == "solo_hearts":
                 if card.card_value == "h9" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 10
                 elif card.card_value == "hk" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
                 elif card.card_value == "h10" and not self.game.gamerules["dk.solo_shift_h10"]:
                     return 12
-                elif card.card_value == "ha" and not self.pig_call:
+                elif card.card_value == "ha" and not self.pigs[0]:
                     return 13
 
                 elif card.card_value == "h10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
@@ -911,26 +934,26 @@ class DoppelkopfRound(object):
                     return 100
                 elif card.card_value == "s10" and self.game.gamerules["dk.solo_shift_h10"]:
                     return 100
-                elif card.card_value == "ha" and self.pig_call:
+                elif card.card_value == "ha" and self.pigs[0]:
                     return 200
                 elif card.card_value == "h9" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 300
                 elif card.card_value == "hk" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 300
 
             # 9, king, 10, ace of spades in spades solo
             elif self.game_type == "solo_spades":
                 if card.card_value == "s9" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 10
                 elif card.card_value == "sk" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
                 elif card.card_value == "s10" and not self.game.gamerules["dk.solo_shift_h10"]:
                     return 12
-                elif card.card_value == "sa" and not self.pig_call:
+                elif card.card_value == "sa" and not self.pigs[0]:
                     return 13
 
                 elif card.card_value == "s10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
@@ -938,26 +961,26 @@ class DoppelkopfRound(object):
                     return 100
                 elif card.card_value == "c10" and self.game.gamerules["dk.solo_shift_h10"]:
                     return 100
-                elif card.card_value == "sa" and self.pig_call:
+                elif card.card_value == "sa" and self.pigs[0]:
                     return 200
                 elif card.card_value == "s0" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 300
                 elif card.card_value == "sk" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 300
 
             # 9, king, 10, ace of clubs in clubs solo
             elif self.game_type == "solo_clubs":
                 if card.card_value == "c9" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 10
                 elif card.card_value == "ck" and not (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
                 elif card.card_value == "c10" and not self.game.gamerules["dk.solo_shift_h10"]:
                     return 12
-                elif card.card_value == "ca" and not self.pig_call:
+                elif card.card_value == "ca" and not self.pigs[0]:
                     return 13
 
                 elif card.card_value == "c10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
@@ -965,13 +988,13 @@ class DoppelkopfRound(object):
                     return 100
                 elif card.card_value == "d10" and self.game.gamerules["dk.solo_shift_h10"]:
                     return 100
-                elif card.card_value == "ca" and self.pig_call:
+                elif card.card_value == "ca" and self.pigs[0]:
                     return 200
                 elif card.card_value == "c9" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] == "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] == "with_all"):
                     return 300
                 elif card.card_value == "ck" and (
-                        self.superpig_call and self.game.gamerules["dk.without9"] != "with_all"):
+                        self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 300
 
             # Jacks in normal version and solos with jack trumps
@@ -1140,8 +1163,8 @@ class DoppelkopfRound(object):
 
         self.cards = create_dk_deck(with9=with9, joker=joker)
 
-        for card_id in self.cards:
-            self.slots["stack"].append(card_id)
+        for card in self.cards.values():
+            self.transfer_card(card, None, "stack")
 
         # Deal the cards
         self.game_state = "dealing"
@@ -1179,7 +1202,7 @@ class DoppelkopfRound(object):
                 self.parties["kontra"].append(player)
 
             # Check for pigs
-            if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "two_on_play"]:
+            """if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "two_on_play"]:
                 if list(map(lambda x: self.cards[x].card_value, hand)).count("da") == 2:
                     self.pigs = (True, player)
 
@@ -1191,10 +1214,11 @@ class DoppelkopfRound(object):
                             self.superpigs = (True, player)
                     elif self.game.gamerules["dk.without9"] in ["with_four", "without"]:
                         if list(map(lambda x: self.cards[x].card_value, hand)).count("dk") == 2:
-                            self.superpigs = (True, player)
+                            self.superpigs = (True, player)"""
 
         self.game_type = "normal"
         self.game_state = "tricks"
+        self.start_hands = self.hands
 
         self.current_player = self.players[0]
         self.trick_num = 1
@@ -1218,6 +1242,9 @@ class DoppelkopfRound(object):
         pass
 
     def start_wedding(self, bride: uuid.UUID, trick: Optional[str] = None):
+        pass
+
+    def end_round(self):
         pass
 
     def exit_round(self, remake=False):
@@ -1513,7 +1540,7 @@ class DoppelkopfRound(object):
                 raise InvalidMoveError(
                     "Calling pigs is illegal for the player's hand does not contain two aces of diamonds!")
             else:
-                self.pigs = (True, self.current_player)
+                self.pigs = [True, self.current_player]
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -1594,7 +1621,7 @@ class DoppelkopfRound(object):
                 raise InvalidMoveError(
                     "Calling Superpigs is illegal for the player's current hand doesn't contain the required cards")
             else:
-                self.superpigs = (True, self.current_player)
+                self.superpigs = [True, self.current_player]
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -2074,7 +2101,7 @@ class DoppelkopfRound(object):
         # Check for valid states
         if self.game_state != "tricks":
             raise GameStateError(
-                f"Game state for poverty accept handling must be 'reservations', not {self.game_state}!")
+                f"Game state for poverty accept handling must be 'tricks', not {self.game_state}!")
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
         if len(self.current_trick) > 4:
@@ -2100,6 +2127,44 @@ class DoppelkopfRound(object):
 
         if not legal_move:
             raise InvalidMoveError("This card may not be played in the context of the trick!")
+
+        # For called pig, check if a pig is played
+        if list(map(lambda x: x["data"], self.moves.values()))[-1] == "call_pigs":
+            # Find out, which cards are the pigs in this round
+            if self.game_type == "solo_hearts":
+                pig_card = "ha"
+            elif self.game_type == "solo_spades":
+                pig_card = "sa"
+            elif self.game_type == "solo_clubs":
+                pig_card = "ca"
+            else:
+                pig_card = "da"
+
+            if self.cards[card].card_value != pig_card:
+                raise InvalidMoveError("After calling a pig, a pig must be played!")
+
+        # For called superpig, check if a superpig is played:
+        if self.game.gamerules["dk.superpigs"] == "on_play":
+            if list(map(lambda x: x["data"], self.moves.values()))[-1] == "call_superpigs":
+                # Find out, which cards are the superpigs in this round
+                if self.game.gamerules["dk.without9"] == "with_all":
+                    value = "9"
+                else:
+                    value = "k"
+
+                if self.game_type == "solo_hearts":
+                    color = "h"
+                elif self.game_type == "solo_spades":
+                    color = "s"
+                elif self.game_type == "solo_clubs":
+                    color = "c"
+                else:
+                    color = "d"
+
+                superpig_card = color + value
+
+                if self.cards[card].card_value != superpig_card:
+                    raise InvalidMoveError("After calling a superpig, a superpig must be played!")
 
         # Actually play the card
         self.current_trick.append((self.current_player, card))
@@ -2140,36 +2205,158 @@ class DoppelkopfRound(object):
                 "pip_change": gain
             })
 
-            # Deinitialise the trick
-            self.current_player = trick_winner
-            self.current_trick.clear()
+            # Not the last round
+            if self.trick_num < len(self.cards) / 4:
+                # Deinitialise the trick
+                self.current_player = trick_winner
+                self.current_trick.clear()
 
-            self.pig_call = False
-            self.superpig_call = False
-            # TODO Implement calling pigs and superpigs
+                if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "one_on_fox"]:
+                    self.pigs[0] = False
 
-            self.trick_num += 1
-            # TODO Implement ending the round
+                self.trick_num += 1
 
-            self.game.send_to_all("cg:game.dk.turn", {
-                "current_trick": self.trick_num,
-                "total_tricks": len(self.cards) / 4,
-                "current_player": self.current_player.hex
-            })
+                self.game.send_to_all("cg:game.dk.turn", {
+                    "current_trick": self.trick_num,
+                    "total_tricks": len(self.cards) / 4,
+                    "current_player": self.current_player.hex
+                })
+
+            # Last Round
+            elif self.trick_num == len(self.cards) / 4:
+                self.end_round()
+
 
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
+        if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
+                                  "ramsch", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
+                                  "solo_null"]:
+            raise GameStateError(f"Game type {self.game_type} does not support pigs!")
         if self.game_state != "tricks":
             raise GameStateError(
-                f"Game state for pigs call handling must be 'reservations', not {self.game_state}!")
+                f"Game state for pigs call handling must be 'tricks', not {self.game_state}!")
         if self.game.gamerules["dk.pigs"] in ["None", "two_reservation"]:
             raise RuleError(f"Pigs are either disabled or already had to be called!")
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
+        if self.pigs[1] is not None:
+            raise InvalidMoveError("Pigs have already been called!")
 
-        if self.pigs[1] == uuidify(data["player"]):
-            if self.game.gamerules["dk.pigs"] == "one_on_call":
-                self.pig_call = True
+        # Find out, which cards are the pigs in this round
+        if self.game_type == "solo_hearts":
+            pig_card = "ha"
+        elif self.game_type == "solo_spades":
+            pig_card = "sa"
+        elif self.game_type == "solo_clubs":
+            pig_card = "ca"
+        else:
+            pig_card = "da"
+
+        if self.game.gamerules["dk.pigs"] in ["two_on_play", "one_first"]:
+            # The player has two pigs on his hand
+            if not list(map(lambda x: self.cards[x].card_value, self.hands[self.current_player])).count(pig_card) == 2:
+                raise InvalidMoveError("Calling pigs is illegal for the player has not the required cards in his hand!")
+            self.pigs = [True, self.current_player]
+
+        elif self.game.gamerules["dk.pigs"] == "one_on_play":
+            # The player had two pigs at the start of the game and still one left
+            if list(map(lambda x: self.cards[x].card_value, self.start_hands[self.current_player])).count(
+                    pig_card) == 2:
+                if list(map(lambda x: self.cards[x].card_value, self.hands[self.current_player])).count(pig_card) > 0:
+                    self.pigs = [True, self.current_player]
+            else:
+                raise InvalidMoveError("Calling pigs is illegal for the player has not the required cards in his hand!")
+
+        elif self.game.gamerules["dk.pigs"] == "one_on_fox":
+            # The player had two pigs at the start of the game and still one left
+            if not (
+                    list(map(lambda x: self.cards[x].card_value, self.start_hands[self.current_player])).count(
+                        pig_card) == 2 and
+                    list(map(lambda x: self.cards[x].card_value, self.hands[self.current_player])).count(pig_card) > 0):
+                raise InvalidMoveError("Calling pigs is illegal for the player has not the required cards in his hand!")
+
+            # Check if the players party brought a fox home
+            # The player took the fox
+            for card in self.slots[f"tricks{self.players.index(self.current_player)}"]:
+                if self.cards[card].value == pig_card:
+                    self.pigs = [True, self.current_player]
+
+            # The players party member(s) took it
+            if not self.pigs[0]:
+                cur_player_party = ""
+                for party, players in self.parties.items():
+                    if self.current_player in players:
+                        cur_player_party = party
+
+                for player in self.obvious_parties[cur_player_party]:
+                    for card in self.slots[f"tricks{self.players.index(player)}"]:
+                        if self.cards[card].value == pig_card:
+                            self.pigs = [True, self.current_player]
+
+            if not self.pigs[0]:
+                raise InvalidMoveError("Calling pigs is illegal for the players first fox hasn't been brought home!")
+
+        # Announce the pig call
+        self.game.send_to_all("cg:game.dk.announce", {
+            "announcer": self.current_player.hex,
+            "type": "pig"
+        })
+
+        # Register the move
+        self.add_move(self.current_player, "announcement", data["type"])
 
     def handle_call_superpigs(self, event: str, data: Dict):
-        pass
+        # Check for valid states
+        if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
+                                  "ramsch", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
+                                  "solo_null"]:
+            raise GameStateError(f"Game type {self.game_type} does not support superpigs!")
+        if self.game_state != "tricks":
+            raise GameStateError(f"Game state for superpigs call handling must be 'tricks', not {self.game_state}!")
+        if self.game.gamerules["dk.superpigs"] in ["None", "reservation"]:
+            raise RuleError(f"Superpigs are either disabled or already had to be called!")
+        if self.pigs[1] is None:
+            raise InvalidMoveError("Superpigs cannot be called with pigs not being called!")
+
+        player = uuidify(data["player"])
+
+        # Find out, which cards are the superpigs in this round
+        if self.game.gamerules["dk.without9"] == "with_all":
+            value = "9"
+        else:
+            value = "k"
+
+        if self.game_type == "solo_hearts":
+            color = "h"
+        elif self.game_type == "solo_spades":
+            color = "s"
+        elif self.game_type == "solo_clubs":
+            color = "c"
+        else:
+            color = "d"
+
+        superpig_card = color + value
+
+        if self.game.gamerules["dk.superpigs"] == "on_play":
+            if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
+                raise InvalidMoveError("Calling superpigs is illegal for the player has not the required cards in his hand!")
+            self.superpigs = [True, player]
+
+        elif self.game.gamerules["dk.superpigs"] == "on_pig":
+            if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
+                raise InvalidMoveError("Calling superpigs is illegal for the player has not the required cards in his hand!")
+
+            if "call_pigs" not in list(map(lambda x: x["data"], self.moves.values()))[-2:]:
+                raise InvalidMoveError("Superpigs can only be called directly after the calling of pigs!")
+            self.superpigs = [True, player]
+
+        # Announce the superpig call
+        self.game.send_to_all("cg:game.dk.announce", {
+            "announcer": player.hex,
+            "type": "superpig"
+        })
+
+        # Register the move
+        self.add_move(player, "announcement", data["type"])
+

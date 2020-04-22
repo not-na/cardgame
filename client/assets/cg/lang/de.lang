@@ -105,7 +105,7 @@ gamerule.dk.pigs.opt.two_reservation=Beide Karo-Asse werden zu Schweinchen, müs
 gamerule.dk.pigs.opt.two_on_play=Beide Karo-Asse werden zu Schweinchen. Der Spieler sagt erst beim Spielen des ersten Karo-Asses die Schweinchen an.
 
 gamerule.dk.superpigs.name=Superschweine
-gamerule.dk.superpigs.description=Wenn Schweinchen angesagt wurden, werden die Karo-9en zu Superschweinen, die noch höher als die Schweine sind.
+gamerule.dk.superpigs.description=Wenn Schweinchen angesagt wurden, werden die Karo-9en (beim Spiel ohne 9en die Karo-Könige) zu Superschweinen, die noch höher als die Schweine sind.
 gamerule.dk.superpigs.opt.None=Spielregel deaktivieren
 gamerule.dk.superpigs.opt.reservation=Die Superschweine werden als Anmerkung nach den Schweinchen angesagt.
 gamerule.dk.superpigs.opt.on_pig=Die Superschweine werden erst angesagt, wenn das erste Schweinchen gespielt wird.
