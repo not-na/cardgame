@@ -71,7 +71,7 @@ class Client(object):
     def __init__(self, cg: cg.CardGame, username=None, pwd=None, default_server=None):
         self.cg = cg
 
-        self.gui: [cgclient.gui.PengGUI, None] = None
+        self.gui: Union[cgclient.gui.PengGUI, None] = None
 
         self._client: Union[CGClient, None] = None
         self.server = None

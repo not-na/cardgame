@@ -49,7 +49,8 @@ class AnnouncePacket(CGPacket):
                 if "data" not in msg:
                     raise KeyError(f"cg:game.dk.announce packet with type 'solo_yes' must contain the key 'data'!")
                 elif "type" not in msg["data"]:
-                    raise KeyError(f"cg:game.dk.announce packet with type 'solo_yes' must contain 'data' containing key 'type'!")
+                    raise KeyError(
+                        f"cg:game.dk.announce packet with type 'solo_yes' must contain 'data' containing key 'type'!")
 
             self.cg.send_event("cg:game.dk.reservation_solo", {
                 "player": self.peer.clients[cid].user.uuid.hex,
@@ -91,7 +92,8 @@ class AnnouncePacket(CGPacket):
             if "data" not in msg:
                 raise KeyError(f"cg:game.dk.announce packet with type 'poverty_return' must contain the key 'data'!")
             elif "amount" not in msg["data"]:
-                raise KeyError(f"cg:game.dk.announce packet with type 'poverty_return' must contain 'data' containing key 'amount'!")
+                raise KeyError(
+                    f"cg:game.dk.announce packet with type 'poverty_return' must contain 'data' containing key 'amount'!")
 
             self.cg.send_event("cg:game.dk.reservation_poverty_accept", {
                 "player": self.peer.clients[cid].user.uuid.hex,
@@ -107,12 +109,26 @@ class AnnouncePacket(CGPacket):
 
         elif t == "wedding_clarification_trick":
             if "data" not in msg:
-                raise KeyError(f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain the key 'data'!")
+                raise KeyError(
+                    f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain the key 'data'!")
             elif "trick" not in msg["data"]:
-                raise KeyError(f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain 'data' containing key 'trick'!")
+                raise KeyError(
+                    f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain 'data' containing key 'trick'!")
 
             self.cg.send_event("cg:game.dk.reservation_wedding", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t,
                 "data": msg["data"]
+            })
+
+        elif t == "call_pigs":
+            self.cg.send_event("cg:game.dk.call_pigs", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t
+            })
+
+        elif t == "call_superpigs":
+            self.cg.send_event("cg:game.dk.call_superpigs", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t
             })

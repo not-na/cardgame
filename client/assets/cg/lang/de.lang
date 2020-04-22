@@ -186,7 +186,7 @@ gamerule.dk.coward.opt.240_no_90=Die Strafe tritt ein, wenn 240 Augen erreicht w
 
 gamerule.dk.wedding.name=Hochzeit
 gamerule.dk.wedding.description=Wenn ein Spieler beide Kreuz-Damen hat, kann er eine Hochzeit ansagen.
-gamerule.dk.wedding.opt.None=Spielregel deaktivieren
+gamerule.dk.wedding.opt.None=Spielregel deaktivieren (Zwei Kreuzdamen führen direkt zu stiller Hochzeit)
 gamerule.dk.wedding.opt.3_trick=Der erste fremde Spieler, der einen Stich macht, spielt mit dem Ansager der Hochzeit zusammen. Macht er die ersten drei Stiche allerdings selbst, muss er alleine spielen.
 gamerule.dk.wedding.opt.wish_trick=Der Ansager der Hochzeit darf sich einen bestimmten Stich wünschen. Der Spieler, der diesen Stich macht, spielt mit dem Ansager der Hochzeit zusammen.
 
@@ -218,6 +218,9 @@ gamerule.dk.buck_cause.opt.solo_lost=Ein Solo wurde verloren.
 
 gamerule.dk.solo_shift_h10.name=Solos ändern Herz-10
 gamerule.dk.solo_shift_h10.description=Im Falle eines Farbsolos sind die Dullen von der Farbe über dem Solo (Herz-Solo -> Pik-10, Pik-Solo -> Kreuz-10, Kreuz-Solo -> Karo-10)
+
+gamerule.dk.solist_begins.name=Solist fängt an
+gamerule.dk.solist_begins.description=Im Falle eines Solos kommt der Solist raus.
 
 gamerule.dk.solo.null.name=Nullsolo
 gamerule.dk.solo.null.description=Der Solist darf kein einziges Auge erhalten. Die Trümpfe sind wie beim Normalspiel.

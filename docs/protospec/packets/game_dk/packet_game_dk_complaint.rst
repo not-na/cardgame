@@ -74,15 +74,15 @@ reply like this: ::
 
    {
       "moves":{
-         "a2b227a1-5b19-49e4-bca4-0c473f3e7ba1":{
+         0:{
             "type":"announcement",
             "data":"reservation_no",
          },
-         "98fd442d-4ee0-4d96-bf51-12917e36a001":{
+         4:{
             "type":"announcement",
             "data":"kontra",
          },
-         "c259418f-4912-444b-8f93-0f3d6c0b209b":{
+         5:{
             "type":"card",
             "data":"cq",
          },
@@ -93,7 +93,8 @@ reply like this: ::
    }
 
 ``moves`` is a dictionary containing all the moves the player has done so far. Each move is
-represented by its :term:`UUID`, followed by a dictionary declaring its ``type`` (``announcement``, ``card``
+represented by its move-ID, beginning in each round with 0 and counting up for each announcement
+made and each card played. The ID is followed by a dictionary declaring its ``type`` (``announcement``, ``card``
 or ``accusation``) and ``data`` specifying the kind of the announcement or the value of the card.
 
 .. note::

@@ -20,7 +20,7 @@ Purpose
 -------
 
 Using this packet, a player can perform an action with a card. Usually this is playing
-the card. Subsequently, the server will sned a :cg:packet:`game.dk.card.transfer`
+the card. Subsequently, the server will send a :cg:packet:`game.dk.card.transfer`
 packet to all clients. This packet is only available for the game :term:`Doppelkopf`\ .
 
 In case of a *poverty*\ , this packet will be used to choose the cards that should be

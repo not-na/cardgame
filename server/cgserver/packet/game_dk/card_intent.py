@@ -48,3 +48,9 @@ class CardIntentPacket(CGPacket):
                 "type": t,
                 "card": c
             })
+
+        elif t == "play":
+            self.cg.send_event("cg:game.dk.play_card", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "card": c
+            })

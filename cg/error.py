@@ -28,3 +28,23 @@ class CGException(Exception):
 
 class ConfigKeyNotFoundException(CGException):
     pass
+
+
+class CardTransferError(CGException):
+    pass
+
+
+class GameStateError(CGException):
+    pass
+
+
+class WrongPlayerError(CGException):
+    pass
+
+
+class InvalidMoveError(CGException):
+    pass
+
+
+class RuleError(CGException):
+    pass

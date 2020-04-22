@@ -39,10 +39,6 @@ concerned players.
    card if the client is intended to know about it. Otherwise, the client will only be informed
    on the transfer of an unknown card.
 
-.. note::
-   This packet also implicitly creates cards by transferring from a slot that does not
-   contain the card. This "source" slot is usually the main deck.
-
 Structure
 ---------
 
@@ -65,3 +61,7 @@ value, an empty string will be transmitted.
 ``from_slot`` is the :term:`slot` in which the card was before the transfer.
 
 ``to_slot`` is the slot to which the card will be transferred.
+
+.. note::
+   Following slots are available: ``stack``, ``hand0`` to ``hand3``, ``poverty``, ``table``,
+   ``tricks0`` to ``tricks3``

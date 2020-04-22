@@ -37,7 +37,7 @@ This is the data sent by the server to the client: ::
       "current_player":"7eb1c06d-2f66-46c7-8eef-6aa5a2ff85aa",
    }
 
-``current_trick`` is the trick that is currently being played.
+``current_trick`` is the trick that is currently being played. The first trick is ``1``, not ``0``!
 
 ``total_tricks`` is the amount of tricks in one game.
 
