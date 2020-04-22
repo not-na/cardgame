@@ -58,7 +58,9 @@ This is the data sent by the server to the client: ::
 ``card_value`` is the value of the card. If the client should not know about the card
 value, an empty string will be transmitted.
 
-``from_slot`` is the :term:`slot` in which the card was before the transfer.
+``from_slot`` is the :term:`slot` in which the card was before the transfer. If this is
+``None``\ , the card is to be created. If this field is not ``None`` and the ``card_id``
+does not exist, the client should crash with an appropriate error message.
 
 ``to_slot`` is the slot to which the card will be transferred.
 

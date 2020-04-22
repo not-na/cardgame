@@ -20,10 +20,15 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import math
+from typing import List, Mapping
 
 import peng3d
+from . import card
+from pyglet.gl import *
 
 import cgclient.gui
+import pyglet
 
 
 class IngameMenu(peng3d.gui.Menu):
@@ -52,8 +57,66 @@ class BackgroundLayer(peng3d.layer.Layer):
 
 
 class GameLayer(peng3d.layer.Layer):
+    SLOT_NAMES: List[str] = [
+        "stack",
+        "poverty",
+        "table",
+        "hand0",
+        "hand1",
+        "hand2",
+        "hand3",
+        "tricks0",
+        "tricks1",
+        "tricks2",
+        "tricks3",
+    ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.slots: Mapping[str, card.Card] = {name: [] for name in self.SLOT_NAMES}
+        self.cards = {}
+
+        self.pos = [0, 2, 0]
+        self.rot = [0, -90]
+
+        self.batch = pyglet.graphics.Batch()
+
+        self.vlist_table = self.batch.add(0, GL_QUADS, pyglet.graphics.OrderedGroup(0),
+                                          "v3f",
+                                          "t3f",
+                                          )
+        # TODO: actually add vertices for table
+
+        # TODO: possibly increase the animation frequency for high refreshrate monitors
+        pyglet.clock.schedule_interval(self.update, 1/60.)
+
+    def draw(self):
+        width, height = self.window.get_size()
+        glEnable(GL_DEPTH_TEST)
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(self.window.cfg["graphics.fieldofview"], width / float(height), self.window.cfg["graphics.nearclip"],
+                       self.window.cfg["graphics.farclip"])  # default 60
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        x, y = self.rot
+        glRotatef(x, 0, 1, 0)
+        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+        x, y, z = self.pos
+        glTranslatef(-x, -y, -z)
+
+        # Draw the main batch
+        # Contains the table and cards
+        self.batch.draw()
+
+    def update(self, dt=None):
+        pass
+
+    def on_redraw(self):
+        for card in self.cards.values():
+            card.do_redraw()
 
 
 class HUDLayer(peng3d.gui.GUILayer):

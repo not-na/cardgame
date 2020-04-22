@@ -71,9 +71,9 @@ class Client(object):
     def __init__(self, cg: cg.CardGame, username=None, pwd=None, default_server=None):
         self.cg = cg
 
-        self.gui: Union[cgclient.gui.PengGUI, None] = None
+        self.gui: Optional[cgclient.gui.PengGUI] = None
 
-        self._client: Union[CGClient, None] = None
+        self._client: Optional[CGClient] = None
         self.server = None
 
         self.default_server = default_server if default_server is not None else ""
@@ -86,7 +86,7 @@ class Client(object):
         self.users: Dict[str, cgclient.user.User] = {}
         self.users_uuid: Dict[uuid.UUID, cgclient.user.User] = {}
 
-        self.lobby: Union[None, cgclient.lobby.Lobby] = None
+        self.lobby: Optional[cgclient.lobby.Lobby] = None
 
         # TODO: implement async ping
 

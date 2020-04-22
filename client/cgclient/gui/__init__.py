@@ -31,6 +31,8 @@ from pyglet.gl import *
 import cg
 import cgclient
 
+from . import card
+
 from . import loadingscreen
 from . import serverselect
 from . import servermain

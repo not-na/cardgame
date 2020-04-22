@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import uuid
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union, Any, Optional
 
 import cg
 from cg.constants import ROLE_NONE
@@ -32,7 +32,7 @@ class Lobby(object):
         self.cg = c
 
         self.uuid: uuid.UUID = u
-        self.game: Union[None, str] = None
+        self.game: Optional[str] = None
 
         self.users: List[uuid.UUID] = []
         self.user_roles: Dict[uuid.UUID, int] = {}

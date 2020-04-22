@@ -40,7 +40,7 @@ class CGPacket(peng3dnet.net.packet.SmartPacket):
     allowed_keys: List[str] = []
 
     conntype: str = CONNTYPE_CLASSIC
-    mode: Union[int, None] = MODE_CG
+    mode: Optional[int] = MODE_CG
     side = None
 
     peer: Union[peng3dnet.net.Server, peng3dnet.net.Client]
