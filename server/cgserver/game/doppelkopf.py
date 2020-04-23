@@ -418,9 +418,6 @@ class DoppelkopfGame(CGame):
             "player_list": [p.hex for p in self.players]
         })
 
-        for player in self.players:
-            self.cg.server.server.clients[self.cg.server.users_uuid[player].cid].state = STATE_GAME_DK
-
         self.start_round(0)
 
     def start_round(self, round_num: int):

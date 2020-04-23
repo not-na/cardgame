@@ -22,7 +22,7 @@
 #
 import time
 import uuid
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, Type
 
 import peng3dnet
 
@@ -78,19 +78,26 @@ class Client(object):
 
         self.default_server = default_server if default_server is not None else ""
 
-        self.username = username
-        self.pwd = pwd
+        self.username: Optional[str] = username
+        self.pwd: Optional[str] = pwd
 
-        self.user_id: Optional = None
+        self.user_id: Optional[uuid.UUID] = None
 
         self.users: Dict[str, cgclient.user.User] = {}
         self.users_uuid: Dict[uuid.UUID, cgclient.user.User] = {}
+
+        self.game_reg: Dict[str, cgclient.game.CGame] = {}
+        self.game: Optional[cgclient.game.CGame] = None
 
         self.lobby: Optional[cgclient.lobby.Lobby] = None
 
         # TODO: implement async ping
 
         self.register_event_handlers()
+
+        self.cg.send_event("cg:game.register.do", {
+            "registrar": self.register_game,
+        })
 
     def init_gui(self):
         self.gui = cgclient.gui.PengGUI(self, self.cg)
@@ -130,15 +137,22 @@ class Client(object):
     def send_message(self, ptype, data: dict):
         self._client.send_message(ptype, data)
 
+    def register_game(self, name: str, cls: Type[cgclient.game.CGame]):
+        self.game_reg[name] = cls
+
     # Event Handlers
 
     def register_event_handlers(self):
         self.cg.add_event_listener("cg:network.client.conn_establish", self.handler_connestablish)
 
         self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister)
+        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
 
     def handler_connestablish(self, event: str, data: dict):
         self.cg.info(f"Connection established after {(time.time()-data['peer'].start_time)*1000:.2f}ms!")
 
     def handler_dopacketregister(self, event: str, data: dict):
         cgclient.packet.register_default_packets(data["reg"], data["peer"], self.cg, data["registrar"])
+
+    def handler_dogameregister(self, event: str, data: Dict):
+        cgclient.game.register_games(data["registrar"])

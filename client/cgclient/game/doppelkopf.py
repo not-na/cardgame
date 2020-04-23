@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  game_start.py
+#  doppelkopf.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,29 +20,15 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import cgclient
 
-from peng3dnet import SIDE_CLIENT
-
-from cg.constants import STATE_GAME_DK, STATE_LOBBY, STATE_ACTIVE
-from cg.packet import CGPacket
+from . import CGame
 
 
-class GameStartPacket(CGPacket):
-    state = [STATE_LOBBY, STATE_ACTIVE]
-    required_keys = [
-        "game_type",
-        "game_id",
-        "player_list",
-    ]
-    allowed_keys = [
-        "game_type",
-        "game_id",
-        "player_list",
-    ]
-    side = SIDE_CLIENT
+class DoppelkopfGame(CGame):
+    menu: cgclient.gui.ingame.IngameMenu
 
-    def send(self, msg, cid=None):
-        self.peer.clients[cid].state = STATE_GAME_DK
+    def start(self):
+        self.menu = self.cg.client.gui.ingame
 
-
-
+        self.menu.game_layer.reinit()

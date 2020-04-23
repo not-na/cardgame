@@ -23,22 +23,39 @@
 
 from peng3dnet import SIDE_CLIENT
 
-from cg.constants import STATE_GAME_DK
+from cg.constants import STATE_GAME_DK, STATE_LOBBY, STATE_ACTIVE
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class GameStartPacket(CGPacket):
-    state = STATE_GAME_DK
+    state = [STATE_LOBBY, STATE_ACTIVE]
     required_keys = [
-        "player_list"
+        "game_type",
+        "game_id",
+        "player_list",
     ]
     allowed_keys = [
-        "player_list"
-    ],
+        "game_type",
+        "game_id",
+        "player_list",
+    ]
     side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        pass
+        if msg["game_type"] == "doppelkopf":
+            # First, set the new remote state
+            self.peer.remote_state = STATE_GAME_DK
+
+            # Then, instantiate the game class on the client
+            self.cg.client.game = self.cg.client.game_reg["doppelkopf"](
+                self.cg,
+                uuidify(msg["game_id"]),
+                [uuidify(p) for p in msg["player_list"]],
+            )
+        else:
+            self.cg.crash(f"Unknown/Unsupported game type {msg['game_type']}")
+
 
 
 

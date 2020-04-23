@@ -20,10 +20,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import cgclient
 from peng3dnet import SIDE_CLIENT
 
 from cg.constants import STATE_GAME_DK
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class CardTransferPacket(CGPacket):
@@ -43,4 +45,20 @@ class CardTransferPacket(CGPacket):
     side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        pass
+        if msg["from_slot"] is None:
+            # Create a new card
+            if msg["to_slot"] is not "stack":
+                self.cg.warn(f"Created card in non-stack slot {msg['to_slot']} with value '{msg['card_value']}'")
+
+            c = cgclient.gui.card.Card(
+                self.cg,
+                self.cg.client.gui.ingame.game_layer,
+                msg["to_slot"],
+                uuidify(msg["card_id"]),
+                msg["card_value"],
+            )
+            self.cg.client.gui.ingame.game_layer.cards[c.cardid] = c
+            self.cg.client.gui.ingame.game_layer.slots[c.slot].append(c)
+        else:
+            # TODO: implement card transfers and animations
+            pass

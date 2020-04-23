@@ -287,7 +287,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.profile_label = peng3d.gui.Label(
             "profilelbl", self, self.window, self.peng,
             pos=self.subgrid_1.get_cell([1, 0], [2, 1]),
-            label="",  # This should be the username
+            label="<unknown>",  # This should be the username
             anchor_x="center",
             anchor_y="center",
         )
@@ -419,7 +419,12 @@ class MainSubMenu(peng3d.gui.SubMenu):
         # Profile Container
 
     def register_event_handlers(self):
+        self.menu.cg.add_event_listener("cg:user.update", self.handler_userupdate)
         self.menu.cg.add_event_listener("cg:network.client.login", self.handler_login)
+
+    def handler_userupdate(self, event: str, data: dict):
+        if data["uuid"] == self.menu.cg.client.user_id:
+            self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username
 
     def handler_login(self, event: str, data: dict):
         self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username

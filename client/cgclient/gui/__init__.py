@@ -96,9 +96,11 @@ class PengGUI(object):
 
         self.peng.i18n.setLang("de")
 
-        self.peng.resourceMgr.addCategory("gui")
-        self.peng.resourceMgr.addCategory("bg")
-        self.peng.resourceMgr.addCategory("icn")  # Game icons for play menu
+        self.peng.resourceMgr.addCategory("gui")    # GUI elements like buttons etc.
+        self.peng.resourceMgr.addCategory("bg")     # Backgrounds
+        self.peng.resourceMgr.addCategory("icn")    # Game icons for play menu
+        self.peng.resourceMgr.addCategory("card")   # Cards
+
         self.peng.resourceMgr.categoriesSettings["icn"]["minfilter"] = GL_LINEAR_MIPMAP_LINEAR
         self.peng.resourceMgr.categoriesSettings["icn"]["magfilter"] = GL_LINEAR
 

@@ -47,12 +47,12 @@ class StatusUserPacket(CGPacket):
             u = self.cg.client.users_uuid[uuidify(msg["uuid"])]
             u.update(msg)
 
-            self.cg.send_event("cg:user.update", msg)
+            self.cg.send_event("cg:user.update", {"uuid": u.uuid})
         elif msg["username"].lower() in self.cg.client.users:
             u = self.cg.client.users[msg["username"].lower()]
             u.update(msg)
 
-            self.cg.send_event("cg:user.update", msg)
+            self.cg.send_event("cg:user.update", {"uuid": u.uuid})
         else:
             # New in database, create
             u = cgclient.user.User(self.cg, msg)

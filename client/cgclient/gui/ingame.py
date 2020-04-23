@@ -21,6 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import math
+import uuid
 from typing import List, Mapping
 
 import peng3d
@@ -38,16 +39,16 @@ class IngameMenu(peng3d.gui.Menu):
         self.gui = gui
         self.cg = gui.cg
 
-        self.bg_layer = BackgroundLayer(self, self.window, self.peng)
+        self.bg_layer: BackgroundLayer = BackgroundLayer(self, self.window, self.peng)
         self.addLayer(self.bg_layer)
 
-        self.game_layer = GameLayer(self, self.window, self.peng)
+        self.game_layer: GameLayer = GameLayer(self, self.window, self.peng)
         self.addLayer(self.game_layer)
 
-        self.hud_layer = HUDLayer("hud", self, self.window, self.peng)
+        self.hud_layer: HUDLayer = HUDLayer("hud", self, self.window, self.peng)
         self.addLayer(self.hud_layer)
 
-        self.gui_layer = GUILayer("game_gui", self, self.window, self.peng)
+        self.gui_layer: GUILayer = GUILayer("game_gui", self, self.window, self.peng)
         self.addLayer(self.gui_layer)
 
 
@@ -70,26 +71,70 @@ class GameLayer(peng3d.layer.Layer):
         "tricks2",
         "tricks3",
     ]
+    peng: peng3d.Peng
+
+    batch: pyglet.graphics.Batch
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.slots: Mapping[str, card.Card] = {name: [] for name in self.SLOT_NAMES}
-        self.cards = {}
+        self.cards: Mapping[uuid.UUID, card.Card] = {}
+
+        self.player_order: List[uuid.UUID] = []
+        self.hand_to_player: Mapping[int, str] = {}
 
         self.pos = [0, 2, 0]
         self.rot = [0, -90]
 
         self.batch = pyglet.graphics.Batch()
 
-        self.vlist_table = self.batch.add(0, GL_QUADS, pyglet.graphics.OrderedGroup(0),
-                                          "v3f",
-                                          "t3f",
+        texinfo = self.peng.resourceMgr.getTex("cg:img.bg.test_table", "bg")
+        self.vlist_table = self.batch.add(4, GL_QUADS, pyglet.graphics.TextureGroup(
+            peng3d.gui.button._FakeTexture(*texinfo),
+            parent=pyglet.graphics.OrderedGroup(0)),
+                                          ("v3f",
+                                           [
+                                               -2, 0, 2, 2, 0, -2, 2, 0, 2, -2, 0, 2,
+                                           ]),
+                                          ("t3f", texinfo[2]),
                                           )
-        # TODO: actually add vertices for table
 
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1/60.)
+
+    def get_card_slot_pos(self, slot: str, index: int, count: int = 1):
+        # First, map virtual slots to physical slots
+        if slot.startswith("hand"):
+            slot = f"player_{self.hand_to_player[int(slot[4])]}"
+        elif slot.startswith("tricks"):
+            slot = f"ptrick_{self.hand_to_player[int(slot[6])]}"
+
+        if slot == "stack":
+            return [0, 0, 0]
+        elif slot == "table":
+            return [.5, index*0.05, 0]
+        elif slot == "poverty":
+            return [-.5, index*0.05, 0]
+        elif slot == "player_self":
+            pass
+        elif slot == "player_left":
+            pass
+        elif slot == "player_right":
+            pass
+        elif slot == "player_top":
+            pass
+        elif slot == "ptrick_self":
+            pass
+        elif slot == "ptrick_left":
+            pass
+        elif slot == "ptrick_right":
+            pass
+        elif slot == "ptrick_top":
+            pass
+
+    def get_backname(self):
+        return "cg:card.back_1"
 
     def draw(self):
         width, height = self.window.get_size()
@@ -116,7 +161,15 @@ class GameLayer(peng3d.layer.Layer):
 
     def on_redraw(self):
         for card in self.cards.values():
-            card.do_redraw()
+            card.draw()
+
+    def reinit(self):
+        # Delete all cards and reset to beginning
+
+        for c in self.cards.values():
+            c.delete()
+        self.cards = {}
+        self.slots = {name: [] for name in self.SLOT_NAMES}
 
 
 class HUDLayer(peng3d.gui.GUILayer):
