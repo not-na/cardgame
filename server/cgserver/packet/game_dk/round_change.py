@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  round_change.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,12 +20,19 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 # 
+from peng3dnet import SIDE_CLIENT
 
-from . import question
-from . import announce
-from . import card_intent
-from . import card_transfer
-from . import complaint
-from . import turn
-from . import scoreboard
-from . import round_change
+from cg.constants import STATE_GAME_DK
+from cg.packet import CGPacket
+
+
+class RoundChangePacket(CGPacket):
+    state = STATE_GAME_DK
+    required_keys = []
+    allowed_keys = [
+        "phase",
+        "player_list",
+        "game_type",
+        "modifiers",
+    ]
+    side = SIDE_CLIENT

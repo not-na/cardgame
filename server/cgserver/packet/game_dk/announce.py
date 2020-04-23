@@ -121,14 +121,26 @@ class AnnouncePacket(CGPacket):
                 "data": msg["data"]
             })
 
-        elif t == "call_pigs":
+        elif t == "pigs":
             self.cg.send_event("cg:game.dk.call_pigs", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t
             })
 
-        elif t == "call_superpigs":
+        elif t == "superpigs":
             self.cg.send_event("cg:game.dk.call_superpigs", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t
+            })
+
+        elif t in ["re", "kontra"]:
+            self.cg.send_event("cg:game.dk.call_re", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t
+            })
+
+        elif t in ["no90", "no60", "no30", "black"]:
+            self.cg.send_event("cg:game.dk.call_reject", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t
             })

@@ -25,6 +25,8 @@ readiness or when a client reconnects to the server after exiting from a running
 Structure
 ---------
 
+Note that all examples shown here contain placeholder data and will have different content in actual packets.
+
 This is the data sent by the server: ::
 
    {

@@ -90,3 +90,5 @@ def register_default_packets(reg, peer, cg, add):
     # Update the scoreboard
     r("cg:game.dk.scoreboard", game_dk.scoreboard.ScoreboardPacket)
 
+    # Update data on the round
+    r("cg:game.dk.round.change", game_dk.round_change.RoundChangePacket)

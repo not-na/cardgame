@@ -28,3 +28,4 @@ from . import card_transfer
 from . import complaint
 from . import turn
 from . import scoreboard
+from . import round_change

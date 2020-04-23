@@ -44,7 +44,7 @@ def create_dk_deck(with9: int = 8, joker: bool = False):
             for value in ["a", "k", "q", "j", "10", "9"]:
                 if value == "9" and (with9 == 0 or (with9 == 4 and i == 1)):
                     continue
-                card = Card("j", "j") if joker and color == "d" and i == 0 and (
+                card = Card("j", "0") if joker and color == "d" and i == 0 and (
                     (with9 == 0 and value == "k") or (with9 in [4, 8] and value == "9")
                 ) else Card(color, value)
                 card_dict[card.card_id] = card

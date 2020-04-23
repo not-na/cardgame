@@ -21,7 +21,8 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import random
-from typing import List, Optional, Dict, Tuple, Union
+from itertools import chain
+from typing import List, Optional, Dict, Tuple, Union, Set
 
 from cg.error import CardTransferError, GameStateError, WrongPlayerError, InvalidMoveError, RuleError
 from cg.util import uuidify
@@ -32,6 +33,8 @@ import cg
 import uuid
 
 from cg.constants import STATE_GAME_DK
+
+DEV_MODE = True
 
 
 class DoppelkopfGame(CGame):
@@ -407,6 +410,13 @@ class DoppelkopfGame(CGame):
         super().__init__(c, lobby)
 
         self.players: List[uuid.UUID] = self.lobby.users
+        self.fake_players: List[uuid.UUID] = []
+
+        if DEV_MODE:
+            while len(self.players) < 4:
+                pid = uuid.uuid4()
+                self.players.append(pid)
+                self.fake_players.append(pid)
 
         self.rounds: List[DoppelkopfRound] = []
         self.current_round: Optional[DoppelkopfRound] = None
@@ -426,10 +436,17 @@ class DoppelkopfGame(CGame):
         self.current_round = DoppelkopfRound(self, players, self.gamerules)
         self.rounds.append(self.current_round)
 
-    def send_to_all(self, packet: str, data: dict, exclude: Union[uuid.UUID, List[uuid.UUID]] = None):
+    def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
+        if exclude is None:
+            exclude = []
         for u in self.players:
-            if (type(u) == uuid.UUID and u != exclude) or (type(u) == list and u not in exclude):
-                self.cg.server.send_to_user(u, packet, data)
+            if u not in exclude:
+                if u not in self.fake_players:
+                    self.cg.server.send_to_user(u, packet, data)
+
+    def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
+        if user not in self.fake_players:
+            self.cg.server.send_to_user(user, packet, data)
 
     def register_event_handlers(self):
         super().register_event_handlers()
@@ -451,16 +468,16 @@ class DoppelkopfRound(object):
 
         self.game_type: str = "normal"
 
-        self.parties: Dict[str, List[uuid.UUID]] = {
-            "re": [],
-            "kontra": [],
-            "none": []
+        self.parties: Dict[str, Set[uuid.UUID]] = {
+            "re": set(),
+            "kontra": set(),
+            "none": set()
         }
-        self.obvious_parties: Dict[str, List[uuid.UUID]] = {
-            "re": [],
-            "kontra": [],
-            "none": [],
-            "unknown": []
+        self.obvious_parties: Dict[str, Set[uuid.UUID]] = {
+            "re": set(),
+            "kontra": set(),
+            "none": set(),
+            "unknown": set()
         }
 
         # TODO Implement obvious parties
@@ -501,6 +518,12 @@ class DoppelkopfRound(object):
 
         self.trick_num: int = 0
         self.current_trick: List[Tuple[uuid.UUID, uuid.UUID]] = []
+        self.max_tricks: int = 12 if self.game.gamerules["dk.whithout9"] == "with_all" else \
+            11 if self.game.gamerules["dk.whithout9"] == "with_four" else \
+                10 if self.game.gamerules["dk.whithout9"] == "without" else 0
+
+        self.wedding_clarification_trick: Optional[str] = None
+        self.wedding_find_trick: int = 0
 
         self.start_hands: Dict[uuid.UUID, List[uuid.UUID]] = {}
 
@@ -533,7 +556,7 @@ class DoppelkopfRound(object):
         if from_slot == "stack":
             if "hand" in to_slot:
                 receiver = self.players[int(to_slot.strip("hand"))]
-                self.game.cg.server.send_to_user(receiver, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(receiver, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
@@ -544,13 +567,13 @@ class DoppelkopfRound(object):
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
-                }, exclude=receiver)
+                }, exclude=[receiver])
             else:
                 raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
         elif "hand" in from_slot:
             if to_slot == "poverty":
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
@@ -561,7 +584,7 @@ class DoppelkopfRound(object):
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
-                }, exclude=self.current_player)
+                }, exclude=[self.current_player])
 
             elif to_slot == "table":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
@@ -575,7 +598,7 @@ class DoppelkopfRound(object):
 
         elif from_slot == "poverty":
             if to_slot == "poverty":
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
@@ -586,10 +609,10 @@ class DoppelkopfRound(object):
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
-                }, exclude=self.current_player)
+                }, exclude=[self.current_player])
 
             elif "hand" in to_slot:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
@@ -600,14 +623,14 @@ class DoppelkopfRound(object):
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
-                }, exclude=self.current_player)
+                }, exclude=[self.current_player])
 
             else:
                 raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
         elif from_slot == "table":
             if "tricks" in to_slot:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": "",
                     "from_slot": from_slot,
@@ -619,7 +642,7 @@ class DoppelkopfRound(object):
 
         elif from_slot is None:
             if to_slot == "stack":
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id,
                     "card_value": "",
                     "from_slot": from_slot,
@@ -824,45 +847,45 @@ class DoppelkopfRound(object):
 
         return "trump"
 
-    def get_trick_winner(self) -> uuid.UUID:
+    def get_trick_winner(self) -> Tuple[uuid.UUID, List[uuid.UUID]]:
         cards_sorted = sorted([i[1] for i in self.current_trick], key=self.get_card_sort_key, reverse=True)
 
         if self.cards[cards_sorted[0]].card_value == self.cards[cards_sorted[1]].card_value:
             if self.get_card_sort_key(self.cards[cards_sorted[0]]) == 100:  # Valid h10 (or s10, c10, d10 if solo)
-                if self.current_trick == len(self.cards) / 4:  # Last Trick
+                if self.current_trick == self.max_tricks:  # Last Trick
                     if self.game.gamerules["dk.heart10_lasttrick"] == "first":
                         for i in self.current_trick:  # Return first h10
                             if i[1] == cards_sorted[0]:
-                                return i[0]
+                                return i[0], cards_sorted
                     elif self.game.gamerules["dk.heart10_lasttrick"] == "second":
                         for i in self.current_trick:  # Return second h10
                             if i[1] == cards_sorted[1]:
-                                return i[0]
+                                return i[0], cards_sorted
                 else:  # Not last Trick
                     if self.game.gamerules["dk.heart10_prio"] == "first":
                         for i in self.current_trick:  # Return first h10
                             if i[1] == cards_sorted[0]:
-                                return i[0]
+                                return i[0], cards_sorted
                     elif self.game.gamerules["dk.heart10_prio"] == "second":
                         for i in self.current_trick:  # Return second h10
                             if i[1] == cards_sorted[1]:
-                                return i[0]
+                                return i[0], cards_sorted
 
             if self.cards[cards_sorted[0]].card_value == "cj":  # Jack of clubs, Charlie
-                if self.current_trick == len(self.cards) / 4:  # Last Trick
+                if self.current_trick == self.max_tricks:  # Last Trick
                     if self.game.gamerules["dk.charlie_prio"] == "first":
                         for i in self.current_trick:  # Return first jack of clubs
                             if i[1] == cards_sorted[0]:
-                                return i[0]
+                                return i[0], cards_sorted
                     elif self.game.gamerules["dk.charlie_prio"] == "second":
                         for i in self.current_trick:  # Return second jack of clubs
                             if i[1] == cards_sorted[1]:
-                                return i[0]
+                                return i[0], cards_sorted
 
         # If the rules above don't apply, return the highest card
         for i in self.current_trick:
             if i[1] == cards_sorted[0]:
-                return i[0]
+                return i[0], cards_sorted
 
     def get_card_sort_key(self, card: Card) -> int:
         first_card = self.cards[self.current_trick[0][1]]
@@ -1125,7 +1148,7 @@ class DoppelkopfRound(object):
                     return 13
 
             # Jolly Joker
-            if card.card_value == "jj":
+            if card.card_value == "j0":
                 if self.game.gamerules["dk.joker"] == "over_h10":
                     return 150
                 elif self.game.gamerules["dk.joker"] == "over_pigs":
@@ -1134,7 +1157,7 @@ class DoppelkopfRound(object):
                     return 350
 
     def get_eyes(self, card: Card) -> int:
-        if card.card_value == "jj":
+        if card.card_value == "j0":
             return 0
 
         if card.value == "9":
@@ -1151,6 +1174,11 @@ class DoppelkopfRound(object):
             return 11
 
     def start(self):
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "loading",
+            "player_list": [p.hex for p in self.players_with_solo]
+        })
+
         # Create card deck
         with9 = self.game.gamerules["dk.without9"]
         with9 = 0 if with9 == "without" else 4 if with9 == "with_four" else 8
@@ -1166,6 +1194,10 @@ class DoppelkopfRound(object):
         # Deal the cards
         self.game_state = "dealing"
 
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "dealing",
+        })
+
         for i in range(4):  # Four times
             for j in range(4):  # To each player
                 for k in range(3):  # 3 cards
@@ -1176,8 +1208,13 @@ class DoppelkopfRound(object):
         # Reservations: Only initialisation, the rest of the code is handled by event handlers
         self.game_state = "reservations"
         self.reserv_state = "reservation"
+
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "reservations",
+        })
+
         self.current_player = self.players[0]
-        self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+        self.game.send_to_user(self.current_player, "cg:game.dk.question", {
             "type": "reservation",
             "target": self.players[0].hex
         })
@@ -1194,52 +1231,173 @@ class DoppelkopfRound(object):
 
             # Put the players into their parties
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
-                self.parties["re"].append(player)
+                self.parties["re"].add(player)
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
-                self.parties["kontra"].append(player)
+                self.parties["kontra"].add(player)
 
-            # Check for pigs
-            """if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "two_on_play"]:
-                if list(map(lambda x: self.cards[x].card_value, hand)).count("da") == 2:
-                    self.pigs = (True, player)
-
-            # Check for superpigs
-            if self.game.gamerules["dk.superpigs"] in ["on_pig", "on_play"]:
-                if self.pigs[0]:
-                    if self.game.gamerules["dk.without9"] == "with_all":
-                        if list(map(lambda x: self.cards[x].card_value, hand)).count("d9") == 2:
-                            self.superpigs = (True, player)
-                    elif self.game.gamerules["dk.without9"] in ["with_four", "without"]:
-                        if list(map(lambda x: self.cards[x].card_value, hand)).count("dk") == 2:
-                            self.superpigs = (True, player)"""
+            self.obvious_parties["unknown"].add(player)
 
         self.game_type = "normal"
         self.game_state = "tricks"
         self.start_hands = self.hands
+
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "tricks",
+            "game_type": "normal",
+        })
 
         self.current_player = self.players[0]
         self.trick_num = 1
 
         self.game.send_to_all("cg:game.dk.turn", {
             "current_trick": 1,
-            "total_tricks": len(self.cards) / 4,
+            "total_tricks": self.max_tricks,
             "current_player": self.current_player.hex
         })
 
     def start_solo(self, solist: uuid.UUID):
-        pass
+        self.reserv_state = "finished"
+
+        self.game_type = self.players_with_solo[solist]
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
+        if self.game_type == "silent_wedding":
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "phase": "tricks",
+                "game_type": "normal"
+            })
+        else:
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "phase": "tricks",
+                "game_type": self.game_type,
+                "solist": solist.hex
+            })
+
+        # Put the players into their parties
+        self.parties["re"].add(solist)
+        for i in self.players:
+            if i != solist:
+                self.parties["kontra"].add(i)
+
+        # Obvious parties
+        if self.game_type != "silent_wedding":
+            self.obvious_parties["re"].add(solist)
+            for i in self.players:
+                if i != solist:
+                    self.obvious_parties["kontra"].add(i)
+        else:
+            self.obvious_parties["unknown"].update(self.players)
+
+        if self.game_type != "silent_wedding":
+            self.current_player = solist
+        else:
+            self.current_player = self.players[0]
+
+        self.trick_num = 1
+
+        self.game.send_to_all("cg:game.dk.turn", {
+            "current_trick": 1,
+            "total_tricks": self.max_tricks,
+            "current_player": self.current_player.hex
+        })
 
     def start_poverty(self, accepter: uuid.UUID):
-        pass
+        self.reserv_state = "finished"
+
+        self.game_type = "poverty"
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "tricks",
+            "game_type": "poverty"
+        })
+
+        # Put the players into their parties
+        self.parties["re"].update([self.poverty_player, accepter])
+        for i in self.players:
+            if i not in self.parties["re"]:
+                self.parties["kontra"].add(i)
+
+        # Obvious parties
+        self.obvious_parties["re"].update(self.parties["re"])
+        self.obvious_parties["kontra"].update(self.parties["kontra"])
+
+        self.current_player = self.players[0]
+        self.trick_num = 1
+
+        self.game.send_to_all("cg:game.dk.turn", {
+            "current_trick": 1,
+            "total_tricks": self.max_tricks,
+            "current_player": self.current_player.hex
+        })
 
     def start_black_sow(self):
-        pass
+        raise NotImplementedError("Black Sow is not implemented yet")
 
     def start_ramsch(self):
-        pass
+        self.reserv_state = "finished"
+
+        for player, hand in self.hands.items():
+            # Put the players into their parties
+            if list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
+                self.parties["re"].add(player)
+            elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
+                self.parties["kontra"].add(player)
+
+            self.obvious_parties["unknown"].add(player)
+
+        self.game_type = "ramsch"
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "tricks",
+            "game_type": "ramsch",
+        })
+
+        self.current_player = self.players[0]
+        self.trick_num = 1
+
+        self.game.send_to_all("cg:game.dk.turn", {
+            "current_trick": 1,
+            "total_tricks": self.max_tricks,
+            "current_player": self.current_player.hex
+        })
 
     def start_wedding(self, bride: uuid.UUID, trick: Optional[str] = None):
-        pass
+        self.reserv_state = "finished"
+
+        # Add players to parties
+        self.parties["re"].add(bride)
+        for i in self.players:
+            if i != bride:
+                self.parties["none"].add(bride)
+
+        # Add obvious parties
+        self.obvious_parties["re"] = self.parties["re"]
+        self.obvious_parties["none"] = self.parties["none"]
+
+        self.game_type = "wedding"
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
+        self.wedding_clarification_trick = trick
+
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "tricks",
+            "game_type": "wedding",
+        })
+
+        self.current_player = self.players[0]
+        self.trick_num = 1
+
+        self.game.send_to_all("cg:game.dk.turn", {
+            "current_trick": 1,
+            "total_tricks": self.max_tricks,
+            "current_player": self.current_player.hex
+        })
 
     def end_round(self):
         pass
@@ -1293,7 +1451,7 @@ class DoppelkopfRound(object):
 
         # Ask next player for reservation if he hasn't been asked yet
         if self.current_player != self.players[0]:
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "reservation",
                 "target": self.current_player.hex
             })
@@ -1304,7 +1462,7 @@ class DoppelkopfRound(object):
             if len(self.players_with_reserv) > 0:
                 self.current_player = self.players_with_reserv[0]
                 self.reserv_state = "solo"
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "solo",
                     "target": self.current_player.hex
                 })
@@ -1356,7 +1514,7 @@ class DoppelkopfRound(object):
         # Ask the next player for a solo if he hasn't been asked yet
         if self.current_player != self.players_with_reserv[0]:
 
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "solo",
                 "target": self.current_player.hex
             })
@@ -1379,25 +1537,25 @@ class DoppelkopfRound(object):
                 # Ask for the next reservation that is enabled in the rules
                 if self.game.gamerules["dk.throw"] == "reservation":
                     self.reserv_state = "throw"
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "throw",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.pigs"] == "two_reservation":
                     self.reserv_state = "pigs"
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "pigs",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.poverty"] != "None":
                     self.reserv_state = "poverty",
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "poverty",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.wedding"] != "None":
                     self.reserv_state = "wedding",
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
                     })
@@ -1489,7 +1647,7 @@ class DoppelkopfRound(object):
 
             # Ask if he want's to throw as long as he hasn't been asked yet
             if self.current_player != self.players_with_reserv[0]:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "throw",
                     "target": self.current_player.hex
                 })
@@ -1499,19 +1657,19 @@ class DoppelkopfRound(object):
                 # Ask for the next reservation that is enabled in the rules
                 if self.game.gamerules["dk.pigs"] == "two_reservation":
                     self.reserv_state = "pigs"
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "pigs",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.poverty"] != "None":
                     self.reserv_state = "poverty",
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "poverty",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.wedding"] != "None":
                     self.reserv_state = "wedding",
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
                     })
@@ -1555,7 +1713,7 @@ class DoppelkopfRound(object):
 
         # If no pigs have been called yet and the player hasn't been asked yet
         if not self.pigs[0] and self.current_player != self.players_with_reserv[0]:
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "pigs",
                 "target": self.current_player.hex
             })
@@ -1569,20 +1727,20 @@ class DoppelkopfRound(object):
             if self.pigs[0] and self.game.gamerules["dk.superpigs"] == "reservation":
                 self.current_player = self.players[0]
                 self.reserv_state = "superpigs"
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "superpigs",
                     "target": self.current_player.hex
                 })
             # Or for other reservations
             elif self.game.gamerules["dk.poverty"] != "None":
                 self.reserv_state = "poverty",
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
                 })
             elif self.game.gamerules["dk.wedding"] != "None":
                 self.reserv_state = "wedding",
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
                 })
@@ -1634,7 +1792,7 @@ class DoppelkopfRound(object):
 
         # If nobody called superpigs and the next player hasn't been asked yet
         if not self.superpigs[0] and self.current_player != self.players[0]:
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "superpigs",
                 "target": self.current_player.hex
             })
@@ -1646,13 +1804,13 @@ class DoppelkopfRound(object):
             # Ask for the next legal reservation
             if self.game.gamerules["dk.poverty"] != "None":
                 self.reserv_state = "poverty",
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
                 })
             elif self.game.gamerules["dk.wedding"] != "None":
                 self.reserv_state = "wedding",
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
                 })
@@ -1703,7 +1861,7 @@ class DoppelkopfRound(object):
                 self.reserv_state = "poverty_circulate"
 
             # Ask for the cards the poverty player want's to exchange
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "poverty_trump_choice",
                 "target": self.current_player.hex
             })
@@ -1727,7 +1885,7 @@ class DoppelkopfRound(object):
 
             # If the player hasn't been asked yet, ask for a poverty
             if self.current_player != self.players_with_reserv[0]:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
                 })
@@ -1737,7 +1895,7 @@ class DoppelkopfRound(object):
                 # Ask for the next legal reservation
                 if self.game.gamerules["dk.wedding"] != "None":
                     self.reserv_state = "wedding",
-                    self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
                     })
@@ -1808,7 +1966,7 @@ class DoppelkopfRound(object):
                                            "poverty")
 
                 # Ask the next player if he accepts the poverty
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty_accept",
                     "target": self.current_player.hex
                 })
@@ -1823,7 +1981,7 @@ class DoppelkopfRound(object):
                                        "poverty")
 
                 # Ask for the amount of trumps in the returned cards
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty_return_trumps",
                     "target": self.current_player.hex
                 })
@@ -1865,7 +2023,7 @@ class DoppelkopfRound(object):
             self.poverty_cards.clear()
 
             # Request the cards the player wants to return
-            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "poverty_return_choice",
                 "target": self.current_player.hex
             })
@@ -1944,7 +2102,7 @@ class DoppelkopfRound(object):
 
             # Ask the player if he want's to accept the poverty if the player hasn't been asked yet
             if self.current_player != self.poverty_player:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty_accept",
                     "target": self.current_player.hex
                 })
@@ -1970,7 +2128,7 @@ class DoppelkopfRound(object):
                     # If the player hasn't been asked yet, ask for a reservation
                     if self.current_player != self.players_with_reserv[0]:
                         self.reserv_state = "poverty"
-                        self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                        self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                             "type": "poverty",
                             "target": self.current_player.hex
                         })
@@ -1981,7 +2139,7 @@ class DoppelkopfRound(object):
                         # Ask for the next legal reservation
                         if self.game.gamerules["dk.wedding"] != "None":
                             self.reserv_state = "wedding",
-                            self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                            self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                                 "type": "wedding",
                                 "target": self.current_player.hex
                             })
@@ -2035,7 +2193,7 @@ class DoppelkopfRound(object):
 
             # Ask for clarification trick wish
             elif self.game.gamerules["dk.wedding"] == "wish_trick":
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding_clarification_trick",
                     "target": self.current_player.hex
                 })
@@ -2059,7 +2217,7 @@ class DoppelkopfRound(object):
 
             # If the player hasn't been asked yet, ask for a wedding
             if self.current_player != self.players_with_reserv[0]:
-                self.game.cg.server.send_to_user(self.current_player, "cg:game.dk.question", {
+                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
                 })
@@ -2163,6 +2321,19 @@ class DoppelkopfRound(object):
                 if self.cards[card].card_value != superpig_card:
                     raise InvalidMoveError("After calling a superpig, a superpig must be played!")
 
+        # Check if the card tells something about the parties
+        if self.game_type in ["normal", "silent_wedding", "ramsch"]:
+            if self.cards[card].card_value == "cq":
+                self.obvious_parties["re"].add(self.current_player)
+
+            # The second queen of clubs is being played
+            if [self.cards[card].card_value for card in chain(*self.hands)].count("cq") == 1:
+                if not self.obvious_parties["re"] == self.parties["re"]:
+                    raise GameStateError("Obvious re party doesn't correspond with re party, though it should!")
+                else:
+                    self.obvious_parties["kontra"] = self.parties["kontra"]
+                    self.obvious_parties["unknown"].clear()
+
         # Actually play the card
         self.current_trick.append((self.current_player, card))
 
@@ -2179,15 +2350,53 @@ class DoppelkopfRound(object):
         if len(self.current_trick) < 4:
             self.game.send_to_all("cg:game.dk.turn", {
                 "current_trick": self.trick_num,
-                "total_tricks": len(self.cards) / 4,
+                "total_tricks": self.max_tricks,
                 "current_player": self.current_player.hex
             })
 
-        # Determine the winner of the trick
+        # Trick is full
         elif len(self.current_trick) == 4:
-            trick_winner = self.get_trick_winner()
+            # Determine the winner of the trick
+            trick_winner, sorted_trick = self.get_trick_winner()
             gain = sum(map(lambda x: self.get_eyes(self.cards[x[1]]), self.current_trick))
             self.player_eyes[trick_winner] += gain
+
+            # Check for the wedding trick
+            if self.game_type == "wedding":
+                if len(self.parties["kontra"]) == 0:  # Parties not decided yet#
+                    if trick_winner not in self.parties["re"]:
+                        if self.wedding_clarification_trick is None:
+                            wedding = self.trick_num <= 3
+
+                        if self.wedding_clarification_trick == "trump":
+                            wedding = self.get_card_color(self.cards[self.current_trick[0][1]]) == "trump"
+                        elif self.wedding_clarification_trick == "miss":
+                            wedding = self.get_card_color(self.cards[sorted_trick[1]]) != "trump"
+                        elif self.wedding_clarification_trick in ["hearts", "spades", "clubs"]:
+                            # The color must not be trumped
+                            wedding = True
+                            for i in self.current_trick:
+                                wedding = wedding and (self.get_card_color(self.cards[i[1]]) != "trump")
+                        elif self.wedding_clarification_trick == "diamonds":
+                            # There may be no diamonds jacks or queens
+                            wedding = True
+                            for i in self.current_trick:
+                                wedding = wedding and (self.cards[i[1]].card_value in ["d9", "d10", "dk", "da"])
+                        else:
+                            wedding = self.cards[sorted_trick[0]].card_value == self.wedding_clarification_trick
+
+                        if wedding:
+                            self.parties["re"].add(trick_winner)
+                            for p in self.players:
+                                if p not in self.parties["re"]:
+                                    self.parties["kontra"].add(p)
+
+                            self.obvious_parties["re"] = self.parties["re"]
+                            self.obvious_parties["kontra"] = self.parties["kontra"]
+
+                            self.wedding_find_trick = self.trick_num
+
+                            # TODO Inform the players on the found wedding
 
             # Transfer the trick to the winners trick stack
             for i in self.current_trick:
@@ -2203,7 +2412,7 @@ class DoppelkopfRound(object):
             })
 
             # Not the last round
-            if self.trick_num < len(self.cards) / 4:
+            if self.trick_num < self.max_tricks:
                 # Deinitialise the trick
                 self.current_player = trick_winner
                 self.current_trick.clear()
@@ -2215,14 +2424,13 @@ class DoppelkopfRound(object):
 
                 self.game.send_to_all("cg:game.dk.turn", {
                     "current_trick": self.trick_num,
-                    "total_tricks": len(self.cards) / 4,
+                    "total_tricks": self.max_tricks,
                     "current_player": self.current_player.hex
                 })
 
             # Last Round
-            elif self.trick_num == len(self.cards) / 4:
+            elif self.trick_num == self.max_tricks:
                 self.end_round()
-
 
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
@@ -2337,12 +2545,14 @@ class DoppelkopfRound(object):
 
         if self.game.gamerules["dk.superpigs"] == "on_play":
             if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
-                raise InvalidMoveError("Calling superpigs is illegal for the player has not the required cards in his hand!")
+                raise InvalidMoveError(
+                    "Calling superpigs is illegal for the player has not the required cards in his hand!")
             self.superpigs = [True, player]
 
         elif self.game.gamerules["dk.superpigs"] == "on_pig":
             if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
-                raise InvalidMoveError("Calling superpigs is illegal for the player has not the required cards in his hand!")
+                raise InvalidMoveError(
+                    "Calling superpigs is illegal for the player has not the required cards in his hand!")
 
             if "call_pigs" not in list(map(lambda x: x["data"], self.moves.values()))[-2:]:
                 raise InvalidMoveError("Superpigs can only be called directly after the calling of pigs!")
@@ -2357,3 +2567,130 @@ class DoppelkopfRound(object):
         # Register the move
         self.add_move(player, "announcement", data["type"])
 
+    def handle_call_re(self, event: str, data: Dict):  # Also for Kontra
+        # Check for valid states
+        if self.game_state != "tricks":
+            raise GameStateError(
+                f"Game state for re or kontra call handling must be 'tricks', not {self.game_state}!")
+        if uuidify(data["player"]) != self.current_player:
+            raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
+
+        dtype = data["type"]
+
+        # Check if the re or kontra is called by the correct party
+        if dtype == "re" and self.current_player not in self.parties["re"]:
+            raise InvalidMoveError("Re can only be called by players of the re party")
+        if dtype == "kontra" and self.current_player not in self.parties["kontra"]:
+            raise InvalidMoveError("Kontra can only be called by players of the kontra party")
+
+        # Check if the re is not too late or already called
+        if dtype == "re":
+            if "re" in self.modifiers["re"]:
+                raise InvalidMoveError("Re was already called!")
+
+            legal_re = len(self.hands[self.current_player]) >= (
+                    self.max_tricks - 1 + self.wedding_find_trick)  # Only one card played
+            legal_re = legal_re or (  # Answering to a kontra
+                    len(self.hands[self.current_player]) == (
+                    self.max_tricks - 2 + self.wedding_find_trick) and "kontra" not in self.modifiers[
+                        "kontra"])
+
+            if not legal_re:
+                raise InvalidMoveError("Re was called too late!")
+
+            self.modifiers["re"].append("re")
+
+            self.obvious_parties["re"].add(self.current_player)
+
+        # Check if Kontra is not too late or already called
+        elif dtype == "kontra":
+            if "kontra" in self.modifiers["kontra"]:
+                raise InvalidMoveError("Kontra was already called!")
+
+            legal_kontra = len(self.hands[self.current_player]) >= (
+                    self.max_tricks - 1 + self.wedding_find_trick)  # Only one card played
+            legal_kontra = legal_kontra or (  # Answering to a re
+                    len(self.hands[self.current_player]) == (
+                    self.max_tricks - 2 + self.wedding_find_trick) and "re" not in self.modifiers["re"])
+
+            if not legal_kontra:
+                raise InvalidMoveError("Kontra was called too late!")
+
+            self.modifiers["kontra"].append("kontra")
+
+            self.obvious_parties["kontra"].add(self.current_player)
+
+        # Announce decision
+        self.game.send_to_all("cg:game.dk.announce", {
+            "announcer": self.current_player.hex,
+            "type": dtype
+        })
+
+        # Register move
+        self.add_move(self.current_player, "announcement", dtype)
+
+    def handle_call_reject(self, event: str, data: Dict):  # Also for Kontra
+        # Check for valid states
+        if self.game_state != "tricks":
+            raise GameStateError(
+                f"Game state for reject call handling must be 'tricks', not {self.game_state}!")
+        if uuidify(data["player"]) != self.current_player:
+            raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
+
+        rtype = data["type"]
+        party = ""
+        for p, pls in self.parties:
+            if self.current_player in pls:
+                party = p
+
+        # Check if the announcement is legal
+        if party == "none":
+            raise InvalidMoveError(f"Cannot call {rtype} if you do not belong to a party")
+
+        if rtype == "no90":
+            if "no90" in self.modifiers[party]:
+                raise InvalidMoveError("No90 has already been called by this party!")
+            if party not in self.modifiers[party]:
+                raise InvalidMoveError(f"No90 cannot be called by this party without having called {party}!")
+            if len(self.hands[self.current_player]) < (self.max_tricks - 2 + self.wedding_find_trick):
+                raise InvalidMoveError("No90 had to be called earlier!")
+
+        elif rtype == "no60":
+            if "no60" in self.modifiers[party]:
+                raise InvalidMoveError("No60 has already been called by this party!")
+            if "no90" not in self.modifiers[party]:
+                raise InvalidMoveError("No60 cannot be called by this party without having called no90!")
+            if len(self.hands[self.current_player]) < (self.max_tricks - 3 + self.wedding_find_trick):
+                raise InvalidMoveError("No60 had to be called earlier!")
+
+        elif rtype == "no30":
+            if "no30" in self.modifiers[party]:
+                raise InvalidMoveError("No30 has already been called by this party!")
+            if "no60" not in self.modifiers[party]:
+                raise InvalidMoveError("No30 cannot be called by this party without having called no60!")
+            if len(self.hands[self.current_player]) < (self.max_tricks - 4 + self.wedding_find_trick):
+                raise InvalidMoveError("No30 had to be called earlier!")
+
+        elif rtype == "black":
+            if "black" in self.modifiers[party]:
+                raise InvalidMoveError("Black has already been called by this party!")
+            if "no30" not in self.modifiers[party]:
+                raise InvalidMoveError("Black cannot be called by this party without having called no30!")
+            if len(self.hands[self.current_player]) < (self.max_tricks - 5 + self.wedding_find_trick):
+                raise InvalidMoveError("Black had to be called earlier!")
+
+        # Add the reject
+        self.modifiers[party].append(rtype)
+
+        # Handle the obvious parties
+        obv_party = self.current_player in self.obvious_parties[party]
+        self.obvious_parties[party].add(self.current_player)
+
+        # Announce decision
+        dt = {"announcer": self.current_player.hex, "type": rtype}
+        if not obv_party:
+            dt["data"] = {"party": party}
+        self.game.send_to_all("cg:game.dk.announce", dt)
+
+        # Register move
+        self.add_move(self.current_player, "announcement", f"{rtype}_{party}")

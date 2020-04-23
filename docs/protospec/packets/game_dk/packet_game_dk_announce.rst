@@ -55,20 +55,21 @@ This is the data sent by the client to the server: ::
    ``solo_no``, ``throw_yes``, ``throw_no``, ``pigs_yes``, ``pigs_no``, ``superpigs_yes``,
    ``superpigs_no``, ``poverty_yes``, ``poverty_no``, ``poverty_accept``, ``poverty_decline``,
    ``poverty_return``, ``wedding_yes``, ``wedding_no``, ``wedding_clarification_trick``,
-   ``re``, ``kontra``, ``no90``, ``no_60``, ``no30``, ``black``, ``pig``, ``superpig``
+   ``re``, ``kontra``, ``no90``, ``no60``, ``no30``, ``black``, ``pig``, ``superpig``
 
 .. note::
    Following types require data:
    ``solo_yes``: ``type`` (the type of the solo),
-   ``poverty_return``: ``amount`` (the amount of trumps returned to the poverty player``
-   ``wedding_clarification_trick``: ``trick`` (the trick the bride wishes to determine the re party)
+   ``poverty_return``: ``amount`` (the amount of trumps returned to the poverty player,
+   ``wedding_clarification_trick``: ``trick`` (the trick the bride wishes to determine the re party),
+   ``no90``, ``no60``, ``no30`` and ``black``: ``party`` (Optional, the party of the announcing player,
+   but only, if it wasn't known yet.)
 
 The server conveys following data to all the clients: ::
 
    {
       "announcer":"453b1c0c-4742-4ba7-9d42-6f4acec1856a",
       "type":"pig",
-      "data":{},
    }
 
 ``announcer`` is the :term:`UUID` of the player who made the announcement.
