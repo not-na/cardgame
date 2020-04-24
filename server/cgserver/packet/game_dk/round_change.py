@@ -30,6 +30,7 @@ class RoundChangePacket(CGPacket):
     state = STATE_GAME_DK
     required_keys = []
     allowed_keys = [
+        "round",
         "phase",
         "player_list",
         "game_type",

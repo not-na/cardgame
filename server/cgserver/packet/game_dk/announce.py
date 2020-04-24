@@ -140,7 +140,7 @@ class AnnouncePacket(CGPacket):
             })
 
         elif t in ["no90", "no60", "no30", "black"]:
-            self.cg.send_event("cg:game.dk.call_reject", {
+            self.cg.send_event("cg:game.dk.call_denial", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t
             })

@@ -419,9 +419,15 @@ class DoppelkopfGame(CGame):
                 self.fake_players.append(pid)
 
         self.rounds: List[DoppelkopfRound] = []
+        self.round_num: int = 0
         self.current_round: Optional[DoppelkopfRound] = None
 
+        self.points: Dict[uuid.UUID, int] = {}
+
     def start(self):
+        for p in self.players:
+            self.points[p] = 0
+
         self.send_to_all("cg:game.start", {
             "game_type": "doppelkopf",
             "game_id": self.game_id.hex,
@@ -433,8 +439,15 @@ class DoppelkopfGame(CGame):
     def start_round(self, round_num: int):
         players = self.players[round_num:] + self.players[:round_num]  # Each round, another player begins
 
-        self.current_round = DoppelkopfRound(self, players, self.gamerules)
+        self.current_round = DoppelkopfRound(self, players)
         self.rounds.append(self.current_round)
+
+        self.send_to_all("cg:game.dk.round.change", {
+            "round": round_num,
+            "phase": "loading",
+            "player_list": [p.hex for p in players]
+        })
+
         self.current_round.start()
 
     def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
@@ -452,7 +465,56 @@ class DoppelkopfGame(CGame):
     def register_event_handlers(self):
         super().register_event_handlers()
 
-        # Add event handler registration here
+        self.cg.add_event_listener("cg:game.dk.end_round", self.handle_end_round)
+
+    def handle_end_round(self, event: str, data: Dict):
+        # Send the information on the round
+        self.send_to_all("cg:game.dk.round.change", {
+            "phase": "end",
+            "game_type": data["game_type"],
+            "winner": data["winner"],
+            "eyes": data["eyes"],
+            "modifiers": data["modifiers"],
+            "extras": data["extras"]
+        })
+
+        # Determine if the round should be played again
+        m = -1 if data["game_type"] in ["ramsch", "ramsch_sw"] else 1  # In case of Ramsch, the points are swapped
+
+        remake_round = data["game_type"] in ["throw", "poverty_cancel"]  # The round was cancelled due to reservations
+        remake_round = remake_round or (  # The winner got 0 or less points (depending on the rules)
+                self.gamerules["dk.remake_game"] and
+                ((data["winner"] == "kontra" and data["game_value"] >= 0) or
+                 (data["winner"] == "re" and data["game_value"] <= 0)))
+
+        if not remake_round:
+            for p in self.players:
+                if p in data["re"]:
+                    if len(data["re"]) == 1:  # Solo
+                        self.points[p] += 3 * m * data["game_value"]
+                        self.send_to_all("cg:game.dk.scoreboard", {
+                            "player": p.hex,
+                            "points": self.points[p],
+                            "point_change": 3 * m * data["game_value"]
+                        })
+                    else:
+                        self.points[p] += m * data["game_value"]
+                        self.send_to_all("cg:game.dk.scoreboard", {
+                            "player": p.hex,
+                            "points": self.points[p],
+                            "point_change": m * data["game_value"]
+                        })
+                elif p in data["kontra"]:
+                    self.points[p] -= m * data["game_value"]
+                    self.send_to_all("cg:game.dk.scoreboard", {
+                        "player": p.hex,
+                        "points": self.points[p],
+                        "point_change": -m * data["game_value"]
+                    })
+
+            self.round_num += 1  # Only increase round_num if the game wasn't cancelled
+
+        self.start_round(self.round_num)
 
     @classmethod
     def check_playercount(cls, count: int):
@@ -481,11 +543,8 @@ class DoppelkopfRound(object):
         self.obvious_parties: Dict[str, Set[uuid.UUID]] = {
             "re": set(),
             "kontra": set(),
-            "none": set(),
             "unknown": set()
         }
-
-        # TODO Implement obvious parties
 
         self.player_eyes: Dict[uuid.UUID, int] = dict((p, 0) for p in self.players)
 
@@ -494,6 +553,7 @@ class DoppelkopfRound(object):
             "re": [],
             "kontra": []
         }
+        self.extra_points: Dict[uuid.UUID, List[str]] = {}
 
         self.cards: Dict[uuid.UUID, Card] = {}
         self.slots: Dict[str, List[uuid.UUID]] = {
@@ -520,6 +580,7 @@ class DoppelkopfRound(object):
 
         self.pigs: List[bool, Optional[uuid.UUID]] = [False, None]
         self.superpigs: List[bool, Optional[uuid.UUID]] = [False, None]
+        self.foxes: List[List[uuid.UUID]] = []
 
         self.trick_num: int = 0
         self.current_trick: List[Tuple[uuid.UUID, uuid.UUID]] = []
@@ -548,6 +609,45 @@ class DoppelkopfRound(object):
             mbp[move["player"]][i] = {"type": move["type"], "data": move["data"]}
 
         return mbp
+
+    def update_obvious_party(self, player: uuid.UUID, party: str, scq: bool = False):
+        # Remove the player from the unknown party
+        self.obvious_parties["unknown"] -= {player}
+        # Add him to the new party
+        self.obvious_parties[party].add(player)
+
+        # Check if this makes the party distribution clear
+        if self.game_type in ["normal", "ramsch"]:
+            if len(self.obvious_parties["re"]) == 2:
+                for p in self.obvious_parties["unknown"]:
+                    self.update_obvious_party(p, "kontra")
+            if len(self.obvious_parties["kontra"]) == 2:
+                for p in self.obvious_parties["unknown"]:
+                    self.update_obvious_party(p, "re")
+
+        if self.game_type in ["silent_wedding", "ramsch_sw"] and scq:
+            if len(self.obvious_parties["re"]) == 1:
+                for p in self.obvious_parties["unknown"]:
+                    self.update_obvious_party(p, "kontra")
+            if len(self.obvious_parties["kontra"]) == 3:
+                for p in self.obvious_parties["unknown"]:
+                    self.update_obvious_party(p, "re")
+
+        # Handle foxes
+        for fox in self.foxes.copy():
+            if (fox[0] in self.obvious_parties["re"] and fox[1] in self.obvious_parties["kontra"]) or (
+                    fox[0] in self.obvious_parties["kontra"] and fox[1] in self.obvious_parties["re"]):
+                self.extra_points[fox[1]].append("fox")
+                self.foxes.remove(fox)
+            elif (fox[0] in self.obvious_parties["re"] and fox[1] in self.obvious_parties["re"]) or (
+                    fox[0] in self.obvious_parties["kontra"] and fox[1] in self.obvious_parties["kontra"]):
+                self.foxes.remove(fox)
+
+        # Handle weddings
+        if self.game_type == "wedding":
+            if len(self.obvious_parties["re"]) == 2:
+                for p in self.obvious_parties["unknown"]:
+                    self.update_obvious_party(p, "kontra")
 
     def add_move(self, player: uuid.UUID, tp: str, data: str):
         self.moves[self.move_counter] = {
@@ -1183,11 +1283,6 @@ class DoppelkopfRound(object):
     def start(self):
         self.game.cg.info(f"START")
 
-        self.game.send_to_all("cg:game.dk.round.change", {
-            "phase": "loading",
-            "player_list": [p.hex for p in self.players_with_solo]
-        })
-
         # Create card deck
         with9 = self.game.gamerules["dk.without9"]
         with9 = 0 if with9 == "without" else 4 if with9 == "with_four" else 8
@@ -1348,18 +1443,21 @@ class DoppelkopfRound(object):
     def start_ramsch(self):
         self.reserv_state = "finished"
 
+        self.game_type = "ramsch"
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
         for player, hand in self.hands.items():
             # Put the players into their parties
             if list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
                 self.parties["re"].add(player)
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
                 self.parties["kontra"].add(player)
+            elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 2:
+                self.parties["re"].add(player)
+                self.game_type = "ramsch_sw"
 
             self.obvious_parties["unknown"].add(player)
-
-        self.game_type = "ramsch"
-        self.game_state = "tricks"
-        self.start_hands = self.hands
 
         self.game.send_to_all("cg:game.dk.round.change", {
             "phase": "tricks",
@@ -1385,8 +1483,8 @@ class DoppelkopfRound(object):
                 self.parties["none"].add(bride)
 
         # Add obvious parties
-        self.obvious_parties["re"] = self.parties["re"]
-        self.obvious_parties["none"] = self.parties["none"]
+        self.obvious_parties["re"].update(self.parties["re"])
+        self.obvious_parties["unknown"].update(self.parties["none"])
 
         self.game_type = "wedding"
         self.game_state = "tricks"
@@ -1409,10 +1507,179 @@ class DoppelkopfRound(object):
         })
 
     def end_round(self):
-        pass
+        self.game_state = "counting"
 
-    def exit_round(self, remake=False):
-        pass
+        # Put the poor players who stayed in the None Party into the kontra party
+        for p in self.parties["none"]:
+            self.parties["kontra"].add(p)
+        self.parties["none"].clear()
+
+        # Count the eyes and extra_points of the parties
+        re_eyes, kontra_eyes = 0, 0
+        re_extra, kontra_extra = 0, 0
+        re_extras, kontra_extras = [], []
+        for p in self.parties["re"]:
+            re_eyes += self.player_eyes[p]
+            re_extra += len(self.extra_points[p])
+            re_extras.extend(self.extra_points[p])
+        for p in self.parties["kontra"]:
+            kontra_eyes += self.player_eyes[p]
+            kontra_extra += len(self.extra_points[p])
+            re_extras.extend(self.extra_points[p])
+
+        # Get the needed win eyes
+        re_win, kontra_win = 121, 120
+
+        if "kontra" in self.modifiers["kontra"]:
+            kontra_win = 121
+            if "re" not in self.modifiers["re"]:
+                re = 120
+
+        if "no90" in self.modifiers["re"]:
+            re_win = 151
+        if "no60" in self.modifiers["re"]:
+            re_win = 181
+        if "no30" in self.modifiers["re"]:
+            re_win = 211
+        if "black" in self.modifiers["re"]:
+            re_win = 240
+
+        if "no90" in self.modifiers["kontra"]:
+            kontra_win = 151
+        if "no60" in self.modifiers["kontra"]:
+            kontra_win = 181
+        if "no30" in self.modifiers["kontra"]:
+            kontra_win = 211
+        if "black" in self.modifiers["kontra"]:
+            kontra_win = 240
+
+        # Determine the winner
+        winner = None
+        if re_eyes >= re_win:
+            winner = "re"
+        elif kontra_eyes >= kontra_win:
+            winner = "kontra"
+
+        if re_eyes >= re_win and kontra_eyes >= kontra_win:
+            raise GameStateError("Only one party can win!")
+
+        # Determine the game value - The game value is positive for re and negative for kontra
+        game_value = 0
+        if winner == "re":
+            game_value = 1
+        elif winner == "kontra":
+            game_value = -1
+
+        # Eyes, under which a party was played
+        if kontra_eyes < 90:
+            game_value += 1
+        if kontra_eyes < 60:
+            game_value += 1
+        if kontra_eyes < 30:
+            game_value += 1
+        if kontra_eyes == 0:
+            game_value += 1
+
+        if re_eyes < 90:
+            game_value -= 1
+        if re_eyes < 60:
+            game_value -= 1
+        if re_eyes < 30:
+            game_value -= 1
+        if re_eyes == 0:
+            game_value -= 1
+
+        # Denials that the winner reached
+        if winner == "re":
+            if kontra_eyes < 90 and "no90" in self.modifiers["re"]:
+                game_value += 1
+            if kontra_eyes < 60 and "no60" in self.modifiers["re"]:
+                game_value += 1
+            if kontra_eyes < 30 and "no30" in self.modifiers["re"]:
+                game_value += 1
+            if kontra_eyes == 0 and "black" in self.modifiers["re"]:
+                game_value += 1
+
+        if winner == "kontra":
+            if re_eyes < 90 and "no90" in self.modifiers["kontra"]:
+                game_value -= 1
+            if re_eyes < 60 and "no60" in self.modifiers["kontra"]:
+                game_value -= 1
+            if re_eyes < 30 and "no30" in self.modifiers["kontra"]:
+                game_value -= 1
+            if re_eyes == 0 and "black" in self.modifiers["kontra"]:
+                game_value -= 1
+
+        # Denials that a party didn't reach
+        if kontra_eyes >= 90 and "no90" in self.modifiers["re"]:
+            game_value -= 1
+        if kontra_eyes >= 60 and "no60" in self.modifiers["re"]:
+            game_value -= 1
+        if kontra_eyes >= 30 and "no30" in self.modifiers["re"]:
+            game_value -= 1
+        if kontra_eyes > 0 and "black" in self.modifiers["re"]:
+            game_value -= 1
+
+        if re_eyes >= 90 and "no90" in self.modifiers["kontra"]:
+            game_value += 1
+        if re_eyes >= 60 and "no60" in self.modifiers["kontra"]:
+            game_value += 1
+        if re_eyes >= 30 and "no30" in self.modifiers["kontra"]:
+            game_value += 1
+        if re_eyes > 0 and "black" in self.modifiers["kontra"]:
+            game_value += 1
+
+        # One point if Kontra won a normal game
+        if winner == "Kontra" and self.game_type == "normal":
+            game_value -= 1
+
+        # Re and Kontra as adding multipliers
+        if self.game.gamerules["dk.re_kontra"] == "+2":
+            if winner == "re":
+                if "re" in self.modifiers["re"]:
+                    game_value += 2
+                if "kontra" in self.modifiers["kontra"]:
+                    game_value += 2
+            elif winner == "kontra":
+                if "re" in self.modifiers["re"]:
+                    game_value -= 2
+                if "kontra" in self.modifiers["kontra"]:
+                    game_value -= 2
+
+        # Re and Kontra as doubling multipliers
+        elif self.game.gamerules["dk.re_kontra"] == "*2":
+            if winner in ["re", "kontra"]:
+                if "re" in self.modifiers["re"]:
+                    game_value *= 2
+                if "kontra" in self.modifiers["kontra"]:
+                    game_value *= 2
+
+        # Adding the extra points
+        game_value += re_extra
+        game_value -= kontra_extra
+
+        # Re and Kontra as doubling multipliers after adding the extra points
+        if self.game.gamerules["dk.re_kontra"] == "*2_extra":
+            if winner in ["re", "kontra"]:
+                if "re" in self.modifiers["re"]:
+                    game_value *= 2
+                if "kontra" in self.modifiers["kontra"]:
+                    game_value *= 2
+
+        # Buckrounds
+        if "buckround" in self.modifiers["general"]:
+            game_value *= 4
+
+        self.game.cg.send_event("cg:game.dk.end_round", {
+            "game_type": self.game_type,
+            "winner": winner,
+            "game_value": game_value,
+            "re": [p for p in self.parties["re"]],
+            "kontra": [p for p in self.parties["kontra"]],
+            "eyes": (re_eyes, kontra_eyes),
+            "modifiers": self.modifiers,
+            "extras": [re_extras, kontra_extras]
+        })
 
     def register_event_handlers(self):
         self.game.cg.add_event_listener("cg:game.dk.reservation", self.handle_reservation)
@@ -1431,6 +1698,8 @@ class DoppelkopfRound(object):
         self.game.cg.add_event_listener("cg:game.dk.play_card", self.handle_play_card)
         self.game.cg.add_event_listener("cg:game.dk.call_pigs", self.handle_call_pigs)
         self.game.cg.add_event_listener("cg:game.dk.call_superpigs", self.handle_call_superpigs)
+        self.game.cg.add_event_listener("cg:game.dk.call_re", self.handle_call_re)
+        self.game.cg.add_event_listener("cg:game.dk.call_denial", self.handle_call_denial)
 
     def handle_reservation(self, event: str, data: Dict):
         # Check for correct states
@@ -1637,7 +1906,15 @@ class DoppelkopfRound(object):
             self.add_move(self.current_player, "announcement", data["type"])
 
             # Exit the round
-            self.exit_round(remake=True)
+            self.game.cg.send_event("cg:game.dk.end_round", {
+                "game_type": "throw",
+                "winner": None,
+                "re": [],
+                "kontra": [],
+                "eyes": 0,
+                "modifiers": self.modifiers,
+                "extras": []
+            })
 
         # If he doesn't want to throw
         elif data["type"] == "throw_no":
@@ -2158,7 +2435,15 @@ class DoppelkopfRound(object):
                 # Redeal the game
                 elif self.game.gamerules["dk.poverty_consequences"] == "redeal":
                     # Exit the round
-                    self.exit_round(remake=True)
+                    self.game.cg.send_event("cg:game.dk.end_round", {
+                        "game_type": "poverty_cancel",
+                        "winner": None,
+                        "re": [],
+                        "kontra": [],
+                        "eyes": 0,
+                        "modifiers": self.modifiers,
+                        "extras": []
+                    })
 
                 # Play a round of black sow
                 elif self.game.gamerules["dk.poverty_consequences"] == "black_sow":
@@ -2292,19 +2577,23 @@ class DoppelkopfRound(object):
         if not legal_move:
             raise InvalidMoveError("This card may not be played in the context of the trick!")
 
+        # Determine fox card (for pigs and foxes)
+        if self.game_type == "solo_hearts":
+            fox_card = "ha"
+        elif self.game_type == "solo_spades":
+            fox_card = "sa"
+        elif self.game_type == "solo_clubs":
+            fox_card = "ca"
+        elif self.game_type in ["normal", "silent_wedding", "wedding", "poverty", "ramsch", "ramsch_sw",
+                                "solo_diamonds", "solo_null"]:
+            fox_card = "da"
+        else:
+            fox_card = ""
+
         # For called pig, check if a pig is played
         if list(map(lambda x: x["data"], self.moves.values()))[-1] == "call_pigs":
             # Find out, which cards are the pigs in this round
-            if self.game_type == "solo_hearts":
-                pig_card = "ha"
-            elif self.game_type == "solo_spades":
-                pig_card = "sa"
-            elif self.game_type == "solo_clubs":
-                pig_card = "ca"
-            else:
-                pig_card = "da"
-
-            if self.cards[card].card_value != pig_card:
+            if self.cards[card].card_value != fox_card:
                 raise InvalidMoveError("After calling a pig, a pig must be played!")
 
         # For called superpig, check if a superpig is played:
@@ -2331,17 +2620,15 @@ class DoppelkopfRound(object):
                     raise InvalidMoveError("After calling a superpig, a superpig must be played!")
 
         # Check if the card tells something about the parties
-        if self.game_type in ["normal", "silent_wedding", "ramsch"]:
+        if self.game_type in ["normal", "silent_wedding", "ramsch", "ramsch_sw"]:
             if self.cards[card].card_value == "cq":
-                self.obvious_parties["re"].add(self.current_player)
+                self.update_obvious_party(self.current_player, "re")
 
             # The second queen of clubs is being played
             if [self.cards[card].card_value for card in chain(*self.hands)].count("cq") == 1:
+                self.update_obvious_party(self.current_player, "re", True)
                 if not self.obvious_parties["re"] == self.parties["re"]:
                     raise GameStateError("Obvious re party doesn't correspond with re party, though it should!")
-                else:
-                    self.obvious_parties["kontra"] = self.parties["kontra"]
-                    self.obvious_parties["unknown"].clear()
 
         # Actually play the card
         self.current_trick.append((self.current_player, card))
@@ -2399,13 +2686,48 @@ class DoppelkopfRound(object):
                             for p in self.players:
                                 if p not in self.parties["re"]:
                                     self.parties["kontra"].add(p)
+                            self.parties["none"].clear()
 
-                            self.obvious_parties["re"] = self.parties["re"]
-                            self.obvious_parties["kontra"] = self.parties["kontra"]
+                            self.update_obvious_party(trick_winner, "re")
 
                             self.wedding_find_trick = self.trick_num
 
                             # TODO Inform the players on the found wedding
+
+            # Check for extra tricks
+            # Doppelkopf
+            if self.game.gamerules["dk.doppelkopf"]:
+                if gain >= 40:
+                    self.extra_points[trick_winner].append("doppelkopf")
+
+            # Fox
+            if self.game.gamerules["dk.fox"]:
+                for i in self.current_trick:
+                    if self.cards[i[1]] == fox_card:
+                        # If the player won the trick himself
+                        if i[0] == trick_winner:
+                            continue
+
+                        # If a trick winner and the fox player are in the same party
+                        for party, members in self.obvious_parties:
+                            if party != "unknown":
+                                if i[0] in self.obvious_parties[party] and trick_winner in self.obvious_parties[party]:
+                                    continue
+
+                        # If the players are in different parties
+                        if (i[0] in self.obvious_parties["re"] and trick_winner in self.obvious_parties["kontra"]) or (
+                                i[0] in self.obvious_parties["kontra"] and trick_winner in self.obvious_parties["re"]):
+                            self.extra_points[trick_winner].append("fox")
+
+                        # If not both player's parties are sure, remember the fox and check it later
+                        else:
+                            self.foxes.append([i[0], trick_winner])
+
+            # Charlie
+            if self.game.gamerules["dk.charlie"]:
+                if self.trick_num == self.max_tricks:
+                    if self.cards[sorted_trick[0]].card_value == "cj":
+                        self.extra_points[trick_winner].append("charlie")
 
             # Transfer the trick to the winners trick stack
             for i in self.current_trick:
@@ -2444,7 +2766,7 @@ class DoppelkopfRound(object):
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
-                                  "ramsch", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
+                                  "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
                                   "solo_null"]:
             raise GameStateError(f"Game type {self.game_type} does not support pigs!")
         if self.game_state != "tricks":
@@ -2523,7 +2845,7 @@ class DoppelkopfRound(object):
     def handle_call_superpigs(self, event: str, data: Dict):
         # Check for valid states
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
-                                  "ramsch", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
+                                  "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
                                   "solo_null"]:
             raise GameStateError(f"Game type {self.game_type} does not support superpigs!")
         if self.game_state != "tricks":
@@ -2609,7 +2931,7 @@ class DoppelkopfRound(object):
 
             self.modifiers["re"].append("re")
 
-            self.obvious_parties["re"].add(self.current_player)
+            self.update_obvious_party(self.current_player, "re")
 
         # Check if Kontra is not too late or already called
         elif dtype == "kontra":
@@ -2627,7 +2949,7 @@ class DoppelkopfRound(object):
 
             self.modifiers["kontra"].append("kontra")
 
-            self.obvious_parties["kontra"].add(self.current_player)
+            self.update_obvious_party(self.current_player, "kontra")
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -2638,11 +2960,11 @@ class DoppelkopfRound(object):
         # Register move
         self.add_move(self.current_player, "announcement", dtype)
 
-    def handle_call_reject(self, event: str, data: Dict):  # Also for Kontra
+    def handle_call_denial(self, event: str, data: Dict):  # Also for Kontra
         # Check for valid states
         if self.game_state != "tricks":
             raise GameStateError(
-                f"Game state for reject call handling must be 'tricks', not {self.game_state}!")
+                f"Game state for denial call handling must be 'tricks', not {self.game_state}!")
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
 
@@ -2688,12 +3010,12 @@ class DoppelkopfRound(object):
             if len(self.hands[self.current_player]) < (self.max_tricks - 5 + self.wedding_find_trick):
                 raise InvalidMoveError("Black had to be called earlier!")
 
-        # Add the reject
+        # Add the denial
         self.modifiers[party].append(rtype)
 
         # Handle the obvious parties
         obv_party = self.current_player in self.obvious_parties[party]
-        self.obvious_parties[party].add(self.current_player)
+        self.update_obvious_party(self.current_player, party)
 
         # Announce decision
         dt = {"announcer": self.current_player.hex, "type": rtype}
