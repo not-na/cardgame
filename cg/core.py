@@ -23,12 +23,15 @@
 
 import logging as _logging
 
-from typing import Callable
+from typing import Callable, Optional
 
 import cg
 
 
 class CardGame(object):
+    client: Optional["cgclient.client.Client"]
+    server: Optional["cgserver.server.DedicatedServer"]
+
     def __init__(self, instance_path):
         self.instance_path = instance_path
 

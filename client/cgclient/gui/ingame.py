@@ -56,6 +56,8 @@ class BackgroundLayer(peng3d.layer.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # TODO: add skybox here
+
 
 class GameLayer(peng3d.layer.Layer):
     SLOT_NAMES: List[str] = [
@@ -84,7 +86,7 @@ class GameLayer(peng3d.layer.Layer):
         self.player_order: List[uuid.UUID] = []
         self.hand_to_player: Mapping[int, str] = {}
 
-        self.pos = [0, 2, 0]
+        self.pos = [0, 6, 0]
         self.rot = [0, -90]
 
         self.batch = pyglet.graphics.Batch()
@@ -95,7 +97,10 @@ class GameLayer(peng3d.layer.Layer):
             parent=pyglet.graphics.OrderedGroup(0)),
                                           ("v3f",
                                            [
-                                               -2, 0, 2, 2, 0, -2, 2, 0, 2, -2, 0, 2,
+                                               -2, 0, 2,
+                                               2, 0, 2,
+                                               2, 0, -2,
+                                               -2, 0, -2,
                                            ]),
                                           ("t3f", texinfo[2]),
                                           )
@@ -184,6 +189,8 @@ class HUDLayer(peng3d.gui.GUILayer):
         self.s_main = MainHUDSubMenu("main", self, self.window, self.peng)
         self.addSubMenu(self.s_main)
 
+        self.changeSubMenu("main")
+
 
 class MainHUDSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
@@ -208,7 +215,7 @@ class GUILayer(peng3d.gui.GUILayer):
         self.s_pause = PauseGUISubMenu("pause", self, self.window, self.peng)
         self.addSubMenu(self.s_pause)
 
-        self.changeSubMenu("loadingscreen")
+        self.changeSubMenu("ingame")
 
 
 class LoadingScreenGUISubMenu(peng3d.gui.SubMenu):

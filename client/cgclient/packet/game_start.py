@@ -53,6 +53,10 @@ class GameStartPacket(CGPacket):
                 uuidify(msg["game_id"]),
                 [uuidify(p) for p in msg["player_list"]],
             )
+
+            # Switch the menu
+            self.cg.client.gui.window.changeMenu("ingame")
+            # TODO: trigger redraw
         else:
             self.cg.crash(f"Unknown/Unsupported game type {msg['game_type']}")
 

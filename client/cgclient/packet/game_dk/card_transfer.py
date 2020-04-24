@@ -41,13 +41,13 @@ class CardTransferPacket(CGPacket):
         "card_value",
         "from_slot",
         "to_slot"
-    ],
+    ]
     side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
         if msg["from_slot"] is None:
             # Create a new card
-            if msg["to_slot"] is not "stack":
+            if msg["to_slot"] != "stack":
                 self.cg.warn(f"Created card in non-stack slot {msg['to_slot']} with value '{msg['card_value']}'")
 
             c = cgclient.gui.card.Card(
@@ -59,6 +59,10 @@ class CardTransferPacket(CGPacket):
             )
             self.cg.client.gui.ingame.game_layer.cards[c.cardid] = c
             self.cg.client.gui.ingame.game_layer.slots[c.slot].append(c)
+
+            c.redraw()
+
+            self.cg.debug(f"Created card {c.cardid} in slot {c.slot} with value '{c.value}'")
         else:
             # TODO: implement card transfers and animations
             pass

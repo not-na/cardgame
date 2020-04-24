@@ -435,14 +435,15 @@ class DoppelkopfGame(CGame):
 
         self.current_round = DoppelkopfRound(self, players, self.gamerules)
         self.rounds.append(self.current_round)
+        self.current_round.start()
 
     def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
         if exclude is None:
             exclude = []
+        self.cg.info(f"Send to all {packet} with {data}")
         for u in self.players:
-            if u not in exclude:
-                if u not in self.fake_players:
-                    self.cg.server.send_to_user(u, packet, data)
+            if u not in exclude and u not in self.fake_players:
+                self.cg.server.send_to_user(u, packet, data)
 
     def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
         if user not in self.fake_players:
@@ -453,12 +454,16 @@ class DoppelkopfGame(CGame):
 
         # Add event handler registration here
 
+    @classmethod
+    def check_playercount(cls, count: int):
+        return DEV_MODE or count == 4
+
 
 class DoppelkopfRound(object):
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID], buckround: bool = False):
-        self.register_event_handlers()
-
         self.game: DoppelkopfGame = game
+
+        self.register_event_handlers()
 
         self.players: List[uuid.UUID] = players
         self.current_player: Optional[uuid.UUID] = None
@@ -518,9 +523,9 @@ class DoppelkopfRound(object):
 
         self.trick_num: int = 0
         self.current_trick: List[Tuple[uuid.UUID, uuid.UUID]] = []
-        self.max_tricks: int = 12 if self.game.gamerules["dk.whithout9"] == "with_all" else \
-            11 if self.game.gamerules["dk.whithout9"] == "with_four" else \
-                10 if self.game.gamerules["dk.whithout9"] == "without" else 0
+        self.max_tricks: int = 12 if self.game.gamerules["dk.without9"] == "with_all" else \
+            11 if self.game.gamerules["dk.without9"] == "with_four" else \
+                10 if self.game.gamerules["dk.without9"] == "without" else 0
 
         self.wedding_clarification_trick: Optional[str] = None
         self.wedding_find_trick: int = 0
@@ -553,17 +558,30 @@ class DoppelkopfRound(object):
         self.move_counter += 1
 
     def transfer_card(self, card: Card, from_slot: Optional[str], to_slot: str):
-        if from_slot == "stack":
+        self.game.cg.info(f"Transfer card {from_slot} {to_slot}")
+        if from_slot is None:
+            if to_slot == "stack":
+                self.game.send_to_all("cg:game.dk.card.transfer", {
+                    "card_id": card.card_id.hex,
+                    "card_value": "",
+                    "from_slot": from_slot,
+                    "to_slot": to_slot,
+                })
+                self.slots[to_slot].append(card.card_id)
+            else:
+                raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
+
+        elif from_slot == "stack":
             if "hand" in to_slot:
                 receiver = self.players[int(to_slot.strip("hand"))]
                 self.game.send_to_user(receiver, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
@@ -574,13 +592,13 @@ class DoppelkopfRound(object):
         elif "hand" in from_slot:
             if to_slot == "poverty":
                 self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
@@ -588,7 +606,7 @@ class DoppelkopfRound(object):
 
             elif to_slot == "table":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
@@ -599,13 +617,13 @@ class DoppelkopfRound(object):
         elif from_slot == "poverty":
             if to_slot == "poverty":
                 self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
@@ -613,13 +631,13 @@ class DoppelkopfRound(object):
 
             elif "hand" in to_slot:
                 self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
@@ -631,31 +649,20 @@ class DoppelkopfRound(object):
         elif from_slot == "table":
             if "tricks" in to_slot:
                 self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
+                    "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
 
-            else:
-                raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
-
-        elif from_slot is None:
-            if to_slot == "stack":
-                self.game.send_to_user(self.current_player, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id,
-                    "card_value": "",
-                    "from_slot": from_slot,
-                    "to_slot": to_slot
-                })
-                self.slots[to_slot].append(card.card_id)
             else:
                 raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
         else:
             raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
-        self.slots[from_slot].remove(card.card_id)
+        if from_slot is not None:
+            self.slots[from_slot].remove(card.card_id)
         self.slots[to_slot].append(card.card_id)
 
     def get_card_color(self, card: Card) -> str:
@@ -1174,6 +1181,8 @@ class DoppelkopfRound(object):
             return 11
 
     def start(self):
+        self.game.cg.info(f"START")
+
         self.game.send_to_all("cg:game.dk.round.change", {
             "phase": "loading",
             "player_list": [p.hex for p in self.players_with_solo]

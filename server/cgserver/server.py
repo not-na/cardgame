@@ -27,7 +27,7 @@ import sys
 import time
 import threading
 import uuid
-from typing import Dict, Union, Type
+from typing import Dict, Union, Type, Optional
 
 import peng3dnet
 
@@ -60,7 +60,7 @@ class CGServer(peng3dnet.ext.ping.PingableServerMixin, peng3dnet.net.Server):
 
 
 class ClientOnCGServer(peng3dnet.net.ClientOnServer):
-    user: Union[cgserver.user.User, None]
+    user: Optional[cgserver.user.User] = None
 
     def on_handshake_complete(self):
         super().on_handshake_complete()

@@ -62,6 +62,7 @@ gui.menu.smain.play.cnc.label.0=Canasta
 gui.menu.smain.play.cnc.label.1=Eigenes Spiel
 
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
+gui.menu.smain.lobby.readybtn.label=Bereit zum Spielen
 
 gui.menu.smain.gamerule.backbtn.label=Zurück
 

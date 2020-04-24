@@ -117,9 +117,8 @@ class Card(object):
 
     def on_redraw(self):
         # First, set the texture coordinates
-        tf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
-        tb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
-
+        tf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")[2]
+        tb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")[2]
         self.vlist.tex_coords = tf+tb
 
         # Then, generate and set the vertices

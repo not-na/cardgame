@@ -57,7 +57,7 @@ def register_default_packets(reg, peer, cg, add):
     r("cg:lobby.change", lobby.change.ChangePacket)
 
     # Lobby Ready Packet
-    r("cg:loby.ready", lobby.ready.ReadyPacket)
+    r("cg:lobby.ready", lobby.ready.ReadyPacket)
 
     # GAME PACKETS
 

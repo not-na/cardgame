@@ -32,12 +32,12 @@ class CardTransferPacket(CGPacket):
         "card_id",
         "card_value",
         "from_slot",
-        "to_slot"
+        "to_slot",
     ]
     allowed_keys = [
         "card_id",
         "card_value",
         "from_slot",
-        "to_slot"
-    ],
+        "to_slot",
+    ]
     side = SIDE_CLIENT

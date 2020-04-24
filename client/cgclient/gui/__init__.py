@@ -82,7 +82,7 @@ class PengGUI(object):
         self.peng.cg = self.cg
 
         self.peng.cfg["rsrc.maxtexsize"] = 4096
-        self.peng.cfg["graphics.clearColors"] = 1.0, 1.0, 0.0, 1.0
+        self.peng.cfg["graphics.clearColor"] = (1.0, 0.0, 1.0, 1.0)
 
         self.window = self.peng.createWindow(
             width=self.cg.get_config_option("cg:graphics.resolution.width"),

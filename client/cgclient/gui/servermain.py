@@ -437,7 +437,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         super().__init__(name, menu, window, peng)
 
         self.label = peng3d.gui.Label("lobby_label", self, self.window, self.peng,
-                                      pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),
+                                      pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2 + 150)),
                                       size=[0, 0],  # (lambda sw, sh: (sw, sh)),
                                       label="Hello Lobby!",
                                       font_size=40,
@@ -458,6 +458,19 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         def f():
             self.menu.changeSubMenu("gamerules")
         self.gamerulebtn.addAction("click", f)
+
+        # Ready Button
+        self.readybtn = cgclient.gui.CGButton(
+            "readybtn", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/2-bh/2-10-bh)),
+            size=(lambda sw, sh: (sw/2, 32)),
+            label=self.peng.tl("cg:gui.menu.smain.lobby.readybtn.label"),
+        )
+        self.addWidget(self.readybtn)
+
+        def f():
+            self.menu.cg.client.send_message("cg:lobby.ready", {"ready": True})
+        self.readybtn.addAction("click", f)
 
 
 class GameruleSubMenu(peng3d.gui.SubMenu):
