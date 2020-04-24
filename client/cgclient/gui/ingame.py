@@ -22,7 +22,7 @@
 #
 import math
 import uuid
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 import peng3d
 from . import card
@@ -63,19 +63,6 @@ class BackgroundLayer(peng3d.layer.Layer):
 
 
 class GameLayer(peng3d.layer.Layer):
-    SLOT_NAMES: List[str] = [
-        "stack",
-        "poverty",
-        "table",
-        "hand0",
-        "hand1",
-        "hand2",
-        "hand3",
-        "tricks0",
-        "tricks1",
-        "tricks2",
-        "tricks3",
-    ]
     peng: peng3d.Peng
 
     batch: pyglet.graphics.Batch
@@ -83,14 +70,12 @@ class GameLayer(peng3d.layer.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.slots: Mapping[str, card.Card] = {name: [] for name in self.SLOT_NAMES}
-        self.cards: Mapping[uuid.UUID, card.Card] = {}
-
-        self.player_order: List[uuid.UUID] = []
-        self.hand_to_player: Mapping[int, str] = {}
-
         self.pos = [0, 3, 0]
         self.rot = [0, -90]
+
+        self.game: Optional[cgclient.game.CGame] = None
+
+        self.hand_to_player: Mapping[int, str] = {}
 
         self.batch = pyglet.graphics.Batch()
 
@@ -135,27 +120,27 @@ class GameLayer(peng3d.layer.Layer):
             slot = f"ptrick_{self.hand_to_player[int(slot[6])]}"
 
         if slot == "stack":
-            return [(index-count/2)*0.1, 0.01*index, 0.1]
+            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1]
         elif slot == "table":
             return [.5, index*0.05, 0]
         elif slot == "poverty":
             return [-.5, index*0.05, 0]
         elif slot == "player_self":
-            pass
+            return [-2, 0.1, 0]
         elif slot == "player_left":
-            pass
+            return [-2, 0.1, -2]
         elif slot == "player_right":
-            pass
+            return [-2, 0.1, 2]
         elif slot == "player_top":
-            pass
+            return [2, 0.1, 0]
         elif slot == "ptrick_self":
-            pass
+            return [-1, 0.1, 0]
         elif slot == "ptrick_left":
-            pass
+            return [-1, 0.1, -1]
         elif slot == "ptrick_right":
-            pass
+            return [-1, 0.1, 1]
         elif slot == "ptrick_top":
-            pass
+            return [1, 0.1, 0]
 
     def get_backname(self):
         return "cg:card.back_1"
@@ -243,16 +228,16 @@ class GameLayer(peng3d.layer.Layer):
             self.rot = x, y
 
     def on_redraw(self):
-        for card in self.cards.values():
+        for card in self.game.cards.values():
             card.draw()
 
-    def reinit(self):
+    def clean_up(self):
         # Delete all cards and reset to beginning
-
-        for c in self.cards.values():
+        for c in self.game.cards.values():
             c.delete()
-        self.cards = {}
-        self.slots = {name: [] for name in self.SLOT_NAMES}
+
+    def reinit(self):
+        self.game = self.menu.cg.client.game
 
 
 class HUDLayer(peng3d.gui.GUILayer):

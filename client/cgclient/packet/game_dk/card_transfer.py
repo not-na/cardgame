@@ -57,12 +57,32 @@ class CardTransferPacket(CGPacket):
                 uuidify(msg["card_id"]),
                 msg["card_value"],
             )
-            self.cg.client.gui.ingame.game_layer.cards[c.cardid] = c
-            self.cg.client.gui.ingame.game_layer.slots[c.slot].append(c)
+            self.cg.client.game.cards[c.cardid] = c
+            self.cg.client.game.slots[c.slot].append(c)
 
             c.redraw()
 
-            self.cg.debug(f"Created card {c.cardid} in slot {c.slot} with value '{c.value}'")
+            # Uncomment if needed, causes a lot of log-spam
+            self.cg.info(f"Created card {c.cardid} in slot {c.slot} with value '{c.value}'")
         else:
-            # TODO: implement card transfers and animations
-            pass
+            card_id = uuidify(msg["card_id"])
+
+            if card_id not in self.cg.client.game.cards:
+                self.cg.error(f"Server moved non-existent card {card_id} from {msg['from_slot']} to {msg['to_slot']}")
+                return  # TODO: maybe do some better handling of this situation
+
+            card: cgclient.gui.card.Card = self.cg.client.game.cards[card_id]
+            if card not in self.cg.client.game.slots[msg["from_slot"]]:
+                self.cg.warn(f"Card {card_id} was not in slot {msg['from_slot']}, but server tried to move it to {msg['to_slot']}")
+                from_slot = card.slot
+            else:
+                from_slot = msg["from_slot"]
+
+            self.cg.client.game.slots[from_slot].remove(card)
+            self.cg.client.game.slots[msg["to_slot"]].append(card)
+
+            card.slot = msg["to_slot"]
+            card.start_anim(from_slot, msg["to_slot"])
+            card.redraw()
+
+            self.cg.info(f"Transferred card {card.value} from {from_slot} to {msg['to_slot']}")

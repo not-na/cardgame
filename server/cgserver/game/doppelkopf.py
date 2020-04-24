@@ -763,7 +763,7 @@ class DoppelkopfRound(object):
 
         if from_slot is not None:
             self.slots[from_slot].remove(card.card_id)
-        self.slots[to_slot].append(card.card_id)
+            self.slots[to_slot].append(card.card_id)
 
     def get_card_color(self, card: Card) -> str:
         # Clubs
@@ -1302,11 +1302,12 @@ class DoppelkopfRound(object):
             "phase": "dealing",
         })
 
+        stack = self.slots["stack"]
         for i in range(4):  # Four times
             for j in range(4):  # To each player
                 for k in range(3):  # 3 cards
-                    stack = self.slots["stack"]
                     card_id = stack.pop(random.randint(0, len(stack) - 1))
+                    self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{j}")
                     self.transfer_card(self.cards[card_id], "stack", f"hand{j}")
 
         # Reservations: Only initialisation, the rest of the code is handled by event handlers

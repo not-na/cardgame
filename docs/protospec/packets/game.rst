@@ -18,4 +18,5 @@ Packets
    game_dk/packet_game_dk_card_transfer
    game_dk/packet_game_dk_complaint
    game_dk/packet_game_dk_turn
+   game_dk/packet_game_dk_round_change
    game_dk/packet_game_dk_scoreboard

@@ -20,12 +20,27 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+from typing import List
+
 import cgclient
 
 from . import CGame
 
 
 class DoppelkopfGame(CGame):
+    SLOT_NAMES: List[str] = [
+        "stack",
+        "poverty",
+        "table",
+        "hand0",
+        "hand1",
+        "hand2",
+        "hand3",
+        "tricks0",
+        "tricks1",
+        "tricks2",
+        "tricks3",
+    ]
     menu: cgclient.gui.ingame.IngameMenu
 
     def start(self):

@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import uuid
-from typing import Callable, List
+from typing import Callable, List, Mapping
 
 import cgclient
 
@@ -34,6 +34,8 @@ def register_games(reg: Callable):
 
 
 class CGame(object):
+    SLOT_NAMES: List[str]
+
     def __init__(self, c: cg.CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID]):
         self.cg: cg.CardGame = c
 
@@ -47,6 +49,11 @@ class CGame(object):
                 # But it can happen if a game is not implemented properly
                 self.cg.warn(f"Player {p} is not yet in client user database, requesting more information")
                 self.cg.client.send_message("cg:status.user", {"uuid": p.hex})
+
+        self.slots: Mapping[str, List[cgclient.gui.card.Card]] = {name: [] for name in self.SLOT_NAMES}
+        self.cards: Mapping[uuid.UUID, cgclient.gui.card.Card] = {}
+
+        self.player_order: List[uuid.UUID] = []
 
     def start(self):
         pass

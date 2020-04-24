@@ -87,6 +87,7 @@ class Card(object):
                  ):
 
         self.cg = c
+        self.game = self.cg.client.game
 
         self.layer = layer
 
@@ -112,6 +113,9 @@ class Card(object):
     def on_transfer(self, new_slot: str):
         pass
 
+    def start_anim(self, from_slot: str, to_slot: str, t=0):
+        pass
+
     def redraw(self):
         self.should_redraw = True
 
@@ -120,8 +124,8 @@ class Card(object):
             self.on_redraw()
 
     def on_redraw(self):
-        idx = self.layer.slots[self.slot].index(self)
-        self.pos = self.layer.get_card_slot_pos(self.slot, idx, len(self.layer.slots[self.slot]))
+        idx = self.game.slots[self.slot].index(self)
+        self.pos = self.layer.get_card_slot_pos(self.slot, idx, len(self.game.slots[self.slot]))
 
         #self.rot[2] = idx
         #self.rot[1] = idx*2

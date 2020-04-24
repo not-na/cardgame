@@ -38,5 +38,46 @@ class RoundChangePacket(CGPacket):
     ]
     side = SIDE_CLIENT
 
-    def receive(self,msg,cid=None):
-        pass
+    def receive(self, msg, cid=None):
+        if "player_list" in msg:
+            own_uuid = self.cg.client.user_id.hex
+            self.cg.info(f"Player list: {msg['player_list']}")
+            idx = msg["player_list"].index(own_uuid)
+
+            if idx == 0:
+                # We are hand0
+                out = {
+                    0: "self",
+                    1: "left",
+                    2: "top",
+                    3: "right",
+                }
+            elif idx == 1:
+                # We are hand1
+                out = {
+                    0: "right",
+                    1: "self",
+                    2: "left",
+                    3: "top",
+                }
+            elif idx == 2:
+                # We are hand2
+                out = {
+                    0: "top",
+                    1: "right",
+                    2: "self",
+                    3: "left",
+                }
+            elif idx == 3:
+                # We are hand3
+                out = {
+                    0: "left",
+                    1: "top",
+                    2: "right",
+                    3: "self",
+                }
+            else:
+                self.cg.crash(f"Invalid own-index of {idx}")
+                return
+
+            self.cg.client.gui.ingame.game_layer.hand_to_player = out
