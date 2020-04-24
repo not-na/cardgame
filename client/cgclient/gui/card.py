@@ -57,8 +57,8 @@ COUNTS = {
 }
 
 # Standard cards - 6cm x 9cm
-CARD_SIZE_W = 0.06
-CARD_SIZE_H = 0.09
+CARD_SIZE_W = 0.6
+CARD_SIZE_H = 0.9
 
 
 def rotation_matrix(axis, theta):
@@ -95,10 +95,14 @@ class Card(object):
         self.value: value = value
 
         self.pos: List[float] = [0, 0, 0]
-        self.rot: List[float] = [0, 0, 0]  # In degrees, (short axis, long axis, z axis)
+        self.rot: List[float] = [0, 180, 0]  # In degrees, (short axis, long axis, z axis)
 
         # 4 vertices front, 4 vertices back
-        self.vlist = self.layer.batch.add(8, GL_QUADS, pyglet.graphics.OrderedGroup(1),
+        self.vlist = self.layer.batch.add(8, GL_QUADS,
+                                          pyglet.graphics.TextureGroup(
+                                              peng3d.gui.button._FakeTexture(*self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")),
+                                              parent=pyglet.graphics.OrderedGroup(1)
+                                          ),
                                           "v3f",
                                           "t3f",
                                           )
@@ -116,10 +120,21 @@ class Card(object):
             self.on_redraw()
 
     def on_redraw(self):
+        idx = self.layer.slots[self.slot].index(self)
+        self.pos = self.layer.get_card_slot_pos(self.slot, idx, len(self.layer.slots[self.slot]))
+
+        #self.rot[2] = idx
+        #self.rot[1] = idx*2
+
         # First, set the texture coordinates
-        tf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")[2]
-        tb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")[2]
+        texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
+        texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
+        tf = texf[2]
+        tb = texb[2]
         self.vlist.tex_coords = tf+tb
+
+        if texf[1] != texb[1]:
+            self.cg.warn(f"Front and back texture IDs for card {self.cardid} with value {self.value} do not match!")
 
         # Then, generate and set the vertices
         vf = self.get_vertices(0)
@@ -146,8 +161,8 @@ class Card(object):
 
         # First, generate vectors for x and y of card
         vcw = Vector3(CARD_SIZE_W/2, 0, 0)  # Vector pointing along the width (short side) of the card
-        vch = Vector3(0, CARD_SIZE_H/2, 0)  # Vector pointing along the height (long side) of the card
-        vcp = Vector3(0, 0, offset)  # Vector pointing "out" of the card, perpendicular
+        vch = Vector3(0, 0, CARD_SIZE_H/2)  # Vector pointing along the height (long side) of the card
+        vcp = Vector3(0, offset, 0)  # Vector pointing "out" of the card, perpendicular
 
         #a_s = math.radians(self.rot[0])  # Angle along short axis in radians,
         if self.rot[0] != 0:
@@ -177,9 +192,9 @@ class Card(object):
 
         # Generate the four corners of the card
         c1 = -vcw-vch  # Bottom left
-        c2 = vcw-vch  # Bottom right
-        c3 = vcw+vch  # Top right
-        c4 = -vcw-vch  # Top left
+        c2 = +vcw-vch  # Bottom right
+        c3 = +vcw+vch  # Top right
+        c4 = -vcw+vch  # Top left
 
         # Add a multiple of the direction vector and offset
         vcp += center

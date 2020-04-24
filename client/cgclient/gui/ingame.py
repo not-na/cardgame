@@ -32,6 +32,9 @@ import cgclient.gui
 import pyglet
 
 
+FLIGHT_MODE = True
+
+
 class IngameMenu(peng3d.gui.Menu):
     def __init__(self, name, window, peng, gui):
         super().__init__(name, window, peng)
@@ -86,7 +89,7 @@ class GameLayer(peng3d.layer.Layer):
         self.player_order: List[uuid.UUID] = []
         self.hand_to_player: Mapping[int, str] = {}
 
-        self.pos = [0, 6, 0]
+        self.pos = [0, 3, 0]
         self.rot = [0, -90]
 
         self.batch = pyglet.graphics.Batch()
@@ -105,6 +108,22 @@ class GameLayer(peng3d.layer.Layer):
                                           ("t3f", texinfo[2]),
                                           )
 
+        # Developer Flight Mode
+        if FLIGHT_MODE:
+            self.move = [0, 0]
+            self.jump = 0
+            self.flight_enabled = False
+
+            self.peng.keybinds.add("w", "cg:move.forward", self.on_fwd_down, False)
+            self.peng.keybinds.add("s", "cg:move.backward", self.on_bwd_down, False)
+            self.peng.keybinds.add("a", "cg:move.left", self.on_left_down, False)
+            self.peng.keybinds.add("d", "cg:move.right", self.on_right_down, False)
+            self.peng.keybinds.add("lshift", "cg:crouch", self.on_crouch_down, False)
+            self.peng.keybinds.add("space", "cg:jump", self.on_jump_down, False)
+            self.peng.keybinds.add("escape", "cg:escape", self.on_escape, False)
+            self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
+            self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
+
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1/60.)
 
@@ -116,7 +135,7 @@ class GameLayer(peng3d.layer.Layer):
             slot = f"ptrick_{self.hand_to_player[int(slot[6])]}"
 
         if slot == "stack":
-            return [0, 0, 0]
+            return [(index-count/2)*0.1, 0.01*index, 0.1]
         elif slot == "table":
             return [.5, index*0.05, 0]
         elif slot == "poverty":
@@ -162,7 +181,66 @@ class GameLayer(peng3d.layer.Layer):
         self.batch.draw()
 
     def update(self, dt=None):
-        pass
+        if FLIGHT_MODE and self.window.menu is self.menu and self.flight_enabled:
+            speed = 5
+            d = dt * speed  # distance covered this tick.
+            dx, dy, dz = self.get_motion_vector()
+            # New position in space, before accounting for gravity.
+            dx, dy, dz = dx * d, dy * d, dz * d
+            dy += self.jump*0.2
+            x, y, z = self.pos
+            self.pos = dx + x, dy + y, dz + z
+
+    def get_motion_vector(self):
+        if any(self.move):
+            x, y = self.rot
+            strafe = math.degrees(math.atan2(*self.move))
+            y_angle = math.radians(y)
+            x_angle = math.radians(x + strafe)
+            dy = 0.0
+            dx = math.cos(x_angle)
+            dz = math.sin(x_angle)
+        else:
+            dy = 0.0
+            dx = 0.0
+            dz = 0.0
+        return dx, dy, dz
+
+    def on_fwd_down(self, symbol, modifiers, release):
+        self.move[0] -= 1 if not release else -1
+
+    def on_bwd_down(self, symbol, modifiers, release):
+        self.move[0] += 1 if not release else -1
+
+    def on_left_down(self, symbol, modifiers, release):
+        self.move[1] -= 1 if not release else -1
+
+    def on_right_down(self, symbol, modifiers, release):
+        self.move[1] += 1 if not release else -1
+
+    def on_crouch_down(self, symbol, modifiers, release):
+        self.jump -= 1 if not release else -1
+
+    def on_jump_down(self, symbol, modifiers, release):
+        self.jump += 1 if not release else -1
+
+    def on_escape(self, symbol, modifiers, release):
+        if release:
+            return
+        self.window.toggle_exclusivity()
+        self.flight_enabled = self.window.exclusive
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.on_mouse_motion(x, y, dx, dy)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        if FLIGHT_MODE and self.window.menu is self.menu and self.flight_enabled:
+            m = 0.15
+            x, y = self.rot
+            x, y = x + dx*m, y + dy*m
+            y = max(-90, min(90, y))
+            x %= 360
+            self.rot = x, y
 
     def on_redraw(self):
         for card in self.cards.values():

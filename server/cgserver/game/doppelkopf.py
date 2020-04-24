@@ -563,7 +563,7 @@ class DoppelkopfRound(object):
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not DEV_MODE else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot,
                 })
