@@ -51,6 +51,9 @@ class IngameMenu(peng3d.gui.Menu):
         self.hud_layer: HUDLayer = HUDLayer("hud", self, self.window, self.peng)
         self.addLayer(self.hud_layer)
 
+        self.popup_layer: PopupLayer = PopupLayer("popup", self, self.window, self.peng)
+        self.addLayer(self.popup_layer)
+
         self.gui_layer: GUILayer = GUILayer("game_gui", self, self.window, self.peng)
         self.addLayer(self.gui_layer)
 
@@ -247,8 +250,8 @@ class GameLayer(peng3d.layer.Layer):
 class HUDLayer(peng3d.gui.GUILayer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.font = "Times New Roman",
-        self.font_size = 25,
+        self.font = "Times New Roman"
+        self.font_size = 25
         self.font_color = [255, 255, 255, 100]
 
         self.setBackground([255, 0, 255, 0])
@@ -262,6 +265,108 @@ class HUDLayer(peng3d.gui.GUILayer):
 class MainHUDSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
+
+
+class PopupLayer(peng3d.gui.GUILayer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.font = "Times New Roman"
+        self.font_size = 25
+        self.font_color = [255, 255, 255, 100]
+
+        self.cg = self.menu.cg
+
+        self.setBackground([0, 255, 0, 0])
+
+        self.s_empty = peng3d.gui.SubMenu("empty", self, self.window, self.peng)
+        self.addSubMenu(self.s_empty)
+
+        self.s_question = QuestionPopupSubMenu("question", self, self.window, self.peng)
+        self.addSubMenu(self.s_question)
+
+        self.changeSubMenu("empty")
+
+    def ask_question_2choice(self, questiontype):
+        self.s_question.questiontype = questiontype
+
+        self.s_question.question.label = self.peng.tl(f"cg:question.{questiontype}.text")
+        self.s_question.choice1btn.label = self.peng.tl(f"cg:question.{questiontype}.choice1")
+        self.s_question.choice2btn.label = self.peng.tl(f"cg:question.{questiontype}.choice2")
+
+        self.changeSubMenu("question")
+
+
+class QuestionPopupSubMenu(peng3d.gui.SubMenu):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.setBackground([242, 241, 240, 200])
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
+
+        self.qcell = self.grid.get_cell([2, 4], [2, 1], anchor_x="center", anchor_y="center")
+        self.question = peng3d.gui.Label("question", self, self.window, self.peng,
+                                         pos=self.qcell,
+                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         label=self.peng.tl("cg:question.unknown.text"),
+                                         font_color=[0, 0, 0, 255],
+                                         multiline=True,
+                                         )
+        self.addWidget(self.question)
+
+        self.choice1btn = cgclient.gui.CGButton("choice1btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([2, 2], [1, 1]),
+                                                label=self.peng.tl("cg:question.unknown.choice1"),
+                                                )
+        self.addWidget(self.choice1btn)
+
+        self.choice1btn.addAction("click", self.on_click_choice1)
+
+        self.choice2btn = cgclient.gui.CGButton("choice2btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([3, 2], [1, 1]),
+                                                label=self.peng.tl("cg:question.unknown.choice2"),
+                                                )
+        self.addWidget(self.choice2btn)
+
+        self.choice2btn.addAction("click", self.on_click_choice2)
+
+        self.questiontype = "unknown"
+
+        self.choice1 = {
+            "reservation": "reservation_yes",
+            "throw": "throw_yes",
+            "pigs": "pigs_yes",
+            "superpigs": "superpigs_yes",
+            "poverty": "poverty_yes",
+            "poverty_accept": "poverty_accept",
+            "wedding": "wedding_yes",
+        }
+
+        self.choice2 = {
+            "reservation": "reservation_no",
+            "throw": "throw_no",
+            "pigs": "pigs_no",
+            "superpigs": "superpigs_no",
+            "poverty": "poverty_no",
+            "poverty_accept": "poverty_decline",
+            "wedding": "wedding_no"
+        }
+
+    def on_click_choice1(self):
+        self.menu.cg.info(f"User clicked on choice 1 of question {self.questiontype}")
+
+        t = self.choice1[self.questiontype]
+        self.menu.cg.client.send_message("cg:game.dk.announce", {"type": t})
+
+        self.menu.changeSubMenu("empty")
+
+    def on_click_choice2(self):
+        self.menu.cg.info(f"User clicked on choice 2 of question {self.questiontype}")
+
+        t = self.choice2[self.questiontype]
+        self.menu.cg.client.send_message("cg:game.dk.announce", {"type": t})
+
+        self.menu.changeSubMenu("empty")
 
 
 class GUILayer(peng3d.gui.GUILayer):

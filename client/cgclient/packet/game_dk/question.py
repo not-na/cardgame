@@ -24,6 +24,7 @@ from peng3dnet import SIDE_CLIENT
 
 from cg.constants import STATE_GAME_DK
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class QuestionPacket(CGPacket):
@@ -39,4 +40,22 @@ class QuestionPacket(CGPacket):
     side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        pass
+        if uuidify(msg["target"]) == self.cg.client.user_id:
+            if msg["type"] in [
+                "reservation",
+                "throw",
+                "pigs",
+                "superpigs",
+                "poverty",
+                "poverty_accept",
+                "wedding",
+            ]:
+                # Simple 2-choice question
+                self.cg.client.gui.ingame.popup_layer.ask_question_2choice(msg["type"])
+            else:
+                # TODO: implement these other question types
+                self.cg.warn(f"Question type {msg['type']} is not yet implemented")
+        else:
+            # Question not for this player, only display notification
+            # TODO: implement player notifications
+            self.cg.info(f"Question for other player {msg['target']} of type {msg['type']}")

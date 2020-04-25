@@ -36,4 +36,4 @@ class AnnouncePacket(CGPacket):
     ]
 
     def receive(self, msg, cid=None):
-        pass
+        self.cg.info(f"Announce: {msg}")
