@@ -453,7 +453,7 @@ class DoppelkopfGame(CGame):
     def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
         if exclude is None:
             exclude = []
-        self.cg.info(f"Send to all {packet} with {data}")
+        #self.cg.info(f"Send to all {packet} with {data}")
         for u in self.players:
             if u not in exclude and u not in self.fake_players:
                 self.cg.server.send_to_user(u, packet, data)
@@ -658,7 +658,7 @@ class DoppelkopfRound(object):
         self.move_counter += 1
 
     def transfer_card(self, card: Card, from_slot: Optional[str], to_slot: str):
-        self.game.cg.info(f"Transfer card {from_slot} {to_slot}")
+        self.game.cg.info(f"Transfer card {card.card_value} from {from_slot} to {to_slot}")
         if from_slot is None:
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
@@ -763,7 +763,7 @@ class DoppelkopfRound(object):
 
         if from_slot is not None:
             self.slots[from_slot].remove(card.card_id)
-            self.slots[to_slot].append(card.card_id)
+        self.slots[to_slot].append(card.card_id)
 
     def get_card_color(self, card: Card) -> str:
         # Clubs

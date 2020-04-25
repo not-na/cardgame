@@ -119,6 +119,10 @@ class GameLayer(peng3d.layer.Layer):
         elif slot.startswith("tricks"):
             slot = f"ptrick_{self.hand_to_player[int(slot[6])]}"
 
+        # TODO: fix the card positions
+        # Currently, _self is the middle stack of the group of three
+        # A bit misleading, but it is only temporary
+
         if slot == "stack":
             return [(index-count/2)*0.1, 0.01*index+0.2, 0.1]
         elif slot == "table":
@@ -126,21 +130,21 @@ class GameLayer(peng3d.layer.Layer):
         elif slot == "poverty":
             return [-.5, index*0.05, 0]
         elif slot == "player_self":
-            return [-2, 0.1, 0]
+            return [-2+0.1*index, 0.1+0.001*index, 0]
         elif slot == "player_left":
-            return [-2, 0.1, -2]
+            return [-2+0.1*index, 0.1+0.001*index, -2]
         elif slot == "player_right":
-            return [-2, 0.1, 2]
+            return [-2+0.1*index, 0.1+0.001*index, 2]
         elif slot == "player_top":
-            return [2, 0.1, 0]
+            return [2+0.1*index, 0.1+0.001*index, 0]
         elif slot == "ptrick_self":
-            return [-1, 0.1, 0]
+            return [-1+0.1*index, 0.1+0.001*index, 0]
         elif slot == "ptrick_left":
-            return [-1, 0.1, -1]
+            return [-1+0.1*index, 0.1+0.001*index, -1]
         elif slot == "ptrick_right":
-            return [-1, 0.1, 1]
+            return [-1+0.1*index, 0.1+0.001*index, 1]
         elif slot == "ptrick_top":
-            return [1, 0.1, 0]
+            return [1+0.1*index, 0.1+0.001*index, 0]
 
     def get_backname(self):
         return "cg:card.back_1"
