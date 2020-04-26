@@ -251,7 +251,7 @@ class DoppelkopfGame(CGame):
         },
         "dk.wedding": {
             "type": "select",
-            "default": "None",
+            "default": "3_trick",
             "options": [
                 "None",
                 "3_trick",
@@ -461,21 +461,20 @@ class DoppelkopfGame(CGame):
 
         if user in self.fake_players:
             user = "fake_player_" + str(self.fake_players.index(user))
-        self.cg.info(f"sent packet {packet} with content \n" +\
-                     f"\t{data}\n" +\
-                     f"\tto user {user}")
+        if packet != "cg:game.dk.card.transfer":
+            self.cg.info(f"sent packet {packet} with content {data} to user {user}")
 
     def register_event_handlers(self):
         super().register_event_handlers()
 
-        self.cg.add_event_listener("cg:game.dk.end_round", self.handle_end_round)
+        self.cg.add_event_listener("cg:game.dk.end_round", self.handle_end_round, group=self.game_id)
 
     def handle_end_round(self, event: str, data: Dict):
         # Send the information on the round
         self.send_to_all("cg:game.dk.round.change", {
             "phase": "end",
             "game_type": data["game_type"],
-            "winner": data["winner"],
+            "winner": data["winner"].hex if data["winner"] is not None else None,
             "eyes": data["eyes"],
             "modifiers": data["modifiers"],
             "extras": data["extras"]
@@ -517,6 +516,8 @@ class DoppelkopfGame(CGame):
 
             self.round_num += 1  # Only increase round_num if the game wasn't cancelled
 
+        self.cg.event_manager.del_group(self.current_round.round_id)  # Deinitialise the round's event handlers
+
         self.start_round(self.round_num)
 
     @classmethod
@@ -527,6 +528,7 @@ class DoppelkopfGame(CGame):
 class DoppelkopfRound(object):
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID], buckround: bool = False):
         self.game: DoppelkopfGame = game
+        self.round_id: uuid.UUID = uuid.uuid4()
 
         self.register_event_handlers()
 
@@ -622,19 +624,23 @@ class DoppelkopfRound(object):
         # Check if this makes the party distribution clear
         if self.game_type in ["normal", "ramsch"]:
             if len(self.obvious_parties["re"]) == 2:
-                for p in self.obvious_parties["unknown"]:
-                    self.update_obvious_party(p, "kontra")
+                for p in self.obvious_parties["unknown"].copy():
+                    self.obvious_parties["unknown"] -= {player}
+                    self.obvious_parties["kontra"].add(player)
             if len(self.obvious_parties["kontra"]) == 2:
-                for p in self.obvious_parties["unknown"]:
-                    self.update_obvious_party(p, "re")
+                for p in self.obvious_parties["unknown"].copy():
+                    self.obvious_parties["unknown"] -= {player}
+                    self.obvious_parties["re"].add(player)
 
         if self.game_type in ["silent_wedding", "ramsch_sw"] and scq:
             if len(self.obvious_parties["re"]) == 1:
-                for p in self.obvious_parties["unknown"]:
-                    self.update_obvious_party(p, "kontra")
+                for p in self.obvious_parties["unknown"].copy():
+                    self.obvious_parties["unknown"] -= {player}
+                    self.obvious_parties["kontra"].add(player)
             if len(self.obvious_parties["kontra"]) == 3:
-                for p in self.obvious_parties["unknown"]:
-                    self.update_obvious_party(p, "re")
+                for p in self.obvious_parties["unknown"].copy():
+                    self.obvious_parties["unknown"] -= {player}
+                    self.obvious_parties["re"].add(player)
 
         # Handle foxes
         for fox in self.foxes.copy():
@@ -649,7 +655,7 @@ class DoppelkopfRound(object):
         # Handle weddings
         if self.game_type == "wedding":
             if len(self.obvious_parties["re"]) == 2:
-                for p in self.obvious_parties["unknown"]:
+                for p in self.obvious_parties["unknown"].copy():
                     self.update_obvious_party(p, "kontra")
 
     def add_move(self, player: uuid.UUID, tp: str, data: str):
@@ -997,8 +1003,11 @@ class DoppelkopfRound(object):
             if i[1] == cards_sorted[0]:
                 return i[0], cards_sorted
 
-    def get_card_sort_key(self, card: Card) -> int:
+    def get_card_sort_key(self, card: Union[Card, uuid.UUID]) -> int:
         first_card = self.cards[self.current_trick[0][1]]
+
+        if isinstance(card, uuid.UUID):
+            card = self.cards[card]
 
         if self.get_card_color(first_card) != "trump":
             # Card is of same color -> color was served
@@ -1307,8 +1316,14 @@ class DoppelkopfRound(object):
 
         stack = self.slots["stack"]
         for i in range(4):  # Four times
+            kr = 3
+            if i == 3:
+                if self.game.gamerules["dk.without9"] == "with_four":
+                    kr = 2
+                elif self.game.gamerules["dk.without9"] == "without":
+                    kr = 1
             for j in range(4):  # To each player
-                for k in range(3):  # 3 cards
+                for k in range(kr):  # 3 cards (or less in the last round, if 9s are disabled)
                     card_id = stack.pop(random.randint(0, len(stack) - 1))
                     self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{j}")
                     self.transfer_card(self.cards[card_id], "stack", f"hand{j}")
@@ -1686,29 +1701,32 @@ class DoppelkopfRound(object):
         })
 
     def register_event_handlers(self):
-        self.game.cg.add_event_listener("cg:game.dk.reservation", self.handle_reservation)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_solo", self.handle_reservation_solo)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_throw", self.handle_reservation_throw)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_pigs", self.handle_reservation_pigs)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_superpigs", self.handle_reservation_superpigs)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_poverty", self.handle_reservation_poverty)
+        self.game.cg.add_event_listener("cg:game.dk.reservation", self.handle_reservation, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_solo", self.handle_reservation_solo, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_throw", self.handle_reservation_throw, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_pigs", self.handle_reservation_pigs, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_superpigs", self.handle_reservation_superpigs, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_poverty", self.handle_reservation_poverty, cg.event.F_RAISE_ERRORS, group=self.round_id)
         self.game.cg.add_event_listener("cg:game.dk.reservation_poverty_pass_card",
-                                        self.handle_reservation_poverty_pass_card)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_poverty_accept", self.handle_reservation_poverty_accept)
-        self.game.cg.add_event_listener("cg:game.dk.reservation_wedding", self.handle_reservation_wedding)
+                                        self.handle_reservation_poverty_pass_card, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_poverty_accept", self.handle_reservation_poverty_accept, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.reservation_wedding", self.handle_reservation_wedding, cg.event.F_RAISE_ERRORS, group=self.round_id)
         self.game.cg.add_event_listener("cg:game.dk.reservation_wedding_clarification_trick",
-                                        self.handle_reservation_wedding_clarification_trick)
+                                        self.handle_reservation_wedding_clarification_trick, cg.event.F_RAISE_ERRORS, group=self.round_id)
 
-        self.game.cg.add_event_listener("cg:game.dk.play_card", self.handle_play_card)
-        self.game.cg.add_event_listener("cg:game.dk.call_pigs", self.handle_call_pigs)
-        self.game.cg.add_event_listener("cg:game.dk.call_superpigs", self.handle_call_superpigs)
-        self.game.cg.add_event_listener("cg:game.dk.call_re", self.handle_call_re)
-        self.game.cg.add_event_listener("cg:game.dk.call_denial", self.handle_call_denial)
+        self.game.cg.add_event_listener("cg:game.dk.play_card", self.handle_play_card, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.call_pigs", self.handle_call_pigs, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.call_superpigs", self.handle_call_superpigs, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.call_re", self.handle_call_re, cg.event.F_RAISE_ERRORS, group=self.round_id)
+        self.game.cg.add_event_listener("cg:game.dk.call_denial", self.handle_call_denial, cg.event.F_RAISE_ERRORS, group=self.round_id)
 
-        self.game.cg.add_event_listener("cg:game.dk.command", self.handle_command)
+        self.game.cg.add_event_listener("cg:game.dk.command", self.handle_command, cg.event.F_RAISE_ERRORS, group=self.round_id)
 
     def handle_reservation(self, event: str, data: Dict):
         # Check for correct states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state is not "reservations":
             raise GameStateError(f"Game state for reservation handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state is not "reservation":
@@ -1756,6 +1774,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_solo(self, event: str, data: Dict):
         # Check for correct states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state is not "reservations":
             raise GameStateError(f"Game state for solo handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state is not "solo":
@@ -1769,7 +1790,7 @@ class DoppelkopfRound(object):
             if (  # Validate solo
                     solo_type in ["solo_queen", "solo_jack", "solo_clubs", "solo_spades", "solo_hearts",
                                   "solo_diamonds", "solo_fleshless"] or
-                    self.game.gamerules["dk." + solo_type.replace("_", ".")] or
+                    self.game.gamerules.get("dk." + solo_type.replace("_", ".")) or
                     (
                             solo_type in ["solo_pure_clubs", "solo_pure_clubs", "solo_pure_clubs",
                                           "solo_pure_clubs"] and
@@ -1832,13 +1853,13 @@ class DoppelkopfRound(object):
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.poverty"] != "None":
-                    self.reserv_state = "poverty",
+                    self.reserv_state = "poverty"
                     self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "poverty",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.wedding"] != "None":
-                    self.reserv_state = "wedding",
+                    self.reserv_state = "wedding"
                     self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
@@ -1849,6 +1870,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_throw(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for throw handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state != "throw":
@@ -1954,13 +1978,13 @@ class DoppelkopfRound(object):
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.poverty"] != "None":
-                    self.reserv_state = "poverty",
+                    self.reserv_state = "poverty"
                     self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "poverty",
                         "target": self.current_player.hex
                     })
                 elif self.game.gamerules["dk.wedding"] != "None":
-                    self.reserv_state = "wedding",
+                    self.reserv_state = "wedding"
                     self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
@@ -1971,6 +1995,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_pigs(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for pigs handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state != "pigs":
@@ -2025,13 +2052,13 @@ class DoppelkopfRound(object):
                 })
             # Or for other reservations
             elif self.game.gamerules["dk.poverty"] != "None":
-                self.reserv_state = "poverty",
+                self.reserv_state = "poverty"
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
                 })
             elif self.game.gamerules["dk.wedding"] != "None":
-                self.reserv_state = "wedding",
+                self.reserv_state = "wedding"
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
@@ -2042,6 +2069,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_superpigs(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for superpigs handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state != "superpigs":
@@ -2095,13 +2125,13 @@ class DoppelkopfRound(object):
 
             # Ask for the next legal reservation
             if self.game.gamerules["dk.poverty"] != "None":
-                self.reserv_state = "poverty",
+                self.reserv_state = "poverty"
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
                 })
             elif self.game.gamerules["dk.wedding"] != "None":
-                self.reserv_state = "wedding",
+                self.reserv_state = "wedding"
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
@@ -2112,6 +2142,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for poverty handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state != "poverty":
@@ -2186,7 +2219,7 @@ class DoppelkopfRound(object):
             else:
                 # Ask for the next legal reservation
                 if self.game.gamerules["dk.wedding"] != "None":
-                    self.reserv_state = "wedding",
+                    self.reserv_state = "wedding"
                     self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                         "type": "wedding",
                         "target": self.current_player.hex
@@ -2196,6 +2229,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty_pass_card(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(
                 f"Game state for poverty card passing handling must be 'reservations', not {self.game_state}!")
@@ -2281,6 +2317,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty_accept(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(
                 f"Game state for poverty accept handling must be 'reservations', not {self.game_state}!")
@@ -2430,7 +2469,7 @@ class DoppelkopfRound(object):
                     else:
                         # Ask for the next legal reservation
                         if self.game.gamerules["dk.wedding"] != "None":
-                            self.reserv_state = "wedding",
+                            self.reserv_state = "wedding"
                             self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                                 "type": "wedding",
                                 "target": self.current_player.hex
@@ -2461,6 +2500,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_wedding(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for wedding handling must be 'reservations', not {self.game_state}!")
         if self.reserv_state != "wedding":
@@ -2528,6 +2570,9 @@ class DoppelkopfRound(object):
 
     def handle_reservation_wedding_clarification_trick(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for wedding clarification trick handling must be 'reservations', not"
                                  f"{self.game_state}!")
@@ -2554,9 +2599,12 @@ class DoppelkopfRound(object):
 
     def handle_play_card(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "tricks":
             raise GameStateError(
-                f"Game state for poverty accept handling must be 'tricks', not {self.game_state}!")
+                f"Game state for cad playing handling must be 'tricks', not {self.game_state}!")
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the card play handling packet is not the current player!")
         if len(self.current_trick) > 4:
@@ -2631,7 +2679,7 @@ class DoppelkopfRound(object):
                 self.update_obvious_party(self.current_player, "re")
 
             # The second queen of clubs is being played
-            if [self.cards[card].card_value for card in chain(*self.hands)].count("cq") == 1:
+            if [self.cards[card].card_value for card in chain(*self.hands.values())].count("cq") == 1:
                 self.update_obvious_party(self.current_player, "re", True)
                 if not self.obvious_parties["re"] == self.parties["re"]:
                     raise GameStateError("Obvious re party doesn't correspond with re party, though it should!")
@@ -2667,10 +2715,10 @@ class DoppelkopfRound(object):
             if self.game_type == "wedding":
                 if len(self.parties["kontra"]) == 0:  # Parties not decided yet#
                     if trick_winner not in self.parties["re"]:
-                        if self.wedding_clarification_trick is None:
+                        if self.wedding_clarification_trick in [None, "foreign"]:
                             wedding = self.trick_num <= 3
 
-                        if self.wedding_clarification_trick == "trump":
+                        elif self.wedding_clarification_trick == "trump":
                             wedding = self.get_card_color(self.cards[self.current_trick[0][1]]) == "trump"
                         elif self.wedding_clarification_trick == "miss":
                             wedding = self.get_card_color(self.cards[sorted_trick[1]]) != "trump"
@@ -2743,8 +2791,8 @@ class DoppelkopfRound(object):
 
             # Inform the players on the new scores
             self.game.send_to_all("cg:game.dk.scoreboard", {
-                "player": self.current_player,
-                "pips": self.player_eyes[self.current_player],
+                "player": trick_winner.hex,
+                "pips": self.player_eyes[trick_winner],
                 "pip_change": gain
             })
 
@@ -2771,6 +2819,9 @@ class DoppelkopfRound(object):
 
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
                                   "solo_null"]:
@@ -2850,6 +2901,9 @@ class DoppelkopfRound(object):
 
     def handle_call_superpigs(self, event: str, data: Dict):
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
                                   "solo_null"]:
@@ -2906,6 +2960,9 @@ class DoppelkopfRound(object):
 
     def handle_call_re(self, event: str, data: Dict):  # Also for Kontra
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "tricks":
             raise GameStateError(
                 f"Game state for re or kontra call handling must be 'tricks', not {self.game_state}!")
@@ -2968,6 +3025,9 @@ class DoppelkopfRound(object):
 
     def handle_call_denial(self, event: str, data: Dict):  # Also for Kontra
         # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
         if self.game_state != "tricks":
             raise GameStateError(
                 f"Game state for denial call handling must be 'tricks', not {self.game_state}!")
@@ -3036,12 +3096,26 @@ class DoppelkopfRound(object):
         packet = f"cg:game.dk.{data['packet']}"
 
         try:
-            player = self.game.fake_players[data["player"]]
+            player = self.game.fake_players[int(data["player"])]
         except IndexError:
             self.game.cg.info(f"Invalid fake player index: {data['player']}")
             return
+        except ValueError:
+            if data['player'] == 'p':
+                player = self.game.players[0]  # Real player
+            elif data['player'] == 'all':
+                for p in self.players:
+                    if p in self.game.fake_players:
+                        self.game.cg.send_event("cg:game.dk.reservation", {
+                            "player": p.hex,
+                            "type": "reservation_no"
+                        })
+                return
+            else:
+                self.game.cg.info(f"The first argument (fake player) must be an integer, not {data['player']}")
+                return
 
-        if packet == "cg:game.dk.reservation_solo" and data["type"] == "solo_yes":
+        if packet == "cg:game.dk.reservation_solo":
             self.game.cg.send_event(packet, {
                 "player": player.hex,
                 "type": data["type"],
@@ -3074,6 +3148,21 @@ class DoppelkopfRound(object):
                 "player": player.hex,
                 "type": data["type"],
                 "data": {"trick": data["data"]}
+            })
+
+        elif packet == "cg:game.dk.play_card":
+            try:
+                card = self.hands[player][int(data["card"])]
+            except ValueError:
+                self.game.cg.info(f"Invalid card; card must be of type int!")
+                return
+            except IndexError:
+                self.game.cg.info(f"There are only {len(self.hands[player])} cards left!")
+                return
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"],
+                "card": card
             })
 
         else:

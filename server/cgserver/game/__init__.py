@@ -78,8 +78,6 @@ class CGame(object, metaclass=abc.ABCMeta):
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
         self.cg: cg.CardGame = c
 
-        self.register_event_handlers()
-
         self.game_id = uuid.uuid4()
 
         self.lobby_id = lobby
@@ -87,12 +85,14 @@ class CGame(object, metaclass=abc.ABCMeta):
 
         self.players: List[uuid.UUID] = self.lobby.users
 
+        self.register_event_handlers()
+
         for p in self.players:
             self.cg.server.users_uuid[p].cur_game = self.game_id
 
         self.gamerules = {}
 
-        for rule, value in self.lobby.gamerules:
+        for rule, value in self.lobby.gamerules.items():
             if rule not in self.GAMERULES:
                 self.cg.warn(f"Gamerules {rule} is not valid for the current game")
             else:

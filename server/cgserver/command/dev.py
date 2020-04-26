@@ -33,16 +33,19 @@ class DevCommand(cgserver.command.Command):
         return "dev\tI bet you'd like to know, wouldn't you? ;)"
 
     def run(self, ctx: cgserver.command.CommandContext, args: list):
-        if len(args) < 4:
+        if len(args) < 4 and args[1] != "q":
             ctx.output(f"The dev command takes at least 3 arguments, not {len(args) - 1}")
             return
 
-        try:
-            fake_player = int(args[1])
-        except ValueError:
-            ctx.output(f"The first argument (fake player) must be an integer, not {args[1]}")
+        if args[1] == "q":
+            self.cg.send_event("cg:game.dk.command", {
+                "packet": "reservation",
+                "player": "all",
+                "type": "reservation_no"
+            })
             return
 
+        fake_player = args[1]
         command = args[2]
         choice = args[3]
         data = ""
@@ -86,6 +89,7 @@ class DevCommand(cgserver.command.Command):
                     "packet": "reservation_solo",
                     "player": fake_player,
                     "type": "solo_no",
+                    "data": ""
                 })
 
         elif command == "throw":
@@ -203,3 +207,37 @@ class DevCommand(cgserver.command.Command):
                 "type": "wedding_clarification_trick",
                 "data": choice
             })
+
+        elif command == "play":
+            self.cg.send_event("cg:game.dk.command", {
+                "packet": "play_card",
+                "player": fake_player,
+                "type": "play",
+                "card": choice
+            })
+
+        elif command == "call":
+            if choice in ["re", "kontra"]:
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "call_re",
+                    "player": fake_player,
+                    "type": choice
+                })
+            elif choice in ["no90", "no60", "no30", "black"]:
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "call_denial",
+                    "player": fake_player,
+                    "type": choice
+                })
+            elif choice == "pigs":
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "call_pigs",
+                    "player": fake_player,
+                    "type": choice
+                })
+            elif choice == "superpigs":
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "call_superpigs",
+                    "player": fake_player,
+                    "type": choice
+                })

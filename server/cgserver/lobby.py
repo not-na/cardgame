@@ -42,6 +42,25 @@ class Lobby(object):
         self.user_ready: Dict[uuid.UUID, bool] = {}
 
         self.gamerules: Dict[str, Any] = {}
+        # Debugging for Doppelkopf
+        if cgserver.game.CGame.DEV_MODE:
+            self.gamerules = {
+                "dk.pigs": "two_reservation",
+                "dk.superpigs": "reservation",
+                "dk.throw": "reservation",
+                "dk.throw_cases": [
+                    "5_9",
+                    "5_k",
+                    "4_9+4_k",
+                    "9_all_c",
+                    "k_all_c",
+                    "7full",
+                    "t<hj",
+                    "t<dj"
+                ],
+                "dk.poverty": "sell",
+                "dk.poverty_consequence": "redeal"
+            }
 
     def remove_user(self, user: uuid.UUID, left=False):
         if user not in self.users:
