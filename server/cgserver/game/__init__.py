@@ -23,7 +23,7 @@
 
 import abc
 import uuid
-from typing import Any, Union, Tuple, Dict, Callable
+from typing import Any, Union, Tuple, Dict, Callable, List
 
 import cgserver
 
@@ -85,6 +85,11 @@ class CGame(object, metaclass=abc.ABCMeta):
         self.lobby_id = lobby
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]
 
+        self.players: List[uuid.UUID] = self.lobby.users
+
+        for p in self.players:
+            self.cg.server.users_uuid[p].cur_game = self.game_id
+
         self.gamerules = {}
 
         for rule, value in self.lobby.gamerules:
@@ -123,4 +128,7 @@ class CGame(object, metaclass=abc.ABCMeta):
 
     def register_event_handlers(self):
         pass
+
+    def delete(self):
+        self.cg.event_manager.del_group(self.game_id)
 

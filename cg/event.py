@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
-from typing import Callable, Dict
+from typing import Callable, Dict, Mapping, Any, List, Tuple
 
 MAX_IGNORE = 2
 """
@@ -69,6 +69,7 @@ class EventManager(object):
 
         self.event_handlers = {}
         self.handler_flags = {}
+        self.handler_groups: Dict[Any, List[Tuple[str, Callable]]] = {}
         self.ignored = {}
 
         self.event_list = set()
@@ -110,7 +111,7 @@ class EventManager(object):
                 elif flags & F_REMOVE_ONERROR:
                     self.del_event_listener(event, handler)
 
-    def add_event_listener(self, event: str, func: Callable[[str, Dict], None], flags=0):
+    def add_event_listener(self, event: str, func: Callable[[str, Dict], None], flags=0, group=None):
         if not isinstance(event, str):
             raise TypeError("Event types must always be strings")
 
@@ -122,6 +123,9 @@ class EventManager(object):
 
         if event not in self.event_handlers:
             self.event_handlers[event] = []
+        if group not in self.handler_groups:
+            self.handler_groups[group] = []
+        self.handler_groups[group].append((event, func))
         self.handler_flags[(event, func)] = flags
         self.event_handlers[event].append(func)
 
@@ -138,6 +142,14 @@ class EventManager(object):
         if not self.event_handlers[event]:
             # Clean up empty event handlers to prevent memory leaks
             del self.event_handlers[event]
+
+    def del_group(self, group):
+        if group not in self.handler_groups:
+            return  # Prevent errors if the group did not exist
+
+        for event, func in self.handler_groups[group]:
+            self.del_event_listener(event, func)
+        del self.handler_groups[group]
 
     def handle_shutdown(self, event: str, data: dict):
         if self.cg.get_config_option("cg:debug.event.dump_file") != "":

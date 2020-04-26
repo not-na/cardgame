@@ -407,7 +407,6 @@ class DoppelkopfGame(CGame):
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
         super().__init__(c, lobby)
 
-        self.players: List[uuid.UUID] = self.lobby.users
         self.fake_players: List[uuid.UUID] = []
 
         if self.DEV_MODE:

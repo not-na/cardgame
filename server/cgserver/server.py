@@ -81,9 +81,6 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
     def on_close(self, reason=None):
         super().on_close(reason)
 
-        if not hasattr(self, "user"):
-            self.server.cg.error(f"Client {self.cid} has no user on exit!")
-
         if self.user is not None:
             self.user.cid = None
 
@@ -91,6 +88,20 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
                 self.server.cg.info(f"Removing user {self.user.username} from lobby due to disconnect")
                 self.server.cgserver.lobbies[self.user.lobby].remove_user(self.user.uuid, left=True)
                 self.user.lobby = None
+
+            if self.user.cur_game is not None:
+                self.server.cg.warn(f"User {self.user.username} was still in a game on disconnect")
+                # TODO: allow reconnect after disconnect
+
+                # Check if the game is now "empty", and if so, delete it
+                g = self.server.cgserver.games[self.user.cur_game]
+                if not any([uid in self.server.cgserver.users_uuid and self.server.cgserver.users_uuid[uid].cid is not None for uid in g.players]):
+                    # Delete the game
+                    g.delete()
+                    del self.server.cgserver.games[self.user.cur_game]
+                    del g
+
+                self.user.cur_game = None
 
         self.server.cg.info(f"Connection to client {self.cid} closed due to '{reason}'")
 

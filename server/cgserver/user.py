@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import uuid
-from typing import Union
+from typing import Union, Optional
 
 import cg
 
@@ -35,8 +35,10 @@ class User(object):
         self.pwd: str = udat.get("pwd", "")
         self.uuid: uuid.UUID = cg.util.uuidify(udat.get("uuid", uuid.uuid4()))
 
-        self.cid: Union[None, int] = None
-        self.lobby: Union[None, uuid.UUID] = None
+        self.cid: Optional[int] = None
+        self.lobby: Optional[uuid.UUID] = None
+
+        self.cur_game: Optional[uuid.UUID] = None
 
         # TODO: add more user data here
 
