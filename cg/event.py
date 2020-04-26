@@ -21,6 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import traceback
 from typing import Callable, Dict, Mapping, Any, List, Tuple
 
 MAX_IGNORE = 2
@@ -108,6 +109,7 @@ class EventManager(object):
                     raise
                 elif not (flags & F_SILENT):
                     self.cg.info(f"Ignored error raised by event handler {handler} of event {event}")
+                    traceback.print_exc()
                 elif flags & F_REMOVE_ONERROR:
                     self.del_event_listener(event, handler)
 

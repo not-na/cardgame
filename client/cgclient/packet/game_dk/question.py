@@ -68,14 +68,17 @@ class QuestionPacket(CGPacket):
 
                 self.cg.client.game.cur_intent = "return_card"
                 self.cg.client.game.cards_batchsize = 3
+            elif msg["type"] == "poverty_return_trumps":
+                self.cg.info("Received poverty_return_trumps question")
+                # Special 4-choice question
+                self.cg.client.gui.ingame.popup_layer.changeSubMenu("returnt")
             else:
                 # TODO: implement these other question types
                 # Missing:
-                # poverty_return_trumps
                 # wedding_clarification_trick
                 # solo
                 # accusation_vote
-                self.cg.warn(f"Question type {msg['type']} is not yet implemented")
+                self.cg.error(f"Question type {msg['type']} is not yet implemented")
         else:
             # Question not for this player, only display notification
             # TODO: implement player notifications

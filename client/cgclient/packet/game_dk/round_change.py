@@ -85,3 +85,20 @@ class RoundChangePacket(CGPacket):
                 return
 
             self.cg.client.gui.ingame.game_layer.hand_to_player = out
+
+        if "phase" in msg:
+            self.cg.info(f"Now in round phase {msg['phase']}")
+            if msg["phase"] == "loading":
+                self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
+            elif msg["phase"] == "dealing":
+                self.cg.client.gui.ingame.gui_layer.changeSubMenu("ingame")
+            elif msg["phase"] == "reservations":
+                pass
+            elif msg["phase"] == "tricks":
+                pass
+            elif msg["phase"] == "counting":
+                pass
+            elif msg["phase"] == "end":
+                pass
+            else:
+                self.cg.crash(f"Invalid round phase {msg['phase']}")

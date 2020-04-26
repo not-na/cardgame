@@ -119,6 +119,7 @@ class Card(object):
         pass
 
     def redraw(self):
+        self.layer.redraw()
         self.should_redraw = True
 
     def draw(self):

@@ -298,16 +298,15 @@ class DedicatedServer(object):
 
         self.server.send_message(packet, data, user.cid)
 
-
     # Event Handlers
     def register_event_handlers(self):
-        self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop, cg.event.F_RAISE_ERRORS)
-        self.cg.add_event_listener("cg:console.stdin.recvline", self.handler_consolerecvline, cg.event.F_RAISE_ERRORS)
+        self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop)
+        self.cg.add_event_listener("cg:console.stdin.recvline", self.handler_consolerecvline)
 
-        self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister, cg.event.F_RAISE_ERRORS)
+        self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister)
         self.cg.add_event_listener("cg:network.client.login", self.handler_netclientlogin)
 
-        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister, cg.event.F_RAISE_ERRORS)
+        self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
 
     def handler_commandstop(self, event: str, data: Dict):
         # TODO: implement server stop

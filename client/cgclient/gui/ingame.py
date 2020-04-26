@@ -76,7 +76,7 @@ class GameLayer(peng3d.layer.Layer):
         super().__init__(*args, **kwargs)
 
         self.pos = [0, 3, 0]
-        self.rot = [0, -90]
+        self.rot = [90, -90]
 
         self.game: Optional[cgclient.game.CGame] = None
 
@@ -133,7 +133,7 @@ class GameLayer(peng3d.layer.Layer):
         if slot == "stack":
             return [(index-count/2)*0.1, 0.01*index+0.2, 0.1]
         elif slot == "table":
-            return [.5, index*0.05, 0]
+            return [.5, 0.1+0.001*index, 0.1*index]
         elif slot == "poverty":
             return [-.5, index*0.05, 0]
         elif slot == "player_self":
@@ -145,13 +145,15 @@ class GameLayer(peng3d.layer.Layer):
         elif slot == "player_top":
             return [2+0.1*index, 0.1+0.001*index, 0]
         elif slot == "ptrick_self":
-            return [-1+0.1*index, 0.1+0.001*index, 0]
+            return [-1+0.1*index, 0.5+0.001*index, 0]
         elif slot == "ptrick_left":
-            return [-1+0.1*index, 0.1+0.001*index, -1]
+            return [-1+0.1*index, 0.5+0.001*index, -1]
         elif slot == "ptrick_right":
-            return [-1+0.1*index, 0.1+0.001*index, 1]
+            return [-1+0.1*index, 0.5+0.001*index, 1]
         elif slot == "ptrick_top":
-            return [1+0.1*index, 0.1+0.001*index, 0]
+            return [1+0.1*index, 0.5+0.001*index, 0]
+        else:
+            self.menu.cg.crash(f"Unknown card slot {slot}")
 
     def get_backname(self):
         return "cg:card.back_1"
@@ -300,6 +302,9 @@ class PopupLayer(peng3d.gui.GUILayer):
         self.s_question = QuestionPopupSubMenu("question", self, self.window, self.peng)
         self.addSubMenu(self.s_question)
 
+        self.s_returnt = ReturnTrumpsSubMenu("returnt", self, self.window, self.peng)
+        self.addSubMenu(self.s_returnt)
+
         self.changeSubMenu("empty")
 
     def ask_question_2choice(self, questiontype):
@@ -385,6 +390,68 @@ class QuestionPopupSubMenu(peng3d.gui.SubMenu):
         self.menu.changeSubMenu("empty")
 
 
+class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.setBackground([242, 241, 240, 200])
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
+
+        self.qcell = self.grid.get_cell([2, 4], [2, 1], anchor_x="center", anchor_y="center")
+        self.question = peng3d.gui.Label("question", self, self.window, self.peng,
+                                         pos=self.qcell,
+                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         label=self.peng.tl("cg:question.poverty_return_trumps.text"),
+                                         font_color=[0, 0, 0, 255],
+                                         multiline=True,
+                                         )
+        self.addWidget(self.question)
+
+        self.choice1btn = cgclient.gui.CGButton("choice1btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([2, 2], [1, 1]),
+                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice1"),
+                                                )
+        self.addWidget(self.choice1btn)
+
+        self.choice1btn.addAction("click", self.on_click, 0)
+
+        self.choice2btn = cgclient.gui.CGButton("choice2btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([3, 2], [1, 1]),
+                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice2"),
+                                                )
+        self.addWidget(self.choice2btn)
+
+        self.choice2btn.addAction("click", self.on_click, 1)
+
+        self.choice3btn = cgclient.gui.CGButton("choice3btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([2, 1], [1, 1]),
+                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice3"),
+                                                )
+        self.addWidget(self.choice3btn)
+
+        self.choice3btn.addAction("click", self.on_click, 2)
+
+        self.choice4btn = cgclient.gui.CGButton("choice4btn", self, self.window, self.peng,
+                                                pos=self.grid.get_cell([3, 1], [1, 1]),
+                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice4"),
+                                                )
+        self.addWidget(self.choice2btn)
+
+        self.choice4btn.addAction("click", self.on_click, 3)
+
+    def on_click(self, n):
+        self.menu.cg.info(f"User clicked on choice {n} of question poverty_return_trumps")
+
+        self.menu.cg.client.send_message("cg:game.dk.announce",
+                                         {
+                                             "type": "poverty_return_trumps",
+                                             "data": {"amount": n},
+                                         })
+
+        self.menu.changeSubMenu("empty")
+
+
 class GUILayer(peng3d.gui.GUILayer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -403,7 +470,7 @@ class GUILayer(peng3d.gui.GUILayer):
         self.s_pause = PauseGUISubMenu("pause", self, self.window, self.peng)
         self.addSubMenu(self.s_pause)
 
-        self.changeSubMenu("ingame")
+        self.changeSubMenu("loadingscreen")
 
 
 class LoadingScreenGUISubMenu(peng3d.gui.SubMenu):
