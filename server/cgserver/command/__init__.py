@@ -142,6 +142,10 @@ class CommandManager(object):
         import cgserver.command.stop
         self.register_command("stop", cgserver.command.stop.StopCommand(self.cg))
 
+        if cgserver.game.CGame.DEV_MODE:
+            import cgserver.command.dev
+            self.register_command("dev", cgserver.command.dev.DevCommand(self.cg))
+
         # TODO: implement more commands, like perf
 
     def register_command(self, command: str, obj: Command) -> None:

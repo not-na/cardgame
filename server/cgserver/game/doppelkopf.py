@@ -34,8 +34,6 @@ import uuid
 
 from cg.constants import STATE_GAME_DK
 
-DEV_MODE = True
-
 
 class DoppelkopfGame(CGame):
     GAMERULES = {
@@ -412,7 +410,7 @@ class DoppelkopfGame(CGame):
         self.players: List[uuid.UUID] = self.lobby.users
         self.fake_players: List[uuid.UUID] = []
 
-        if DEV_MODE:
+        if self.DEV_MODE:
             while len(self.players) < 4:
                 pid = uuid.uuid4()
                 self.players.append(pid)
@@ -453,14 +451,20 @@ class DoppelkopfGame(CGame):
     def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
         if exclude is None:
             exclude = []
-        #self.cg.info(f"Send to all {packet} with {data}")
+
         for u in self.players:
-            if u not in exclude and u not in self.fake_players:
-                self.cg.server.send_to_user(u, packet, data)
+            if u not in exclude:
+                self.send_to_user(u, packet, data)
 
     def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
         if user not in self.fake_players:
             self.cg.server.send_to_user(user, packet, data)
+
+        if user in self.fake_players:
+            user = "fake_player_" + str(self.fake_players.index(user))
+        self.cg.info(f"sent packet {packet} with content \n" +\
+                     f"\t{data}\n" +\
+                     f"\tto user {user}")
 
     def register_event_handlers(self):
         super().register_event_handlers()
@@ -518,7 +522,7 @@ class DoppelkopfGame(CGame):
 
     @classmethod
     def check_playercount(cls, count: int):
-        return DEV_MODE or count == 4
+        return cls.DEV_MODE or count == 4
 
 
 class DoppelkopfRound(object):
@@ -663,7 +667,7 @@ class DoppelkopfRound(object):
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not DEV_MODE else card.card_value,
+                    "card_value": "" if not self.game.DEV_MODE else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot,
                 })
@@ -1701,6 +1705,8 @@ class DoppelkopfRound(object):
         self.game.cg.add_event_listener("cg:game.dk.call_superpigs", self.handle_call_superpigs)
         self.game.cg.add_event_listener("cg:game.dk.call_re", self.handle_call_re)
         self.game.cg.add_event_listener("cg:game.dk.call_denial", self.handle_call_denial)
+
+        self.game.cg.add_event_listener("cg:game.dk.command", self.handle_command)
 
     def handle_reservation(self, event: str, data: Dict):
         # Check for correct states
@@ -3026,3 +3032,53 @@ class DoppelkopfRound(object):
 
         # Register move
         self.add_move(self.current_player, "announcement", f"{rtype}_{party}")
+
+    def handle_command(self, event: str, data: Dict):
+        packet = f"cg:game.dk.{data['packet']}"
+
+        try:
+            player = self.game.fake_players[data["player"]]
+        except IndexError:
+            self.game.cg.info(f"Invalid fake player index: {data['player']}")
+            return
+
+        if packet == "cg:game.dk.reservation_solo" and data["type"] == "solo_yes":
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"],
+                "data": {"type": data["data"]}
+            })
+
+        elif packet == "cg:game.dk.reservation_poverty_pass_card":
+            try:
+                card_data = [int(i) for i in data["card"]]
+            except ValueError:
+                self.game.cg.info(f"Invalid cards; cards must be of type int!")
+                return
+
+            cards = [card.hex for card in [self.hands[player][i] for i in card_data]]
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"],
+                "card": cards
+            })
+
+        elif packet == "cg:game.dk.reservation_poverty_accept" and data["type"] == "poverty_return":
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"],
+                "data": {"amount": data["data"]}
+            })
+
+        elif packet == "cg:game.dk.reservation_wedding_clarification_trick":
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"],
+                "data": {"trick": data["data"]}
+            })
+
+        else:
+            self.game.cg.send_event(packet, {
+                "player": player.hex,
+                "type": data["type"]
+            })

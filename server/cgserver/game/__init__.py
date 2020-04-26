@@ -20,6 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import abc
 import uuid
 from typing import Any, Union, Tuple, Dict, Callable
@@ -35,6 +36,7 @@ def register_games(reg: Callable):
 
 
 class CGame(object, metaclass=abc.ABCMeta):
+    DEV_MODE = True
     GAMERULES: Dict[str, Dict[str, Any]] = {}
     """
     Dictionary defining all valid gamerules for the given game.
