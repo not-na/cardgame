@@ -52,8 +52,29 @@ class QuestionPacket(CGPacket):
             ]:
                 # Simple 2-choice question
                 self.cg.client.gui.ingame.popup_layer.ask_question_2choice(msg["type"])
+            elif msg["type"] == "poverty_trump_choice":
+                # TODO: Notify player that they have to play some cards
+                self.cg.info(f"Choose three cards for poverty_trump_choice")
+                # Choose three cards
+                self.cg.client.game.clear_selection()
+
+                self.cg.client.game.cur_intent = "pass_card"
+                self.cg.client.game.cards_batchsize = 3
+            elif msg["type"] == "poverty_return_choice":
+                self.cg.info(f"Choose three cards for poverty_return_choice")
+                # TODO: Notify player that they have to play some cards
+                # Choose three cards
+                self.cg.client.game.clear_selection()
+
+                self.cg.client.game.cur_intent = "return_card"
+                self.cg.client.game.cards_batchsize = 3
             else:
                 # TODO: implement these other question types
+                # Missing:
+                # poverty_return_trumps
+                # wedding_clarification_trick
+                # solo
+                # accusation_vote
                 self.cg.warn(f"Question type {msg['type']} is not yet implemented")
         else:
             # Question not for this player, only display notification

@@ -65,6 +65,7 @@ class CardTransferPacket(CGPacket):
             # Uncomment if needed, causes a lot of log-spam
             self.cg.info(f"Created card {c.cardid} in slot {c.slot} with value '{c.value}'")
         else:
+            # Transfer existing card
             card_id = uuidify(msg["card_id"])
 
             if card_id not in self.cg.client.game.cards:
@@ -80,6 +81,10 @@ class CardTransferPacket(CGPacket):
 
             self.cg.client.game.slots[from_slot].remove(card)
             self.cg.client.game.slots[msg["to_slot"]].append(card)
+
+            # Regardless of where the card was, whatever caused it to be selected is likely not valid anymore
+            card.selected = False
+            # TODO: check if we need to re-compute card.hovered
 
             card.slot = msg["to_slot"]
             card.start_anim(from_slot, msg["to_slot"])

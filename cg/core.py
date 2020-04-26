@@ -87,8 +87,8 @@ class CardGame(object):
     def send_event(self, event: str, data=None):
         return self.event_manager.send_event(event, data)
 
-    def add_event_listener(self, event: str, func: Callable, flags=0):
-        self.event_manager.add_event_listener(event, func, flags)
+    def add_event_listener(self, event: str, func: Callable, flags=0, group=None):
+        self.event_manager.add_event_listener(event, func, flags, group)
 
     def del_event_listener(self, event: str, func: Callable):
         self.event_manager.del_event_listener(event, func)

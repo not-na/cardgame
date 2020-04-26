@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import uuid
-from typing import Callable, List, Mapping
+from typing import Callable, List, Mapping, Optional
 
 import cgclient
 
@@ -35,6 +35,8 @@ def register_games(reg: Callable):
 
 class CGame(object):
     SLOT_NAMES: List[str]
+    default_intent: str
+    card_intent_packet: str
 
     def __init__(self, c: cg.CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID]):
         self.cg: cg.CardGame = c
@@ -55,6 +57,57 @@ class CGame(object):
 
         self.player_order: List[uuid.UUID] = []
 
+        self.own_hand: Optional[str] = None
+
+        self.cards_batchsize: int = 1
+        self.cur_cardbatch: List[uuid.UUID] = []
+        self.cur_intent: str = "play"
+
     def start(self):
         pass
+
+    def select_card(self, card: uuid.UUID):
+        if card not in self.cards:
+            self.cg.crash(f"Attempted to select card {card} that does not exist")
+            return
+        c = self.cards[card]
+        if card in self.cur_cardbatch:
+            self.cg.warn(f"Tried to select card {c.value} ({card}) that was already selected")
+            return
+        if self.cards[card] not in self.slots[self.own_hand]:
+            self.cg.warn(f"Card {c.value} ({card}) not in own hand, attempting transfer anyway")
+
+        self.cur_cardbatch.append(card)
+        c.selected = True
+        c.redraw()
+
+        self.process_selection()
+
+    def process_selection(self):
+        if len(self.cur_cardbatch) > self.cards_batchsize:
+            # Complain in the logs, but send the data anyway
+            self.cg.error(f"{len(self.cur_cardbatch)} cards are selected, but {self.cur_intent} only expects {self.cards_batchsize}")
+        if len(self.cur_cardbatch) >= self.cards_batchsize:
+            self.cg.info(f"Sending card intent with intent '{self.cur_intent}' and {len(self.cur_cardbatch)} card(s)")
+            # Send the packet
+            if len(self.cur_cardbatch) == 1:
+                self.cg.client.send_message(self.card_intent_packet, {
+                    "intent": self.cur_intent,
+                    "card": self.cur_cardbatch[0].hex,
+                })
+            else:
+                self.cg.client.send_message(self.card_intent_packet, {
+                    "intent": self.cur_intent,
+                    "card": [cid.hex for cid in self.cur_cardbatch],
+                })
+
+            self.clear_selection()
+            self.cur_intent = self.default_intent
+
+    def clear_selection(self):
+        for card in self.cur_cardbatch:
+            self.cards[card].selected = False
+            self.cards[card].redraw()
+        self.cur_cardbatch = []
+
 

@@ -46,6 +46,7 @@ class RoundChangePacket(CGPacket):
 
             if idx == 0:
                 # We are hand0
+                self.cg.client.game.own_hand = "hand0"
                 out = {
                     0: "self",
                     1: "left",
@@ -54,6 +55,7 @@ class RoundChangePacket(CGPacket):
                 }
             elif idx == 1:
                 # We are hand1
+                self.cg.client.game.own_hand = "hand1"
                 out = {
                     0: "right",
                     1: "self",
@@ -62,6 +64,7 @@ class RoundChangePacket(CGPacket):
                 }
             elif idx == 2:
                 # We are hand2
+                self.cg.client.game.own_hand = "hand2"
                 out = {
                     0: "top",
                     1: "right",
@@ -70,6 +73,7 @@ class RoundChangePacket(CGPacket):
                 }
             elif idx == 3:
                 # We are hand3
+                self.cg.client.game.own_hand = "hand3"
                 out = {
                     0: "left",
                     1: "top",

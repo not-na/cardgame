@@ -109,6 +109,8 @@ class Card(object):
                                           )
 
         self.should_redraw: bool = True
+        self.selected: bool = False
+        self.hovered: bool = False
 
     def on_transfer(self, new_slot: str):
         pass

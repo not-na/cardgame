@@ -70,6 +70,8 @@ class GameLayer(peng3d.layer.Layer):
 
     batch: pyglet.graphics.Batch
 
+    CARD_KEYS = "0123456789abcdef"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -111,6 +113,8 @@ class GameLayer(peng3d.layer.Layer):
             self.peng.keybinds.add("escape", "cg:escape", self.on_escape, False)
             self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
             self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
+
+        self.peng.registerEventHandler("on_key_release", self.on_key_release)
 
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1/60.)
@@ -233,6 +237,18 @@ class GameLayer(peng3d.layer.Layer):
             y = max(-90, min(90, y))
             x %= 360
             self.rot = x, y
+
+    def on_key_release(self, symbol, modifiers):
+        if not self.menu == self.window.menu:
+            # Only active when the parent menu is active
+            return
+
+        if symbol < 0x7A and chr(symbol) in self.CARD_KEYS:
+            # "Play" the card
+            idx = self.CARD_KEYS.index(chr(symbol))
+            self.menu.cg.info(f"Playing card #{idx}")
+            if idx < len(self.game.slots[self.game.own_hand]):
+                self.game.select_card(self.game.slots[self.game.own_hand][idx].cardid)
 
     def on_redraw(self):
         for card in self.game.cards.values():
