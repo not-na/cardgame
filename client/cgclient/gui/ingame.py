@@ -76,7 +76,7 @@ class GameLayer(peng3d.layer.Layer):
         super().__init__(*args, **kwargs)
 
         self.pos = [0, 3, 0]
-        self.rot = [90, -90]
+        self.rot = [0, -90]
 
         self.game: Optional[cgclient.game.CGame] = None
 
@@ -119,7 +119,7 @@ class GameLayer(peng3d.layer.Layer):
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1/60.)
 
-    def get_card_slot_pos(self, slot: str, index: int, count: int = 1):
+    def get_card_slot_pos_rot(self, slot: str, index: int, count: int = 1):
         # First, map virtual slots to physical slots
         if slot.startswith("hand"):
             slot = f"player_{self.hand_to_player[int(slot[4])]}"
@@ -131,27 +131,27 @@ class GameLayer(peng3d.layer.Layer):
         # A bit misleading, but it is only temporary
 
         if slot == "stack":
-            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1]
+            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], 0
         elif slot == "table":
-            return [.5, 0.1+0.001*index, 0.1*index]
+            return [.5, 0.1+0.001*index, 0.1*index], 0
         elif slot == "poverty":
-            return [-.5, index*0.05, 0]
+            return [-.5, index*0.05, 0], 0
         elif slot == "player_self":
-            return [-2+0.1*index, 0.1+0.001*index, 0]
+            return [-2+0.1*index, 0.1+0.001*index, 0], 0
         elif slot == "player_left":
-            return [-2+0.1*index, 0.1+0.001*index, -2]
+            return [-2+0.1*index, 0.1+0.001*index, -2], 0
         elif slot == "player_right":
-            return [-2+0.1*index, 0.1+0.001*index, 2]
+            return [-2+0.1*index, 0.1+0.001*index, 2], 0
         elif slot == "player_top":
-            return [2+0.1*index, 0.1+0.001*index, 0]
+            return [2.5-0.1*index, 0.1+0.001*index, 0], 0
         elif slot == "ptrick_self":
-            return [-1+0.1*index, 0.5+0.001*index, 0]
+            return [-2.5-0.1*index, 0.5+0.001*index, 0], 0
         elif slot == "ptrick_left":
-            return [-1+0.1*index, 0.5+0.001*index, -1]
+            return [-2.5-0.1*index, 0.5+0.001*index, -1], 0
         elif slot == "ptrick_right":
-            return [-1+0.1*index, 0.5+0.001*index, 1]
+            return [-2.5-0.1*index, 0.5+0.001*index, 1], 0
         elif slot == "ptrick_top":
-            return [1+0.1*index, 0.5+0.001*index, 0]
+            return [2.5+0.1*index, 0.5+0.001*index, 0], 0
         else:
             self.menu.cg.crash(f"Unknown card slot {slot}")
 

@@ -78,6 +78,23 @@ def rotation_matrix(axis, theta):
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
 
+class _FakeTexture(object):
+    def __init__(self, card):
+        self.card = card
+
+    @property
+    def target(self):
+        return self.card.texf[0]
+
+    @property
+    def id(self):
+        return self.card.texf[1]
+
+    @property
+    def tex_coords(self):
+        return self.card.texf[2]
+
+
 class Card(object):
     def __init__(self,
                  c: cg.CardGame,
@@ -95,18 +112,29 @@ class Card(object):
         self.cardid: uuid.UUID = cardid
         self.value: value = value
 
+        self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
+        self.texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
+
         self.pos: List[float] = [0, 0, 0]
         self.rot: List[float] = [0, 180, 0]  # In degrees, (short axis, long axis, z axis)
 
         # 4 vertices front, 4 vertices back
-        self.vlist = self.layer.batch.add(8, GL_QUADS,
-                                          pyglet.graphics.TextureGroup(
-                                              peng3d.gui.button._FakeTexture(*self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")),
-                                              parent=pyglet.graphics.OrderedGroup(1)
-                                          ),
-                                          "v3f",
-                                          "t3f",
-                                          )
+        self.vlist_back = self.layer.batch.add(4, GL_QUADS,
+                                               pyglet.graphics.TextureGroup(
+                                                   peng3d.gui.button._FakeTexture(*self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")),
+                                                   parent=pyglet.graphics.OrderedGroup(1)
+                                               ),
+                                               "v3f",
+                                               "t3f/static",
+                                               )
+        self.vlist_front = self.layer.batch.add(4, GL_QUADS,
+                                               pyglet.graphics.TextureGroup(
+                                                   _FakeTexture(self),
+                                                   parent=pyglet.graphics.OrderedGroup(1),
+                                               ),
+                                               "v3f",
+                                               "t3f/static",
+                                               )
 
         self.should_redraw: bool = True
         self.selected: bool = False
@@ -128,26 +156,29 @@ class Card(object):
 
     def on_redraw(self):
         idx = self.game.slots[self.slot].index(self)
-        self.pos = self.layer.get_card_slot_pos(self.slot, idx, len(self.game.slots[self.slot]))
+        self.pos, r = self.layer.get_card_slot_pos_rot(self.slot, idx, len(self.game.slots[self.slot]))
+        self.rot[2] = r
 
         #self.rot[2] = idx
         #self.rot[1] = idx*2
 
         # First, set the texture coordinates
-        texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
-        texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
-        tf = texf[2]
-        tb = texb[2]
-        self.vlist.tex_coords = tf+tb
+        self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
+        self.texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
+        tf = self.texf[2]
+        tb = self.texb[2]
+        self.vlist_front.tex_coords = tf
+        self.vlist_back.tex_coords = tb
 
-        if texf[1] != texb[1]:
-            self.cg.warn(f"Front and back texture IDs for card {self.cardid} with value {self.value} do not match!")
+        #if texf[1] != texb[1]:
+        #    self.cg.warn(f"Front and back texture IDs for card {self.cardid} with value {self.value} do not match!")
 
         # Then, generate and set the vertices
         vf = self.get_vertices(0)
         vb = self.get_vertices(0.00002)  # 0.2mm
 
-        self.vlist.vertices = vf+vb
+        self.vlist_front.vertices = vf
+        self.vlist_back.vertices = vb
 
     def get_texname(self):
         if self.value == "":

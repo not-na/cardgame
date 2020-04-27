@@ -25,6 +25,7 @@ import uuid
 from typing import Union, Dict, Optional, Type
 
 import peng3dnet
+import pyglet
 
 import cg
 
@@ -63,6 +64,8 @@ class CGClient(peng3dnet.net.Client):
             self.cg.info(f"Connection closed due to '{reason}'")
 
         self.cg.send_event("cg:network.client.close_conn", {"reason": reason})
+
+        pyglet.app.exit()
 
 
 class Client(object):
