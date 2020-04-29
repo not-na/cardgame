@@ -24,6 +24,7 @@ from peng3dnet import SIDE_CLIENT
 
 from cg.constants import STATE_GAME_DK
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class RoundChangePacket(CGPacket):
@@ -85,6 +86,14 @@ class RoundChangePacket(CGPacket):
                 return
 
             self.cg.client.gui.ingame.game_layer.hand_to_player = out
+            self.cg.client.gui.ingame.game_layer.player_list = list(map(uuidify, msg["player_list"]))
+
+            for uidx, uraw in enumerate(msg["player_list"]):
+                uid = uuidify(uraw)
+                n = out[uidx]
+                l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]
+                name = self.cg.client.get_user_name(uid)
+                l.label = f"{name}"
 
         if "phase" in msg:
             self.cg.info(f"Now in round phase {msg['phase']}")

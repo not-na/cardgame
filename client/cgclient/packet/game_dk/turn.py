@@ -24,6 +24,7 @@ from peng3dnet import SIDE_CLIENT
 
 from cg.constants import STATE_GAME_DK
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class TurnPacket(CGPacket):
@@ -41,4 +42,16 @@ class TurnPacket(CGPacket):
     side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        pass
+        cur_player = uuidify(msg["current_player"])
+        idx = self.cg.client.gui.ingame.game_layer.player_list.index(cur_player)
+
+        for i, n in self.cg.client.gui.ingame.game_layer.hand_to_player.items():
+            l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]
+            if i == idx:
+                c = [0, 255, 0, 255]
+            else:
+                c = [100, 100, 100, 255]
+
+            l.font_color = c
+            l._label.color = c
+            l.redraw()

@@ -140,6 +140,12 @@ class Client(object):
     def send_message(self, ptype, data: dict):
         self._client.send_message(ptype, data)
 
+    def get_user_name(self, user_id: uuid.UUID):
+        if user_id not in self.users_uuid:
+            return "<UNKNOWN>"
+        else:
+            return self.users_uuid[user_id].username
+
     def register_game(self, name: str, cls: Type[cgclient.game.CGame]):
         self.game_reg[name] = cls
 

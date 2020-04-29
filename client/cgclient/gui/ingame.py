@@ -86,6 +86,8 @@ class GameLayer(peng3d.layer.Layer):
 
         self.hand_to_player: Dict[int, str] = {}
 
+        self.player_list: List[uuid.UUID] = []
+
         self.clicked_card: Optional[card.Card] = None
 
         self.color_db: Dict[int, Optional[uuid.UUID]] = {
@@ -458,7 +460,7 @@ class HUDLayer(peng3d.gui.GUILayer):
         super().__init__(*args, **kwargs)
         self.font = "Times New Roman"
         self.font_size = 25
-        self.font_color = [255, 255, 255, 100]
+        self.font_color = [100, 100, 100, 255]
 
         self.setBackground([255, 0, 255, 0])
 
@@ -469,8 +471,61 @@ class HUDLayer(peng3d.gui.GUILayer):
 
 
 class MainHUDSubMenu(peng3d.gui.SubMenu):
+    labels: Dict[str, peng3d.gui.Label]
+
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
+
+        self.labels = {}
+
+        self.pself_label = peng3d.gui.Label("pself_label", self, self.window, self.peng,
+                                            pos=(lambda sw, sh, bw, bh: (0, 20)),
+                                            size=(lambda sw, sh: (sw, 0)),
+                                            label="PSELF",
+                                            anchor_x="center",
+                                            anchor_y="baseline",
+                                            multiline=False,
+                                            font_size=35,
+                                            )
+        self.addWidget(self.pself_label)
+        self.labels["self"] = self.pself_label
+
+        self.pleft_label = peng3d.gui.Label("pleft_label", self, self.window, self.peng,
+                                            pos=(lambda sw, sh, bw, bh: (0, sh/2)),
+                                            size=(lambda sw, sh: (0, 0)),
+                                            label="PLEFT",
+                                            anchor_x="left",
+                                            anchor_y="baseline",
+                                            multiline=False,
+                                            font_size=35,
+                                            )
+        self.addWidget(self.pleft_label)
+        self.labels["left"] = self.pleft_label
+
+        self.pright_label = peng3d.gui.Label("pright_label", self, self.window, self.peng,
+                                             pos=(lambda sw, sh, bw, bh: (sw-self.pright_label._label.content_width-20, sh/2)),
+                                             size=(lambda sw, sh: (0, 0)),
+                                             label="PRIGHT",
+                                             anchor_x="left",
+                                             anchor_y="baseline",
+                                             #align="right",
+                                             multiline=False,
+                                             font_size=35,
+                                             )
+        self.addWidget(self.pright_label)
+        self.labels["right"] = self.pright_label
+
+        self.ptop_label = peng3d.gui.Label("ptop_label", self, self.window, self.peng,
+                                           pos=(lambda sw, sh, bw, bh: (0, sh-60)),
+                                           size=(lambda sw, sh: (sw, 0)),
+                                           label="PTOP",
+                                           anchor_x="center",
+                                           anchor_y="baseline",
+                                           multiline=False,
+                                           font_size=35,
+                                           )
+        self.addWidget(self.ptop_label)
+        self.labels["top"] = self.ptop_label
 
 
 class PopupLayer(peng3d.gui.GUILayer):

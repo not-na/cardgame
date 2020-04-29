@@ -194,8 +194,8 @@ class Card(object):
     def get_texname(self):
         if self.value == "":
             name = "unknown_front"
-        elif self.value == "j0":
-            name = "jolly_joker"
+        elif self.value.startswith("j"):
+            name = f"joker_{self.value[1]}"
         else:
             suite = SUITES[self.value[0]]
             count = COUNTS[self.value[1:]]
