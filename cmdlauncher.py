@@ -64,6 +64,7 @@ HELP_TEXT = "Help for the Cardgame CLI Launcher\n" \
             "Shift+i    Input to the current process until 'END' is typed\n" \
             "d          (Re-)build the sphinx documentation\n" \
             "r          Restart the current process, even if it already runs\n" \
+            "Shift+r    Restart the first server and all clients\n" \
             "a          Add an account for easy login\n" \
             "b          Scroll to the bottom\n" \
             "g          Toggle OpenGL Debug mode via Apitrace\n" \
@@ -807,6 +808,22 @@ def main(stdscr):
                     cur_proc.start()
                 else:
                     in_status = "Cannot restart launcher"
+            elif c == ord("R"):
+                # Restart first server and all clients
+                if len(servers) == 0:
+                    in_status = "No server available"
+                else:
+                    s = servers[min(servers.keys())]
+                    if s.running:
+                        s.kill()
+                    s.add_stdout("Restarted all subprocesses", curses.A_BOLD | C_GREEN)
+                    s.start()
+
+                    for p in clients.values():
+                        if p.running:
+                            p.kill()
+                        p.add_stdout("Restarted all subprocesses", curses.A_BOLD | C_GREEN)
+                        p.start()
             elif c == ord("d"):
                 # Rebuild Sphinx Docs
                 if docs.running:
