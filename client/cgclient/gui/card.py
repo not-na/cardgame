@@ -112,6 +112,8 @@ class Card(object):
         self.cardid: uuid.UUID = cardid
         self.value: value = value
 
+        self.color_id = self.layer.gen_color_id(self)
+
         self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
         self.texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
 
@@ -136,9 +138,17 @@ class Card(object):
                                                "t3f/static",
                                                )
 
+        self.vlist_pick = self.layer.batch_pick.add(4, GL_QUADS,
+                                                    None,
+                                                    "v3f",
+                                                    ("c3B/static", self.color_id*4),
+                                                    )
+
         self.should_redraw: bool = True
         self.selected: bool = False
         self.hovered: bool = False
+        self.clicked: bool = False
+        self.dragged: bool = False
 
     def on_transfer(self, new_slot: str):
         pass
@@ -178,6 +188,7 @@ class Card(object):
         vb = self.get_vertices(0.00002)  # 0.2mm
 
         self.vlist_front.vertices = vf
+        self.vlist_pick.vertices = vf
         self.vlist_back.vertices = vb
 
     def get_texname(self):

@@ -75,7 +75,8 @@ class CGame(object):
             self.cg.warn(f"Tried to select card {c.value} ({card}) that was already selected")
             return
         if self.cards[card] not in self.slots[self.own_hand]:
-            self.cg.warn(f"Card {c.value} ({card}) not in own hand, attempting transfer anyway")
+            self.cg.warn(f"Tried to play Card {c.value} ({card}) not in own hand")
+            return
 
         self.cur_cardbatch.append(card)
         c.selected = True
@@ -103,6 +104,7 @@ class CGame(object):
 
             self.clear_selection()
             self.cur_intent = self.default_intent
+            self.cards_batchsize = 1
 
     def clear_selection(self):
         for card in self.cur_cardbatch:

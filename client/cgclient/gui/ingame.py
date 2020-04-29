@@ -20,9 +20,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import ctypes
 import math
+import time
 import uuid
-from typing import List, Mapping, Optional
+from typing import List, Mapping, Optional, Tuple, Dict
 
 import peng3d
 from . import card
@@ -69,8 +71,10 @@ class GameLayer(peng3d.layer.Layer):
     peng: peng3d.Peng
 
     batch: pyglet.graphics.Batch
+    batch_pick: pyglet.graphics.Batch
 
     CARD_KEYS = "0123456789abcdef"
+    NUM_SYNCS = 2
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,9 +84,19 @@ class GameLayer(peng3d.layer.Layer):
 
         self.game: Optional[cgclient.game.CGame] = None
 
-        self.hand_to_player: Mapping[int, str] = {}
+        self.hand_to_player: Dict[int, str] = {}
+
+        self.clicked_card: Optional[card.Card] = None
+
+        self.color_db: Dict[int, Optional[uuid.UUID]] = {
+            0: None,
+        }
+        self.mouse_moved = True
+        self.mouse_pos = 0, 0
+        self.mouse_color = 255, 0, 255
 
         self.batch = pyglet.graphics.Batch()
+        self.batch_pick = pyglet.graphics.Batch()
 
         texinfo = self.peng.resourceMgr.getTex("cg:img.bg.test_table", "bg")
         self.vlist_table = self.batch.add(4, GL_QUADS, pyglet.graphics.TextureGroup(
@@ -97,6 +111,21 @@ class GameLayer(peng3d.layer.Layer):
                                            ]),
                                           ("t3f", texinfo[2]),
                                           )
+
+        # Initialize the PBO for colorID
+        pbo_ids = (GLuint*self.NUM_SYNCS)()
+        glGenBuffers(self.NUM_SYNCS, pbo_ids)
+        self.pbos = list(pbo_ids)
+        self.cur_pbo = 0
+        self.pbo_wait = False
+
+        for n in range(self.NUM_SYNCS):
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, self.pbos[n])
+            glBufferData(GL_PIXEL_PACK_BUFFER, 4, 0, GL_STREAM_READ)
+
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
+
+        self.pbo_syncs = [None for i in range(self.NUM_SYNCS)]
 
         # Developer Flight Mode
         if FLIGHT_MODE:
@@ -113,6 +142,8 @@ class GameLayer(peng3d.layer.Layer):
             self.peng.keybinds.add("escape", "cg:escape", self.on_escape, False)
             self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
             self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
+            self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
+            self.peng.registerEventHandler("on_mouse_release", self.on_mouse_release)
 
         self.peng.registerEventHandler("on_key_release", self.on_key_release)
 
@@ -158,7 +189,20 @@ class GameLayer(peng3d.layer.Layer):
     def get_backname(self):
         return "cg:card.back_1"
 
+    def gen_color_id(self, co: card.Card) -> Tuple:
+        for n in range(0, 255):
+            if n not in self.color_db:
+                break
+        else:
+            self.menu.cg.crash(f"Could not generate a new ColorID for card {co.value} ({co.cardid})")
+            return 255, 0, 0
+
+        self.color_db[n] = co.cardid
+
+        return 0, n, 0
+
     def draw(self):
+        # Customized variant of PengWindow.set3d()
         width, height = self.window.get_size()
         glEnable(GL_DEPTH_TEST)
         glViewport(0, 0, width, height)
@@ -174,9 +218,63 @@ class GameLayer(peng3d.layer.Layer):
         x, y, z = self.pos
         glTranslatef(-x, -y, -z)
 
+        if self.mouse_moved:
+            t = time.time()
+            # Draw the ColorID pass
+            # Used to determine which card we are hovering over
+            # Based roughly on https://stackoverflow.com/a/4059685
+            # PBO based on
+            glEnable(GL_SCISSOR_TEST)
+            glScissor(*self.mouse_pos, 1, 1)  # Restrict to 1x1 px around the mouse cursor
+
+            # Draw the colorID batch
+            self.batch_pick.draw()
+
+            t2 = time.time()
+
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, self.pbos[self.cur_pbo])
+            # Read the pixel at the mouse
+            #buf = (GLubyte*4)()
+            #buf_ptr = ctypes.cast(buf, ctypes.POINTER(GLubyte))
+
+            glReadPixels(*self.mouse_pos, 1, 1, GL_BGRA, GL_UNSIGNED_BYTE, 0)
+
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
+
+            if self.pbo_syncs[self.cur_pbo] is not None:
+                glDeleteSync(self.pbo_syncs[self.cur_pbo])
+            self.pbo_syncs[self.cur_pbo] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0)
+
+            self.cur_pbo = (self.cur_pbo+1) % self.NUM_SYNCS
+            self.pbo_wait = True
+
+            # Reset state
+            glDisable(GL_SCISSOR_TEST)
+            #self.window.clear()
+
+            #et = time.time()
+
+            #tdiff = et-t
+            #self.menu.cg.info(f"T_total: {tdiff*1000:.4f}ms Tr: {(t2-t)*1000:.4f}ms Tg: {(et-t2)*1000:.4f}ms")
+
+            self.mouse_moved = False
+
+        t = time.time()
         # Draw the main batch
         # Contains the table and cards
         self.batch.draw()
+
+        et = time.time()
+        #self.menu.cg.info(f"T_r: {(et-t)*1000:.4f}ms")
+
+    def get_card_at_mouse(self) -> Optional[uuid.UUID]:
+        if self.mouse_color == (255, 0, 255):
+            return None
+
+        if self.mouse_color[1] in self.color_db:
+            return self.color_db[self.mouse_color[1]]
+        else:
+            return None
 
     def update(self, dt=None):
         if FLIGHT_MODE and self.window.menu is self.menu and self.flight_enabled:
@@ -188,6 +286,47 @@ class GameLayer(peng3d.layer.Layer):
             dy += self.jump*0.2
             x, y, z = self.pos
             self.pos = dx + x, dy + y, dz + z
+
+        if self.pbo_wait:
+            # a PBO with colorID data may be ready
+            result = (GLint*1)()
+            #r_pointer = ctypes.cast(result, ctypes.POINTER(GLint))
+            length = (GLsizei*1)()
+            #l_pointer = ctypes.cast(length, ctypes.POINTER(GLsizei))
+            for n in range(self.NUM_SYNCS):
+                if self.pbo_syncs[n] is None:
+                    # PBO sync is not active, skip check
+                    continue
+                #t = time.time()
+                # Check sync status
+                glGetSynciv(self.pbo_syncs[n], GL_SYNC_STATUS, 1, length, result)
+                if result[0] == GL_SIGNALED:
+                    # Sync has been signaled, data is ready
+                    buf = (GLubyte * 4)()
+                    buf_ptr = ctypes.cast(buf, ctypes.POINTER(GLubyte))
+                    glBindBuffer(GL_PIXEL_PACK_BUFFER, self.pbos[n])
+                    glGetBufferSubData(GL_PIXEL_PACK_BUFFER, 0, 4, buf_ptr)
+
+                    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
+
+                    # Re-arrange buffer data
+                    b, g, r, a = buf
+                    o = r, g, b
+
+                    glDeleteSync(self.pbo_syncs[n])
+                    self.pbo_syncs[n] = None
+
+                    if o != self.mouse_color:
+                        self.menu.cg.info(f"Mouse color changed from {self.mouse_color} to {o}")
+                        pass
+                        # TODO: implement hover
+                    self.mouse_color = o
+
+                    #et = time.time()
+                    #self.menu.cg.info(f"T: {(et-t)*1000:.4f}ms for color {o}")
+
+            if not any(map(lambda s: s is not None, self.pbo_syncs)):
+                self.pbo_wait = False
 
     def get_motion_vector(self):
         if any(self.move):
@@ -232,6 +371,8 @@ class GameLayer(peng3d.layer.Layer):
         self.on_mouse_motion(x, y, dx, dy)
 
     def on_mouse_motion(self, x, y, dx, dy):
+        self.mouse_moved = True
+        self.mouse_pos = x, y
         if FLIGHT_MODE and self.window.menu is self.menu and self.flight_enabled:
             m = 0.15
             x, y = self.rot
@@ -239,6 +380,49 @@ class GameLayer(peng3d.layer.Layer):
             y = max(-90, min(90, y))
             x %= 360
             self.rot = x, y
+
+        # TODO: add card dragging support here
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        if self.window.menu is not self.menu:
+            return
+        c = self.get_card_at_mouse()
+        if c is None:
+            return
+
+        co = self.game.cards[c]
+        co.clicked = True
+        self.clicked_card = co
+        self.menu.cg.info(f"Pressed Card {co.value} ({co.cardid})")
+
+        co.redraw()
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        if self.menu is not self.window.menu:
+            return
+        c = self.get_card_at_mouse()
+        if c is None:
+            return
+
+        co = self.game.cards[c]
+
+        if co != self.clicked_card:
+            return  # Not the clicked card, do nothing
+
+        self.menu.cg.info(f"Released Card {co.value} ({co.cardid})")
+
+        if not co.dragged:
+            # Card has been selected
+            self.game.select_card(c)
+        else:
+            # TODO: implement card dragging
+            pass
+
+        co.clicked = False
+        co.dragged = False
+
+        co.redraw()
+        self.clicked_card = None
 
     def on_key_release(self, symbol, modifiers):
         if not self.menu == self.window.menu:
@@ -260,6 +444,10 @@ class GameLayer(peng3d.layer.Layer):
         # Delete all cards and reset to beginning
         for c in self.game.cards.values():
             c.delete()
+
+        self.color_db = {
+            0: None,
+        }
 
     def reinit(self):
         self.game = self.menu.cg.client.game
@@ -436,7 +624,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
                                                 pos=self.grid.get_cell([3, 1], [1, 1]),
                                                 label=self.peng.tl("cg:question.poverty_return_trumps.choice4"),
                                                 )
-        self.addWidget(self.choice2btn)
+        self.addWidget(self.choice4btn)
 
         self.choice4btn.addAction("click", self.on_click, 3)
 
@@ -445,7 +633,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.menu.cg.client.send_message("cg:game.dk.announce",
                                          {
-                                             "type": "poverty_return_trumps",
+                                             "type": "poverty_return",
                                              "data": {"amount": n},
                                          })
 
