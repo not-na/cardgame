@@ -261,6 +261,7 @@ class PopenSubProcess(SubProcess):
             try:
                 self.popen.stdin.write(msg.encode("utf-8"))
                 self.popen.stdin.flush()
+                self.add_stdout(f"<<< {msg}", curses.A_ITALIC)
             except Exception:
                 self.add_stdout("Could not write to input", C_RED | curses.A_BOLD)
         else:
