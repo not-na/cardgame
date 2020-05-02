@@ -55,6 +55,14 @@ class AuthPacket(CGPacket):
                 }, cid)
                 return
             else:
+                if not USER_PATTERN.fullmatch(username):
+                    self.peer.send_message("cg:auth",
+                                           {
+                                               "status": "wrong_credentials",
+                                           }
+                                           )
+                    return
+
                 # User does not exist, create it
                 self.cg.info(f"Creating new account with name '{username}'")
                 u = cgserver.user.User(self.cg.server, self.cg, username, {

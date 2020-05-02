@@ -319,9 +319,23 @@ class GameLayer(peng3d.layer.Layer):
                     self.pbo_syncs[n] = None
 
                     if o != self.mouse_color:
-                        self.menu.cg.info(f"Mouse color changed from {self.mouse_color} to {o}")
-                        pass
-                        # TODO: implement hover
+                        # Remove hovered flag from old card
+                        cid = self.get_card_at_mouse()
+                        if cid is not None:
+                            co = self.game.cards[cid]
+                            co.hovered = False
+                            self.redraw()
+
+                        # Update mouse_color
+                        self.mouse_color = o
+
+                        # Add hovered flag to new card
+                        cid = self.get_card_at_mouse()
+                        if cid is not None:
+                            co = self.game.cards[cid]
+                            co.hovered = True
+                            self.redraw()
+
                     self.mouse_color = o
 
                     #et = time.time()

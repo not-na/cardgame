@@ -77,6 +77,7 @@ class QuestionPacket(CGPacket):
                 # Missing:
                 # wedding_clarification_trick
                 # solo
+                # black_sow_solo
                 # accusation_vote
                 self.cg.error(f"Question type {msg['type']} is not yet implemented")
         else:
