@@ -33,10 +33,17 @@ class DevCommand(cgserver.command.Command):
         return "dev\tI bet you'd like to know, wouldn't you? ;)"
 
     def run(self, ctx: cgserver.command.CommandContext, args: list):
-        if len(args) < 4 and args[1] != "q":
+        if len(args) < 4 and args[1] not in ["r", "q", "autoplay"]:
             ctx.output(f"The dev command takes at least 3 arguments, not {len(args) - 1}")
             return
 
+        if args[1] == "r":
+            self.cg.send_event("cg:game.dk.command", {
+                "packet": "ready",
+                "player": "all",
+                "type": "ready"
+            })
+            return
         if args[1] == "q":
             self.cg.send_event("cg:game.dk.command", {
                 "packet": "reservation",
@@ -44,6 +51,12 @@ class DevCommand(cgserver.command.Command):
                 "type": "reservation_no"
             })
             return
+        if args[1] == "autoplay":
+            self.cg.send_event("cg:game.dk.command", {
+                "packet": "autoplay",
+                "player": "p",
+                "type": "autoplay"
+            })
 
         fake_player = args[1]
         command = args[2]
@@ -240,4 +253,34 @@ class DevCommand(cgserver.command.Command):
                     "packet": "call_superpigs",
                     "player": fake_player,
                     "type": choice
+                })
+
+        elif command == "black_sow_solo":
+            self.cg.send_event("cg:game.dk.command", {
+                "packet": "black_sow_solo",
+                "player": fake_player,
+                "type": "black_sow_solo",
+                "data": choice
+            })
+            print("sent packet", {
+                "packet": "black_sow_solo",
+                "player": fake_player,
+                "type": "black_sow_solo",
+                "data": choice
+            })
+
+        elif command == "rdy":
+            if choice == "y":
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "ready",
+                    "player": fake_player,
+                    "type": "ready",
+                })
+
+        elif command == "tthrow":
+            if choice == "y":
+                self.cg.send_event("cg:game.dk.command", {
+                    "packet": "throw",
+                    "player": fake_player,
+                    "type": "throw",
                 })

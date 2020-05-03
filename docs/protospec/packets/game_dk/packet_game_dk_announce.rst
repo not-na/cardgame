@@ -55,11 +55,12 @@ This is the data sent by the client to the server: ::
    ``solo_no``, ``throw_yes``, ``throw_no``, ``pigs_yes``, ``pigs_no``, ``superpigs_yes``,
    ``superpigs_no``, ``poverty_yes``, ``poverty_no``, ``poverty_accept``, ``poverty_decline``,
    ``poverty_return``, ``wedding_yes``, ``wedding_no``, ``wedding_clarification_trick``,
-   ``re``, ``kontra``, ``no90``, ``no60``, ``no30``, ``black``, ``pig``, ``superpig``
+   ``re``, ``kontra``, ``no90``, ``no60``, ``no30``, ``black``, ``pig``, ``superpig``,
+   ``black_sow_solo``, ``ready``, ``throw``.
 
 .. note::
    Following types require data:
-   ``solo_yes``: ``type`` (the type of the solo),
+   ``solo_yes``, ``black_sow_solo``: ``type`` (the type of the solo),
    ``poverty_return``: ``amount`` (the amount of trumps returned to the poverty player,
    ``wedding_clarification_trick``: ``trick`` (the trick the bride wishes to determine the re party),
    ``no90``, ``no60``, ``no30`` and ``black``: ``party`` (Optional, the party of the announcing player,

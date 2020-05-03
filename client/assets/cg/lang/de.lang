@@ -200,9 +200,6 @@ gamerule.dk.re_kontra.opt.+2=Re und Kontra addieren jeweils 2 Punkte zum Spielwe
 gamerule.dk.re_kontra.opt.*2=Re und Kontra verdoppeln den Spielwert, allerdings nicht die Sonderpunkte.
 gamerule.dk.re_kontra.opt.*2_extra=Re und Kontra verdoppeln den Spielwert und die Sonderpunkte.
 
-gamerule.dk.knock.name=Klopfen
-gamerule.dk.knock.description=Statt Re und Kontra anzusagen, wird geklopft.
-
 gamerule.dk.buck_round.name=Bockrunden
 gamerule.dk.buck_round.description=Nach bestimmten Ereignissen wird eine gewisse Anzahl von Runden lang die Punktzahl der Spiele verdoppelt.
 gamerule.dk.buck_round.opt.None=Spielregel deaktivieren

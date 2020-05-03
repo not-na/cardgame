@@ -115,7 +115,7 @@ class AnnouncePacket(CGPacket):
                 raise KeyError(
                     f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain 'data' containing key 'trick'!")
 
-            self.cg.send_event("cg:game.dk.reservation_wedding", {
+            self.cg.send_event("cg:game.dk.reservation_wedding_clarification_trick", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t,
                 "data": msg["data"]
@@ -144,3 +144,31 @@ class AnnouncePacket(CGPacket):
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t
             })
+
+        elif t == "black_sow_solo":
+            if "data" not in msg:
+                raise KeyError(f"cg:game.dk.announce packet with type 'solo_yes' must contain the key 'data'!")
+            elif "type" not in msg["data"]:
+                raise KeyError(
+                    f"cg:game.dk.announce packet with type 'solo_yes' must contain 'data' containing key 'type'!")
+
+            self.cg.send_event("cg:game.dk.black_sow_solo", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t,
+                "data": msg["data"]
+            })
+
+        elif t == "throw":
+            self.cg.send_event("cg:game.dk.throw", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t,
+            })
+
+        elif t == "ready":
+            self.cg.send_event("cg:game.dk.ready", {
+                "player": self.peer.clients[cid].user.uuid.hex,
+                "type": t,
+            })
+
+        else:
+            self.cg.warn(f"Unknown announce of type {t} from client {self.peer.clients[cid].user.uuid}!")

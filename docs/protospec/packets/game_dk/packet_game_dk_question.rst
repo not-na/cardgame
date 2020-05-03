@@ -56,7 +56,7 @@ This is the data sent by the server to the client: ::
    Following types are available: ``reservation``, ``solo``, ``throw``, ``pigs``,
    ``superpigs``, ``poverty``, ``poverty_accept``, ``poverty_trump_choice``,
    ``poverty_return_trumps``, ``poverty_return_choice``,    ``wedding``,
-   ``wedding_clarification_trick`` and ``accusation_vote``\ .
+   ``wedding_clarification_trick``, ``black_sow_solo`` and ``accusation_vote``.
 
 ``target`` is the :term:`UUID` of the player to whom the question is directed. This is
 necessary because sometimes all players are supposed to hear a question, though it might not

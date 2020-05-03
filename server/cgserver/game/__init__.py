@@ -27,6 +27,8 @@ from typing import Any, Union, Tuple, Dict, Callable, List
 
 import cgserver
 
+from . import card
+
 import cg
 
 
