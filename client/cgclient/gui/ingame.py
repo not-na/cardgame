@@ -75,6 +75,7 @@ class GameLayer(peng3d.layer.Layer):
 
     CARD_KEYS = "0123456789abcdef"
     NUM_SYNCS = 2
+    MIN_COLORID = 1/30.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,6 +129,7 @@ class GameLayer(peng3d.layer.Layer):
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
 
         self.pbo_syncs = [None for i in range(self.NUM_SYNCS)]
+        self.last_colorid = 0
 
         # Developer Flight Mode
         if FLIGHT_MODE:
@@ -220,7 +222,9 @@ class GameLayer(peng3d.layer.Layer):
         x, y, z = self.pos
         glTranslatef(-x, -y, -z)
 
-        if self.mouse_moved:
+        if self.mouse_moved and time.time()-self.last_colorid > self.MIN_COLORID:
+            self.last_colorid = time.time()
+
             t = time.time()
             # Draw the ColorID pass
             # Used to determine which card we are hovering over
@@ -359,6 +363,12 @@ class GameLayer(peng3d.layer.Layer):
             dz = 0.0
         return dx, dy, dz
 
+    def is_card_clickable(self):
+        return (self.menu is self.window.menu
+                and self.menu.popup_layer.activeSubMenu == "empty"
+                and self.menu.gui_layer.activeSubMenu == "ingame"
+                )
+
     def on_fwd_down(self, symbol, modifiers, release):
         self.move[0] -= 1 if not release else -1
 
@@ -400,7 +410,7 @@ class GameLayer(peng3d.layer.Layer):
         # TODO: add card dragging support here
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if self.window.menu is not self.menu:
+        if not self.is_card_clickable():
             return
         c = self.get_card_at_mouse()
         if c is None:
@@ -414,7 +424,7 @@ class GameLayer(peng3d.layer.Layer):
         co.redraw()
 
     def on_mouse_release(self, x, y, button, modifiers):
-        if self.menu is not self.window.menu:
+        if not self.is_card_clickable():
             return
         c = self.get_card_at_mouse()
         if c is None:
@@ -562,6 +572,9 @@ class PopupLayer(peng3d.gui.GUILayer):
         self.s_returnt = ReturnTrumpsSubMenu("returnt", self, self.window, self.peng)
         self.addSubMenu(self.s_returnt)
 
+        self.s_solo = SoloPopupSubMenu("solo", self, self.window, self.peng)
+        self.addSubMenu(self.s_solo)
+
         self.changeSubMenu("empty")
 
     def ask_question_2choice(self, questiontype):
@@ -618,6 +631,8 @@ class QuestionPopupSubMenu(peng3d.gui.SubMenu):
             "poverty": "poverty_yes",
             "poverty_accept": "poverty_accept",
             "wedding": "wedding_yes",
+            "solo": "solo_yes",
+            "black_sow_solo": "black_sow_solo",
         }
 
         self.choice2 = {
@@ -627,11 +642,17 @@ class QuestionPopupSubMenu(peng3d.gui.SubMenu):
             "superpigs": "superpigs_no",
             "poverty": "poverty_no",
             "poverty_accept": "poverty_decline",
-            "wedding": "wedding_no"
+            "wedding": "wedding_no",
+            "solo": "solo_no",
+            # Black Sow Solo does not allow choice2
         }
 
     def on_click_choice1(self):
         self.menu.cg.info(f"User clicked on choice 1 of question {self.questiontype}")
+
+        if self.questiontype.endswith("solo"):
+            self.menu.changeSubMenu("solo")
+            return
 
         t = self.choice1[self.questiontype]
         self.menu.cg.client.send_message("cg:game.dk.announce", {"type": t})
@@ -705,6 +726,59 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
                                              "type": "poverty_return",
                                              "data": {"amount": n},
                                          })
+
+        self.menu.changeSubMenu("empty")
+
+
+class SoloPopupSubMenu(peng3d.gui.SubMenu):
+    SOLOS = [
+        "queen",
+        "jack",
+        "clubs",
+        "spades",
+        "hearts",
+        "diamonds",
+        "fleshless",
+        "aces",
+        "10s",
+        "king",
+        "9s",
+        "picture",
+        "noble_brothel",
+        "monastery",
+        "brothel",
+        "pure_clubs",
+        "pure_spades"
+        "pure_hearts"
+        "pure_diamonds",
+        "null",
+        "boneless",
+    ]
+
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.setBackground([242, 241, 240, 200])
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [7, 7], [20, 20])
+
+        self.qcell = self.grid.get_cell([1, 5], [5, 1], anchor_x="center", anchor_y="center")
+        self.question = peng3d.gui.Label("question", self, self.window, self.peng,
+                                         pos=self.qcell,
+                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         label=self.peng.tl("cg:question.solo.heading"),
+                                         font_color=[0, 0, 0, 255],
+                                         multiline=True,
+                                         )
+        self.addWidget(self.question)
+
+        # TODO
+
+    def on_click_solo(self, answer):
+        self.menu.cg.client.send_message("cg:game.dk.announce", {
+            "type": self.menu.s_question.choice1[self.menu.s_question.questiontype],
+            "data": {"type": answer}
+        })
 
         self.menu.changeSubMenu("empty")
 

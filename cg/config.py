@@ -23,7 +23,6 @@
 
 import os
 import platform
-import peng3d
 
 import cg.error
 import cg.util.cache

@@ -88,4 +88,4 @@ def validate(data: Union[float, bool, str, List], validator: Dict) -> Tuple[bool
                 valid = False
         return valid, out
     else:
-        raise NotImplementedError(f"Validator type {validator['validator']} is unknown")
+        raise NotImplementedError(f"Validator type {validator['type']} is unknown")

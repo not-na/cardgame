@@ -819,12 +819,16 @@ def main(stdscr):
                         s.kill()
                     s.add_stdout("Restarted all subprocesses", curses.A_BOLD | C_GREEN)
                     s.start()
+                    s.scroll_v = 0
+                    s.scroll_v_lock = True
 
                     for p in clients.values():
                         if p.running:
                             p.kill()
                         p.add_stdout("Restarted all subprocesses", curses.A_BOLD | C_GREEN)
                         p.start()
+                        p.scroll_v = 0
+                        p.scroll_v_lock = True
             elif c == ord("d"):
                 # Rebuild Sphinx Docs
                 if docs.running:

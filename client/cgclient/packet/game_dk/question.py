@@ -49,6 +49,7 @@ class QuestionPacket(CGPacket):
                 "poverty",
                 "poverty_accept",
                 "wedding",
+                "solo",
             ]:
                 # Simple 2-choice question
                 self.cg.client.gui.ingame.popup_layer.ask_question_2choice(msg["type"])
@@ -72,12 +73,14 @@ class QuestionPacket(CGPacket):
                 self.cg.info("Received poverty_return_trumps question")
                 # Special 4-choice question
                 self.cg.client.gui.ingame.popup_layer.changeSubMenu("returnt")
+            elif msg["type"] == "black_sow_solo":
+                # Only ask the question to set the type
+                self.cg.client.gui.ingame.popup_layer.ask_question_2choice(msg["type"])
+                self.cg.client.gui.ingame.popup_layer.changeSubMenu("solo")
             else:
                 # TODO: implement these other question types
                 # Missing:
                 # wedding_clarification_trick
-                # solo
-                # black_sow_solo
                 # accusation_vote
                 self.cg.error(f"Question type {msg['type']} is not yet implemented")
         else:
