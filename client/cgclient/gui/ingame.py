@@ -595,13 +595,11 @@ class QuestionPopupSubMenu(peng3d.gui.SubMenu):
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
 
-        self.qcell = self.grid.get_cell([2, 4], [2, 1], anchor_x="center", anchor_y="center")
         self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.qcell,
-                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         pos=self.grid.get_cell([2, 4], [2, 1]),
                                          label=self.peng.tl("cg:question.unknown.text"),
                                          font_color=[0, 0, 0, 255],
-                                         multiline=True,
+                                         multiline=False,
                                          )
         self.addWidget(self.question)
 
@@ -676,10 +674,8 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
 
-        self.qcell = self.grid.get_cell([2, 4], [2, 1], anchor_x="center", anchor_y="center")
         self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.qcell,
-                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         pos=self.grid.get_cell([2, 4], [2, 1]),
                                          label=self.peng.tl("cg:question.poverty_return_trumps.text"),
                                          font_color=[0, 0, 0, 255],
                                          multiline=True,
@@ -748,8 +744,8 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
         "monastery",
         "brothel",
         "pure_clubs",
-        "pure_spades"
-        "pure_hearts"
+        "pure_spades",
+        "pure_hearts",
         "pure_diamonds",
         "null",
         "boneless",
@@ -762,17 +758,24 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [7, 7], [20, 20])
 
-        self.qcell = self.grid.get_cell([1, 5], [5, 1], anchor_x="center", anchor_y="center")
         self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.qcell,
-                                         size=(lambda sw, sh: (self.qcell.size[0], 0)),
+                                         pos=self.grid.get_cell([1, 6], [5, 1]),
                                          label=self.peng.tl("cg:question.solo.heading"),
                                          font_color=[0, 0, 0, 255],
-                                         multiline=True,
+                                         multiline=False,
                                          )
         self.addWidget(self.question)
 
-        # TODO
+        self.solobtns = {}
+
+        for i, solo in enumerate(self.SOLOS):
+            sbtn = cgclient.gui.CGButton(f"solo_{solo}btn", self, self.window, self.peng,
+                                         pos=self.grid.get_cell([1+(i % 5), 5-(i//5)], [1, 1]),
+                                         label=self.peng.tl(f"cg:question.solo.{solo}")
+                                         )
+            self.addWidget(sbtn)
+
+            sbtn.addAction("click", self.on_click_solo, solo)
 
     def on_click_solo(self, answer):
         self.menu.cg.client.send_message("cg:game.dk.announce", {
