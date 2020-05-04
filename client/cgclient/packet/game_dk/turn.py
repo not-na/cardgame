@@ -44,6 +44,7 @@ class TurnPacket(CGPacket):
     def receive(self, msg, cid=None):
         cur_player = uuidify(msg["current_player"])
         idx = self.cg.client.gui.ingame.game_layer.player_list.index(cur_player)
+        idx = (idx + 1) % 4
 
         for i, n in self.cg.client.gui.ingame.game_layer.hand_to_player.items():
             l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]

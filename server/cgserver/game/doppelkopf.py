@@ -305,6 +305,9 @@ class DoppelkopfGame(CGame):
             "min": 1,
             "max": 4,
             "step": 1,
+            "requirements": {
+                "dk.buck_round": ["succession", "parallel"],
+            },
         },
         "dk.solo_shift_h10": {
             "type": "bool",
@@ -317,62 +320,48 @@ class DoppelkopfGame(CGame):
             "type": "bool",
             "default": False
         },
-        "dk.solo.null": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
+        "dk.solo_prio": {
+            "type": "select",
+            "default": "first",
+            "options": [
+                "first",
+                "prio"
+            ],
         },
-        "dk.solo.boneless": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.pure_color": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.king": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.brothel": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.noble_brothel": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.picture": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.monastery": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.aces": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.10s": {
-            "type": "bool",
-            "default": False,
-            "requirements": {},
-        },
-        "dk.solo.9s": {
-            "type": "bool",
-            "default": False,
-            "requirements": {
-                "dk.without9": ["with_all"]
-            },
+        "dk.solos": {
+            "type": "active",
+            "default": [
+                "solo_queen",
+                "solo_jack",
+                "solo_clubs",
+                "solo_spades",
+                "solo_hearts",
+                "solo_diamonds",
+                "solo_fleshless",
+            ],
+            "options": [
+                "solo_queen",
+                "solo_jack",
+                "solo_clubs",
+                "solo_spades",
+                "solo_hearts",
+                "solo_diamonds",
+                "solo_fleshless",
+                "solo_aces",
+                "solo_10s",
+                "solo_king",
+                "solo_9s",
+                "solo_picture",
+                "solo_noble_brothel",
+                "solo_monastery",
+                "solo_brothel",
+                "solo_pure_clubs",
+                "solo_pure_spades",
+                "solo_pure_hearts",
+                "solo_pure_diamonds",
+                "solo_null",
+                "solo_boneless",
+            ]
         },
     }
     SOLO_ORDER = [
@@ -552,7 +541,7 @@ class DoppelkopfGame(CGame):
 
 
 class DoppelkopfRound(object):
-    DEV_MODE_PREP_CARDS = False
+    DEV_MODE_PREP_CARDS = True
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game
@@ -812,35 +801,35 @@ class DoppelkopfRound(object):
         # Clubs
         if card.card_value == "c9":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s"]:
                 return "clubs"
 
         if card.card_value == "cj":
-            if self.game_type in ["solo_queens", "solo_kings", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "clubs"
 
         if card.card_value == "cq":
-            if self.game_type in ["solo_jacks", "solo_kings", "solo_monastery", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "clubs"
 
         if card.card_value == "ck":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jacks", "solo_queens",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
                                   "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s", "solo_9s"]:
                 return "clubs"
 
         if card.card_value == "c10":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_jacks", "solo_queens", "solo_brothel",
-                                  "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_hearts", "solo_jack", "solo_queen", "solo_brothel",
+                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_9s"]:
                 return "clubs"
@@ -850,8 +839,8 @@ class DoppelkopfRound(object):
 
         if card.card_value == "ca":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_10s", "solo_9s"]:
                 return "clubs"
@@ -859,35 +848,35 @@ class DoppelkopfRound(object):
         # Spades
         if card.card_value == "s9":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s"]:
                 return "spades"
 
         if card.card_value == "sj":
-            if self.game_type in ["solo_queens", "solo_kings", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "spades"
 
         if card.card_value == "sq":
-            if self.game_type in ["solo_jacks", "solo_kings", "solo_monastery", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "spades"
 
         if card.card_value == "sk":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jacks", "solo_queens",
+                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
                                   "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
                 return "spades"
 
         if card.card_value == "s10":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_jacks", "solo_queens", "solo_brothel",
-                                  "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_clubs", "solo_jack", "solo_queen", "solo_brothel",
+                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_9s"]:
                 return "spades"
@@ -897,8 +886,8 @@ class DoppelkopfRound(object):
 
         if card.card_value == "sa":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_hearts", "solo_pure_clubs", "solo_10s", "solo_9s"]:
                 return "spades"
@@ -906,33 +895,33 @@ class DoppelkopfRound(object):
         # Hearts
         if card.card_value == "h9":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s"]:
                 return "hearts"
 
         if card.card_value == "hj":
-            if self.game_type in ["solo_queens", "solo_kings", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "hearts"
 
         if card.card_value == "hq":
-            if self.game_type in ["solo_jacks", "solo_kings", "solo_monastery", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
                                   "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "hearts"
 
         if card.card_value == "hk":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
+                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
                                   "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
                 return "hearts"
 
         if card.card_value == "h10":
-            if self.game_type in ["solo_queens", "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel",
+            if self.game_type in ["solo_queen", "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel",
                                   "solo_picture", "solo_fleshless", "solo_boneless", "solo_pure_diamonds",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_9s"]:
                 return "hearts"
@@ -943,44 +932,46 @@ class DoppelkopfRound(object):
             elif self.game_type in ["solo_spades", "solo_clubs"]:
                 if self.game.gamerules["dk.solo_shift_h10"]:
                     return "hearts"
+                if not self.game.gamerules["dk.heart10"]:
+                    return "hearts"
 
         if card.card_value == "ha":
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_10s", "solo_9s"]:
                 return "hearts"
 
         # Diamonds
         if card.card_value == "d9":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "", "solo_pure_hearts", "solo_pure_spades",
                                   "solo_pure_clubs", "solo_aces", "solo_10s"]:
                 return "diamonds"
 
         if card.card_value == "dj":
-            if self.game_type in ["solo_queens", "solo_kings", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "diamonds"
 
         if card.card_value == "dq":
-            if self.game_type in ["solo_jacks", "solo_kings", "solo_monastery", "solo_fleshless", "solo_boneless",
+            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
                                   "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
                                   "solo_9s"]:
                 return "diamonds"
 
         if card.card_value == "dk":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
+            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
                                   "solo_brothel", "solo_fleshless", "solo_boneless", "solo_pure_hearts",
                                   "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
                 return "diamonds"
 
         if card.card_value == "d10":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_jacks", "solo_queens", "solo_brothel",
-                                  "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+            if self.game_type in ["solo_hearts", "solo_spades", "solo_jack", "solo_queen", "solo_brothel",
+                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
                                   "solo_pure_clubs", "solo_aces", "solo_9s"]:
                 return "diamonds"
@@ -989,8 +980,8 @@ class DoppelkopfRound(object):
                     return "diamonds"
 
         if card.card_value == "da":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jacks", "solo_queens",
-                                  "solo_brothel", "solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture",
+            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
                                   "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
                                   "solo_pure_clubs", "solo_10s", "solo_9s"]:
                 return "diamonds"
@@ -1099,7 +1090,7 @@ class DoppelkopfRound(object):
                 elif card.card_value == "hk" and not (
                         self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
-                elif card.card_value == "h10" and not self.game.gamerules["dk.solo_shift_h10"]:
+                elif card.card_value == "h10" and not self.game.gamerules["dk.heart10"]:
                     return 12
                 elif card.card_value == "ha" and not self.pigs[0]:
                     return 13
@@ -1126,12 +1117,12 @@ class DoppelkopfRound(object):
                 elif card.card_value == "sk" and not (
                         self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
-                elif card.card_value == "s10" and not self.game.gamerules["dk.solo_shift_h10"]:
+                elif card.card_value == "s10":
                     return 12
                 elif card.card_value == "sa" and not self.pigs[0]:
                     return 13
 
-                elif card.card_value == "s10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
+                elif card.card_value == "h10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
                     "dk.solo_shift_h10"]:
                     return 100
                 elif card.card_value == "c10" and self.game.gamerules["dk.solo_shift_h10"]:
@@ -1153,12 +1144,12 @@ class DoppelkopfRound(object):
                 elif card.card_value == "ck" and not (
                         self.superpigs[0] and self.game.gamerules["dk.without9"] != "with_all"):
                     return 11
-                elif card.card_value == "c10" and not self.game.gamerules["dk.solo_shift_h10"]:
+                elif card.card_value == "c10":
                     return 12
                 elif card.card_value == "ca" and not self.pigs[0]:
                     return 13
 
-                elif card.card_value == "c10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
+                elif card.card_value == "h10" and self.game.gamerules["dk.heart10"] and not self.game.gamerules[
                     "dk.solo_shift_h10"]:
                     return 100
                 elif card.card_value == "d10" and self.game.gamerules["dk.solo_shift_h10"]:
@@ -1174,7 +1165,7 @@ class DoppelkopfRound(object):
 
             # Jacks in normal version and solos with jack trumps
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_jacks",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_jack",
                                   "solo_brothel", "solo_monastery", "solo_picture", "solo_null"]:
                 if card.card_value == "dj":
                     return 20
@@ -1187,7 +1178,7 @@ class DoppelkopfRound(object):
 
             # Queens in normal version and solos with queen trumps
             if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_queens",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_queen",
                                   "solo_brothel", "solo_noble_brothel", "solo_picture", "solo_null"]:
                 if card.card_value == "dq":
                     return 30
@@ -1199,7 +1190,7 @@ class DoppelkopfRound(object):
                     return 33
 
             # Kings in solos with king trumps
-            if self.game_type in ["solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
+            if self.game_type in ["solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
                 if card.card_value == "dk":
                     return 40
                 elif card.card_value == "hk":
@@ -1407,24 +1398,10 @@ class DoppelkopfRound(object):
             "current_player": self.current_player.hex
         })
 
-    def start_solo(self, solist: uuid.UUID):
+    def start_solo(self, solist: uuid.UUID, pigs_handled=True):
         self.reserv_state = "finished"
 
         self.game_type = self.players_with_solo[solist]
-        self.game_state = "tricks"
-        self.start_hands = self.hands
-
-        if self.game_type == "silent_wedding":
-            self.game.send_to_all("cg:game.dk.round.change", {
-                "phase": "tricks",
-                "game_type": "normal"
-            })
-        else:
-            self.game.send_to_all("cg:game.dk.round.change", {
-                "phase": "tricks",
-                "game_type": self.game_type,
-                "solist": solist.hex
-            })
 
         # Put the players into their parties
         self.parties["re"].add(solist)
@@ -1440,6 +1417,32 @@ class DoppelkopfRound(object):
                     self.obvious_parties["kontra"].add(i)
         else:
             self.obvious_parties["unknown"].update(self.players)
+
+        # Handle question for pigs
+        if not pigs_handled:
+            if self.game_type in ["solo_clubs", "solo_spades", "solo_hearts", "solo_diamonds", "solo_null"]:
+                self.current_player = self.players[0]
+                self.reserv_state = "pigs_solo"
+                self.game.send_to_all("cg:game.dk.question", {
+                    "type": "pigs",
+                    "target": solist.hex
+                })
+                return
+
+        self.game_state = "tricks"
+        self.start_hands = self.hands
+
+        if self.game_type == "silent_wedding":
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "phase": "tricks",
+                "game_type": "normal"
+            })
+        else:
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "phase": "tricks",
+                "game_type": self.game_type,
+                "solist": solist.hex
+            })
 
         # Starting player
         if self.game_type != "silent_wedding" and self.game.gamerules["dk.solist_begins"]:
@@ -2045,15 +2048,7 @@ class DoppelkopfRound(object):
         # Remember, if the player want's to play a valid solo
         if data["type"] == "solo_yes":
             solo_type = data["data"]["type"]
-            if (  # Validate solo
-                    solo_type in ["solo_queen", "solo_jack", "solo_clubs", "solo_spades", "solo_hearts",
-                                  "solo_diamonds", "solo_fleshless"] or
-                    self.game.gamerules.get("dk." + solo_type.replace("_", ".")) or
-                    (
-                            solo_type in ["solo_pure_clubs", "solo_pure_clubs", "solo_pure_clubs",
-                                          "solo_pure_clubs"] and
-                            self.game.gamerules["dk.solo.pure_color"]
-                    )):
+            if solo_type in self.game.gamerules["dk.solos"]:
                 self.players_with_solo[self.current_player] = solo_type
             else:
                 raise RuleError(f"Solo of type {solo_type} is either disabled or does not exist!")
@@ -2069,6 +2064,14 @@ class DoppelkopfRound(object):
         self.add_move(self.current_player, "announcement",
                       "solo_no" if data["type"] == "solo_no" else data["data"]["type"])
 
+        # Start the solo if the first announcer plays his solo
+        if self.game.gamerules["dk.solo_prio"] == "first":
+            if self.game.gamerules["dk.pigs"] == "two_reservation":
+                self.start_solo(uuidify(data["player"]), False)
+            else:
+                self.start_solo(uuidify(data["player"]))
+            return
+
         # Go to the next player with reservation
         self.current_player = self.players_with_reserv[
             (self.players_with_reserv.index(self.current_player) + 1) % len(self.players_with_reserv)
@@ -2076,7 +2079,6 @@ class DoppelkopfRound(object):
 
         # Ask the next player for a solo if he hasn't been asked yet
         if self.current_player != self.players_with_reserv[0]:
-
             self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "solo",
                 "target": self.current_player.hex
@@ -2091,7 +2093,10 @@ class DoppelkopfRound(object):
                     if self.game.SOLO_ORDER.index(solo) < self.game.SOLO_ORDER.index(self.players_with_solo[solist]):
                         solist = player
 
-                self.start_solo(solist)
+                if self.game.gamerules["dk.pigs"] == "two_reservation":
+                    self.start_solo(uuidify(data["player"]), False)
+                else:
+                    self.start_solo(uuidify(data["player"]))
 
             # If no one wants to play a solo
             else:
@@ -2258,17 +2263,30 @@ class DoppelkopfRound(object):
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for pigs handling must be 'reservations', not {self.game_state}!")
-        if self.reserv_state != "pigs":
+        if self.reserv_state not in ["pigs", "pigs_solo"]:
             raise GameStateError(f"Reservations state for pigs handling must be 'pigs', not {self.reserv_state}!")
         if self.game.gamerules["dk.pigs"] != "two_reservation":
             raise RuleError("Pigs are disabled by the rules!")
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the pigs handling packet is not the current player!")
 
+        # Determine the fox card for calling pigs
+        if self.game_type == "solo_hearts":
+            fox_card = "ha"
+        elif self.game_type == "solo_spades":
+            fox_card = "sa"
+        elif self.game_type == "solo_clubs":
+            fox_card = "ca"
+        elif self.game_type in ["normal", "silent_wedding", "wedding", "poverty", "ramsch", "ramsch_sw",
+                                "solo_diamonds", "solo_null", "black_sow"]:
+            fox_card = "da"
+        else:
+            fox_card = ""
+
         # Register pigs a players pigs if he has them
         if data["type"] == "pigs_yes":
             player_hand = [self.cards[i] for i in self.hands[self.current_player]]
-            if list(map(lambda x: x.card_value, player_hand)).count("da") != 2:  # Not two diamond aces in the hand
+            if list(map(lambda x: x.card_value, player_hand)).count(fox_card) != 2:  # Not two diamond aces in the hand
                 raise InvalidMoveError(
                     "Calling pigs is illegal for the player's hand does not contain two aces of diamonds!")
             else:
@@ -2284,12 +2302,18 @@ class DoppelkopfRound(object):
         self.add_move(self.current_player, "announcement", data["type"])
 
         # Go to next reservation
-        self.current_player = self.players_with_reserv[
-            (self.players_with_reserv.index(self.current_player) + 1) % len(self.players_with_reserv)
-            ]
+        if self.reserv_state == "pigs":
+            self.current_player = self.players_with_reserv[
+                (self.players_with_reserv.index(self.current_player) + 1) % len(self.players_with_reserv)
+                ]
+        else:
+            self.current_player = self.players[(self.players.index(self.current_player) + 1) % len(self.players)]
 
         # If no pigs have been called yet and the player hasn't been asked yet
-        if not self.pigs[0] and self.current_player != self.players_with_reserv[0]:
+        if not self.pigs[0] and ((self.current_player != self.players_with_reserv[0] and
+                                  self.reserv_state == "pigs") or
+                                 (self.current_player != self.players[0] and
+                                  self.reserv_state == "pigs_solo")):
             self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                 "type": "pigs",
                 "target": self.current_player.hex
@@ -2298,32 +2322,45 @@ class DoppelkopfRound(object):
         # If everyone has been asked or someone called pigs
         else:
             # Reset to first reservation
-            self.current_player = self.players_with_reserv[0]
+            if self.reserv_state == "pigs":
+                self.current_player = self.players_with_reserv[0]
 
-            # Ask for superpigs
-            if self.pigs[0] and self.game.gamerules["dk.superpigs"] == "reservation":
-                self.current_player = self.players[0]
-                self.reserv_state = "superpigs"
-                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                    "type": "superpigs",
-                    "target": self.current_player.hex
-                })
-            # Or for other reservations
-            elif self.game.gamerules["dk.poverty"] != "None":
-                self.reserv_state = "poverty"
-                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                    "type": "poverty",
-                    "target": self.current_player.hex
-                })
-            elif self.game.gamerules["dk.wedding"] != "None":
-                self.reserv_state = "wedding"
-                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                    "type": "wedding",
-                    "target": self.current_player.hex
-                })
-            # Or abort, if no legal reservations are left
-            else:
-                self.start_normal()
+                # Ask for superpigs
+                if self.pigs[0] and self.game.gamerules["dk.superpigs"] == "reservation":
+                    self.current_player = self.players[0]
+                    self.reserv_state = "superpigs"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "superpigs",
+                        "target": self.current_player.hex
+                    })
+                # Or for other reservations
+                elif self.game.gamerules["dk.poverty"] != "None":
+                    self.reserv_state = "poverty"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "poverty",
+                        "target": self.current_player.hex
+                    })
+                elif self.game.gamerules["dk.wedding"] != "None":
+                    self.reserv_state = "wedding"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "wedding",
+                        "target": self.current_player.hex
+                    })
+                # Or abort, if no legal reservations are left
+                else:
+                    self.start_normal()
+
+            elif self.reserv_state == "pigs_solo":
+                # Ask for superpigs
+                if self.pigs[0] and self.game.gamerules["dk.superpigs"] == "reservation":
+                    self.current_player = self.players[0]
+                    self.reserv_state = "superpigs_solo"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "superpigs",
+                        "target": self.current_player.hex
+                    })
+                else:
+                    self.start_solo(next(iter(self.parties["re"])))
 
     def handle_reservation_superpigs(self, event: str, data: Dict):
         # Check for valid states
@@ -2332,7 +2369,7 @@ class DoppelkopfRound(object):
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for superpigs handling must be 'reservations', not {self.game_state}!")
-        if self.reserv_state != "superpigs":
+        if self.reserv_state not in ["superpigs", "superpigs_solo"]:
             raise GameStateError(
                 f"Reservations state for superpigs handling must be 'superpigs', not {self.reserv_state}!")
         if not self.pigs[0]:
@@ -2344,19 +2381,34 @@ class DoppelkopfRound(object):
 
         # Register valid superpigs
         if data["type"] == "superpigs_yes":
-            legal_spigs = False
+            superpig_card = ""
+            if self.game.gamerules["dk.without9"] == "with_all":
+                if self.game_type == "solo_hearts":
+                    superpig_card = "h9"
+                elif self.game_type == "solo_spades":
+                    superpig_card = "s9"
+                elif self.game_type == "solo_clubs":
+                    superpig_card = "c9"
+                elif self.game_type in ["normal", "silent_wedding", "wedding", "poverty", "ramsch", "ramsch_sw",
+                                        "solo_diamonds", "solo_null", "black_sow"]:
+                    superpig_card = "d9"
+            elif self.game.gamerules["dk.without9"] in ["with_four", "without"]:
+                if self.game.gamerules["dk.without9"] == "with_all":
+                    if self.game_type == "solo_hearts":
+                        superpig_card = "hk"
+                    elif self.game_type == "solo_spades":
+                        superpig_card = "sk"
+                    elif self.game_type == "solo_clubs":
+                        superpig_card = "ck"
+                    elif self.game_type in ["normal", "silent_wedding", "wedding", "poverty", "ramsch", "ramsch_sw",
+                                            "solo_diamonds", "solo_null", "black_sow"]:
+                        superpig_card = "dk"
 
             player_hand = [self.cards[i] for i in self.hands[self.current_player]]
-            if self.game.gamerules["dk.without9"] == "with_all":
-                legal_spigs = list(map(lambda x: x.card_value, player_hand)).count("d9") == 2
-            elif self.game.gamerules["dk.without9"] in ["with_four", "without"]:
-                legal_spigs = list(map(lambda x: x.card_value, player_hand)).count("dk") == 2
-
-            if not legal_spigs:
+            if not list(map(lambda x: x.card_value, player_hand)).count(superpig_card) == 2:
                 raise InvalidMoveError(
                     "Calling Superpigs is illegal for the player's current hand doesn't contain the required cards")
-            else:
-                self.superpigs = [True, self.current_player]
+            self.superpigs = [True, self.current_player]
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -2379,24 +2431,28 @@ class DoppelkopfRound(object):
 
         # If superpigs were called or everyone was asked
         else:
-            self.current_player = self.players_with_reserv[0]
+            if self.reserv_state == "superpigs":
+                self.current_player = self.players_with_reserv[0]
 
-            # Ask for the next legal reservation
-            if self.game.gamerules["dk.poverty"] != "None":
-                self.reserv_state = "poverty"
-                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                    "type": "poverty",
-                    "target": self.current_player.hex
-                })
-            elif self.game.gamerules["dk.wedding"] != "None":
-                self.reserv_state = "wedding"
-                self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                    "type": "wedding",
-                    "target": self.current_player.hex
-                })
-            # Or abort if none are left
-            else:
-                self.start_normal()
+                # Ask for the next legal reservation
+                if self.game.gamerules["dk.poverty"] != "None":
+                    self.reserv_state = "poverty"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "poverty",
+                        "target": self.current_player.hex
+                    })
+                elif self.game.gamerules["dk.wedding"] != "None":
+                    self.reserv_state = "wedding"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "type": "wedding",
+                        "target": self.current_player.hex
+                    })
+                # Or abort if none are left
+                else:
+                    self.start_normal()
+
+            elif self.reserv_state == "superpigs_solo":
+                self.start_solo(next(iter(self.parties["re"])))
 
     def handle_reservation_poverty(self, event: str, data: Dict):
         # Check for valid states
@@ -2964,6 +3020,7 @@ class DoppelkopfRound(object):
 
         # Trick is full
         elif len(self.current_trick) == 4:
+            time.sleep(2)
             self.game.cg.info(f"Game Type: {self.game_type}")
             self.game.cg.info(f"Obvious Parties {self.obvious_parties}")
 
@@ -2994,7 +3051,8 @@ class DoppelkopfRound(object):
                                 for i in self.current_trick:
                                     wedding = wedding and (self.cards[i[1]].card_value in ["d9", "d10", "dk", "da"])
                             else:
-                                wedding = self.cards[sorted_trick[0]].card_value == self.wedding_clarification_trick
+                                raise InvalidMoveError(
+                                    f"Invalid wedding clarification trick: {self.wedding_clarification_trick}")
 
                             self.game.cg.info(
                                 f"wedding: {wedding}, wct: {self.wedding_clarification_trick}, card: {self.cards[sorted_trick[0]].card_value}")
@@ -3052,12 +3110,15 @@ class DoppelkopfRound(object):
                             # If a trick winner and the fox player are in the same party
                             for party, members in self.obvious_parties.items():
                                 if party != "unknown":
-                                    if i[0] in self.obvious_parties[party] and trick_winner in self.obvious_parties[party]:
+                                    if i[0] in self.obvious_parties[party] and trick_winner in self.obvious_parties[
+                                        party]:
                                         continue
 
                             # If the players are in different parties
-                            if (i[0] in self.obvious_parties["re"] and trick_winner in self.obvious_parties["kontra"]) or (
-                                    i[0] in self.obvious_parties["kontra"] and trick_winner in self.obvious_parties["re"]):
+                            if (i[0] in self.obvious_parties["re"] and trick_winner in self.obvious_parties[
+                                "kontra"]) or (
+                                    i[0] in self.obvious_parties["kontra"] and trick_winner in self.obvious_parties[
+                                "re"]):
                                 self.extra_points[trick_winner].append("fox")
 
                             # If not both player's parties are sure, remember the fox and check it later
@@ -3492,7 +3553,8 @@ class DoppelkopfRound(object):
                 self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "black_sow_solo":
-            raise GameStateError(f"Game state for black sow solo handling must be 'black_sow_solo', not {self.game_state}!")
+            raise GameStateError(
+                f"Game state for black sow solo handling must be 'black_sow_solo', not {self.game_state}!")
         if self.game.gamerules["dk.poverty_consequence"] != "black_sow":
             raise RuleError("Black sow is disabled by the rules!")
         if uuidify(data["player"]) != self.current_player:
@@ -3500,15 +3562,7 @@ class DoppelkopfRound(object):
 
         # Remember, if the player want's to play a valid solo
         solo_type = data["data"]["type"]
-        if not (  # Validate solo
-                solo_type in ["solo_queen", "solo_jack", "solo_clubs", "solo_spades", "solo_hearts",
-                              "solo_diamonds", "solo_fleshless"] or
-                self.game.gamerules.get("dk." + solo_type.replace("_", ".")) or
-                (
-                        solo_type in ["solo_pure_clubs", "solo_pure_clubs", "solo_pure_clubs",
-                                      "solo_pure_clubs"] and
-                        self.game.gamerules["dk.solo.pure_color"]
-                )):
+        if solo_type not in self.game.gamerules["dk.solos"]:
             raise RuleError(f"Solo of type {solo_type} is either disabled or does not exist!")
 
         # Announce decision
@@ -3684,7 +3738,7 @@ class DoppelkopfRound(object):
                     "type": "play",
                     "card": "-1"
                 })
-                time.sleep(.2)
+                time.sleep(1.5)
 
                 if self.game_state == "counting":
                     return

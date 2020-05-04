@@ -186,7 +186,7 @@ class GameLayer(peng3d.layer.Layer):
         elif slot == "ptrick_right":
             return [-2.5-0.1*index, 0.5+0.001*index, 1], 0
         elif slot == "ptrick_top":
-            return [2.5+0.1*index, 0.5+0.001*index, 0], 0
+            return [3.5+0.1*index, 0.5+0.001*index, 0], 0
         else:
             self.menu.cg.crash(f"Unknown card slot {slot}")
 
@@ -780,7 +780,7 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
     def on_click_solo(self, answer):
         self.menu.cg.client.send_message("cg:game.dk.announce", {
             "type": self.menu.s_question.choice1[self.menu.s_question.questiontype],
-            "data": {"type": answer}
+            "data": {"type": "solo_"+answer}
         })
 
         self.menu.changeSubMenu("empty")

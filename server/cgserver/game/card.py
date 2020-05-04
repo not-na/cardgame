@@ -53,7 +53,7 @@ def create_dk_deck(with9: int = 8, joker: bool = False):
 
 
 def create_dk_prepped_deck():
-    deck = 0
+    deck = 2
     hands = {}
     if deck == 0:
         hands = {

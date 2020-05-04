@@ -68,6 +68,82 @@ gui.menu.smain.gamerule.backbtn.label=Zurück
 
 gui.menu.settings.exitbtn.label=Zurück
 
+question.reservation.text=Hast du einen Vorbehalt?
+question.reservation.choice1=Ja
+question.reservation.choice2=Nein
+
+question.solo.text=Möchtest du ein Solo spielen?
+question.solo.choice1=Ja
+question.solo.choice2=Nein
+
+question.solo.heading=Welches Solo möchtest du spielen?
+question.solo.queen=Damensolo
+question.solo.jack=Bubensolo
+question.solo.clubs=Kreuzsolo
+question.solo.spades=Piksolo
+question.solo.hearts=Herzsolo
+question.solo.diamonds=Karosolo
+question.solo.fleshless=Fleischloses Solo
+question.solo.null=Nullsolo
+question.solo.boneless=Knochenloses Solo
+question.solo.pure_clubs=Reines Kreuzsolo
+question.solo.pure_spades=Reines Piksolo
+question.solo.pure_hearts=Reines Herzsolo
+question.solo.pure_diamonds=Reines Karosolo
+question.solo.king=Königssolo
+question.solo.brothel=Buben-Damen-Solo
+question.solo.noble_brothel=Damen-Königs-Solo
+question.solo.picture=Bildersolo
+question.solo.monastery=Buben-Königs-Solo
+question.solo.aces=Assesolo
+question.solo.10s=Zehnensolo
+question.solo.9s=Neunensolo
+
+question.throw.text=Möchtest du schmeißen?
+question.throw.choice1=Ja
+question.throw.choice2=Nein
+
+question.pigs.text=Möchtest du Schweinchen anmelden?
+question.pigs.choice1=Ja
+question.pigs.choice2=Nein
+
+question.superpigs.text=Möchtest du Superschweine anmelden?
+question.superpigs.choice1=Ja
+question.superpigs.choice2=Nein
+
+question.poverty.text=Möchtest du eine Armut anmelden?
+question.poverty.choice1=Ja
+question.poverty.choice2=Nein
+
+question.poverty_accept.text=Möchtest du die Armut annehmen?
+question.poverty_accept.choice1=Ja
+question.poverty_accept.choice2=Nein
+
+question.poverty_trump_choice.text=Wähle deine Trümpfe aus!
+
+question.poverty_return_choice.text=Wähle die Karten aus, die du zurückgeben möchtest!
+
+question.poverty_return_trumps.text=Wie viele Trümpfe hast du zurückgegeben?
+question.poverty_return_trumps.choice1=0
+question.poverty_return_trumps.choice2=1
+question.poverty_return_trumps.choice3=2
+question.poverty_return_trumps.choice4=3
+
+question.wedding.text=Möchtest du eine Hochzeit anmelden?
+question.wedding.choice1=Ja
+question.wedding.choice2=Nein
+
+question.wedding_clarification_trick.text=Was für ein Stich soll deine Hochzeit bestimmen?
+question.wedding_clarification_trick.choice1=Erster Fremder
+question.wedding_clarification_trick.choice2=Erster Trumpfstich
+question.wedding_clarification_trick.choice3=Erster Fehlstich
+question.wedding_clarification_trick.choice4=Erster Kreuzstich
+question.wedding_clarification_trick.choice5=Erster Pikstich
+question.wedding_clarification_trick.choice6=Erster Herzstich
+question.wedding_clarification_trick.choice7=Erster Karostich
+
+question.black_sow_solo.heading=Welches Solo möchtest du spielen?
+
 gamerule.general.wrongmove.name=Handhabung ungültiger Spielzüge
 gamerule.general.wrongmove.description=Was passiert im Falle eines ungültigen Spielzugs?
 gamerule.general.wrongmove.opt.disallow=Falsche Spielzüge sind nicht möglich.
@@ -220,35 +296,26 @@ gamerule.dk.solo_shift_h10.description=Im Falle eines Farbsolos sind die Dullen 
 gamerule.dk.solist_begins.name=Solist fängt an
 gamerule.dk.solist_begins.description=Im Falle eines Solos kommt der Solist raus.
 
-gamerule.dk.solo.null.name=Nullsolo
-gamerule.dk.solo.null.description=Der Solist darf kein einziges Auge erhalten. Die Trümpfe sind wie beim Normalspiel.
-
-gamerule.dk.solo.boneless.name=Knochenloses Solo
-gamerule.dk.solo.boneless.description=Der Solist darf kein einziges Auge erhalten. Wie beim Fleischlosen Solo gibt es keine Trümpfe.
-
-gamerule.dk.solo.pure_color.name=Reines Farbsolo
-gamerule.dk.solo.pure_color.description=Die Kartenwerte sind wie bein Fleischlosen Solo, allerdings gibt es eine Trumpffarbe.
-
-gamerule.dk.solo.king.name=Königssolo
-gamerule.dk.solo.king.description=Nur Könige sind Trumpf.
-
-gamerule.dk.solo.brothel.name=Buben-Damen-Solo
-gamerule.dk.solo.brothel.description=Nur Buben und Damen sind Trümpfe (Reihenfolge wie im Normalspiel).
-
-gamerule.dk.solo.noble_brothel.name=Damen-Königs-Solo
-gamerule.dk.solo.noble_brothel.description=Nur Damen und Könige sind Trümpfe (Könige über Damen).
-
-gamerule.dk.solo.picture.name=Bildersolo
-gamerule.dk.solo.picture.description=Nur Buben, Damen und Könige sind Trümpfe (Könige über Damen über Buben).
-
-gamerule.dk.solo.monastery.name=Buben-Königs-Solo
-gamerule.dk.solo.monastery.description=Nur Buben und Könige sind Trümpfe (Könige über Buben).
-
-gamerule.dk.solo.aces.name=Assesolo
-gamerule.dk.solo.aces.description=Nur Asse sind Trumpf
-
-gamerule.dk.solo.10s.name=Zehnensolo
-gamerule.dk.solo.10s.description=Nur 10en sind Trumpf
-
-gamerule.dk.solo.9s.name=Neunensolo
-gamerule.dk.solo.9s.description=Nur 9en sind Trumpf
+gamerule.dk.solos.name=Solos
+gamerule.dk.solos.description=Solos, die gespielt werden dürfen
+gamerule.dk.solos.opt.solo_queen=Damensolo
+gamerule.dk.solos.opt.solo_jack=Bubensolo
+gamerule.dk.solos.opt.solo_clubs=Kreuzsolo
+gamerule.dk.solos.opt.solo_spades=Piksolo
+gamerule.dk.solos.opt.solo_hearts=Herzsolo
+gamerule.dk.solos.opt.solo_diamonds=Karosolo
+gamerule.dk.solos.opt.solo_fleshless=Fleischloses Solo
+gamerule.dk.solos.opt.solo_null=Nullsolo (Der Solist darf kein einziges Auge erhalten. Die Trümpfe sind wie beim Normalspiel)
+gamerule.dk.solos.opt.solo_boneless=Knochenloses Solo (Der Solist darf kein einziges Auge erhalten. Wie beim Fleischlosen Solo gibt es keine Trümpfe)
+gamerule.dk.solos.opt.solo_pure_clubs=Reines Kreuzsolo (Die Kartenwerte sind wie bein Fleischlosen Solo, allerdings ist alles Kreuz Trumpf)
+gamerule.dk.solos.opt.solo_pure_spades=Reines Piksolo
+gamerule.dk.solos.opt.solo_pure_hearts=Reines Herzsolo
+gamerule.dk.solos.opt.solo_pure_diamonds=Reines Karosolo
+gamerule.dk.solos.opt.solo_king=Königssolo (Nur Könige sind Trumpf)
+gamerule.dk.solos.opt.solo_brothel=Buben-Damen-Solo (Nur Buben und Damen sind Trümpfe (Reihenfolge wie im Normalspiel))
+gamerule.dk.solos.opt.solo_noble_brothel=Damen-Königs-Solo (Nur Damen und Könige sind Trümpfe (Könige über Damen))
+gamerule.dk.solos.opt.solo_picture=Bildersolo (Nur Buben, Damen und Könige sind Trümpfe (Könige über Damen über Buben))
+gamerule.dk.solos.opt.solo_monastery=Buben-Königs-Solo
+gamerule.dk.solos.opt.solo_aces=Assesolo (Nur Asse sind Trumpf)
+gamerule.dk.solos.opt.solo_10s=Zehnensolo
+gamerule.dk.solos.opt.solo_9s=Neunensolo
