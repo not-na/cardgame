@@ -72,15 +72,27 @@ class CardTransferPacket(CGPacket):
                 self.cg.error(f"Server moved non-existent card {card_id} from {msg['from_slot']} to {msg['to_slot']}")
                 return  # TODO: maybe do some better handling of this situation
 
+            # Get the card
             card: cgclient.gui.card.Card = self.cg.client.game.cards[card_id]
+
+            # Check for sanity of supplied data
             if card not in self.cg.client.game.slots[msg["from_slot"]]:
                 self.cg.warn(f"Card {card_id} was not in slot {msg['from_slot']}, but server tried to move it to {msg['to_slot']}")
+                # If the from slot was invalid, use the actual from slot instead
                 from_slot = card.slot
             else:
                 from_slot = msg["from_slot"]
 
+            # Transfer the card internally
             self.cg.client.game.slots[from_slot].remove(card)
             self.cg.client.game.slots[msg["to_slot"]].append(card)
+
+            # Redraw all cards in from and target slots to prevent visual holes
+            for c in self.cg.client.game.slots[from_slot]:
+                c.start_anim(from_slot, from_slot)
+            for c in self.cg.client.game.slots[msg["to_slot"]]:
+                if c is not card:
+                    c.start_anim(msg["to_slot"], msg["to_slot"])
 
             # Regardless of where the card was, whatever caused it to be selected is likely not valid anymore
             card.selected = False

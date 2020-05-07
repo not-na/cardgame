@@ -154,41 +154,16 @@ class GameLayer(peng3d.layer.Layer):
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1/60.)
 
-    def get_card_slot_pos_rot(self, slot: str, index: int, count: int = 1):
-        # First, map virtual slots to physical slots
+    def norm_card_slot(self, slot: str):
+        # Normalize handN and tricksN slots to physical slots
+        # Needed because the different hands can map to different players
         if slot.startswith("hand"):
-            slot = f"player_{self.hand_to_player[int(slot[4])]}"
+            return f"player_{self.hand_to_player[int(slot[4])]}"
         elif slot.startswith("tricks"):
-            slot = f"ptrick_{self.hand_to_player[int(slot[6])]}"
-
-        # TODO: fix the card positions
-        # Currently, _self is the middle stack of the group of three
-        # A bit misleading, but it is only temporary
-
-        if slot == "stack":
-            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], 0
-        elif slot == "table":
-            return [.5, 0.1+0.001*index, 0.1*index], 0
-        elif slot == "poverty":
-            return [-.5, index*0.05, 0], 0
-        elif slot == "player_self":
-            return [-2+0.1*index, 0.1+0.001*index, 0], 0
-        elif slot == "player_left":
-            return [-2+0.1*index, 0.1+0.001*index, -2], 0
-        elif slot == "player_right":
-            return [-2+0.1*index, 0.1+0.001*index, 2], 0
-        elif slot == "player_top":
-            return [2.5-0.1*index, 0.1+0.001*index, 0], 0
-        elif slot == "ptrick_self":
-            return [-2.5-0.1*index, 0.5+0.001*index, 0], 0
-        elif slot == "ptrick_left":
-            return [-2.5-0.1*index, 0.5+0.001*index, -1], 0
-        elif slot == "ptrick_right":
-            return [-2.5-0.1*index, 0.5+0.001*index, 1], 0
-        elif slot == "ptrick_top":
-            return [3.5+0.1*index, 0.5+0.001*index, 0], 0
+            return f"ptrick_{self.hand_to_player[int(slot[6])]}"
         else:
-            self.menu.cg.crash(f"Unknown card slot {slot}")
+            # No modification necessary
+            return slot
 
     def get_backname(self):
         return "cg:card.back_1"
@@ -206,6 +181,9 @@ class GameLayer(peng3d.layer.Layer):
         return 0, n, 0
 
     def draw(self):
+        for card in self.game.cards.values():
+            card.draw()
+
         # Customized variant of PengWindow.set3d()
         width, height = self.window.get_size()
         glEnable(GL_DEPTH_TEST)
@@ -328,17 +306,19 @@ class GameLayer(peng3d.layer.Layer):
                         if cid is not None:
                             co = self.game.cards[cid]
                             co.hovered = False
-                            self.redraw()
+                            co.start_anim(co.slot, co.slot, 0.2)
 
                         # Update mouse_color
                         self.mouse_color = o
 
-                        # Add hovered flag to new card
-                        cid = self.get_card_at_mouse()
-                        if cid is not None:
-                            co = self.game.cards[cid]
-                            co.hovered = True
-                            self.redraw()
+                        if self.is_card_clickable():
+                            # Add hovered flag to new card
+                            cid = self.get_card_at_mouse()
+                            if cid is not None:
+                                co = self.game.cards[cid]
+                                if co.slot == self.game.own_hand:
+                                    co.hovered = True
+                                    co.start_anim(co.slot, co.slot, 0.2)
 
                     self.mouse_color = o
 
@@ -418,6 +398,7 @@ class GameLayer(peng3d.layer.Layer):
 
         co = self.game.cards[c]
         co.clicked = True
+        co.start_anim(co.slot, co.slot)
         self.clicked_card = co
         self.menu.cg.info(f"Pressed Card {co.value} ({co.cardid})")
 
@@ -447,7 +428,7 @@ class GameLayer(peng3d.layer.Layer):
         co.clicked = False
         co.dragged = False
 
-        co.redraw()
+        co.start_anim(co.slot, co.slot)
         self.clicked_card = None
 
     def on_key_release(self, symbol, modifiers):
@@ -463,8 +444,7 @@ class GameLayer(peng3d.layer.Layer):
                 self.game.select_card(self.game.slots[self.game.own_hand][idx].cardid)
 
     def on_redraw(self):
-        for card in self.game.cards.values():
-            card.draw()
+        pass
 
     def clean_up(self):
         # Delete all cards and reset to beginning
@@ -780,7 +760,7 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
     def on_click_solo(self, answer):
         self.menu.cg.client.send_message("cg:game.dk.announce", {
             "type": self.menu.s_question.choice1[self.menu.s_question.questiontype],
-            "data": {"type": "solo_"+answer}
+            "data": {"type": f"solo_{answer}"}
         })
 
         self.menu.changeSubMenu("empty")

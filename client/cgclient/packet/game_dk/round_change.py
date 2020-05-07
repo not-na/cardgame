@@ -93,7 +93,6 @@ class RoundChangePacket(CGPacket):
                 n = out[uidx]
                 l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]
                 name = self.cg.client.get_user_name(uid)
-                name = "<unknown>"
                 l.label = f"{name}"
 
         if "phase" in msg:

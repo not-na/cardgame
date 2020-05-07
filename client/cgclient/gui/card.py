@@ -21,8 +21,9 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import math
+import time
 import uuid
-from typing import List
+from typing import List, Tuple
 
 import peng3d
 from vectormath import Vector3
@@ -59,6 +60,13 @@ COUNTS = {
 # Standard cards - 6cm x 9cm
 CARD_SIZE_W = 0.6
 CARD_SIZE_H = 0.9
+HOVER_EXTENSION = 0.1
+CLICK_EXTENSION = 0.2
+SELECTED_EXTENSION = 0.3
+DEFAULT_ANIM_DURATION = 1.0
+
+ANIM_STATE_DONE = 0
+ANIM_STATE_ACTIVE = 1
 
 
 def rotation_matrix(axis, theta):
@@ -76,6 +84,22 @@ def rotation_matrix(axis, theta):
     return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
                      [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+
+
+def lin_interpolate(src: float, target: float, p: float):
+    # Just a simple linear interpolation
+    return src+(target-src)*p
+
+
+def multi_interpolate(src: List[float], target: List[float], p: float):
+    if len(src) != len(target):
+        raise ValueError("multi_interpolate() requires two list of equal length")
+
+    out = []
+    for i in range(len(src)):
+        out.append(lin_interpolate(src[i], target[i], p))
+
+    return out
 
 
 class _FakeTexture(object):
@@ -96,6 +120,7 @@ class _FakeTexture(object):
 
 
 class Card(object):
+
     def __init__(self,
                  c: cg.CardGame,
                  layer,
@@ -112,13 +137,20 @@ class Card(object):
         self.cardid: uuid.UUID = cardid
         self.value: value = value
 
+        self.anim_fromslot: str = slot
+        self.anim_stime: float = 0.0
+        self.anim_state: int = ANIM_STATE_DONE
+        self.anim_frompos = [0, 0, 0]
+        self.anim_fromrot = [0, 0, 0]
+        self.anim_duration: float = 1.0
+
         self.color_id = self.layer.gen_color_id(self)
 
         self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
         self.texb = self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")
 
         self.pos: List[float] = [0, 0, 0]
-        self.rot: List[float] = [0, 180, 0]  # In degrees, (short axis, long axis, z axis)
+        self.rot: List[float] = [0, 0, 0]  # In degrees, (short axis, long axis, z axis)
 
         # 4 vertices front, 4 vertices back
         self.vlist_back = self.layer.batch.add(4, GL_QUADS,
@@ -153,24 +185,67 @@ class Card(object):
     def on_transfer(self, new_slot: str):
         pass
 
-    def start_anim(self, from_slot: str, to_slot: str, t=0):
-        pass
+    def start_anim(self, from_slot: str, to_slot: str, duration=DEFAULT_ANIM_DURATION):
+        self.anim_state = ANIM_STATE_ACTIVE
+        self.anim_stime = time.time()
+        self.anim_fromslot = from_slot
+        self.anim_frompos = self.pos
+        self.anim_fromrot = self.rot
+        self.anim_duration = duration
+        self.slot = to_slot
+
+        self.redraw()
+
+    def update_anim(self):
+        if self.anim_state == ANIM_STATE_DONE:
+            return
+
+        idx = self.game.slots[self.slot].index(self)
+        tpos, trot = self.get_card_pos_rot(self.slot, idx, len(self.game.slots[self.slot]))
+
+        if self.anim_fromslot == "stack":
+            self.anim_state = ANIM_STATE_DONE
+            self.pos = tpos
+            self.rot = trot
+
+            self.redraw()
+            return
+
+        t = time.time()-self.anim_stime  # Time since start of animation
+        p = t/self.anim_duration  # Percentage of animation completed
+
+        if p >= 1:
+            # We are done with the animation, no need for further calculations
+            self.anim_state = ANIM_STATE_DONE
+            self.pos = tpos
+            self.rot = trot
+
+            self.redraw()
+            return
+
+        # Smoothstep copied from Wikipedia - https://en.wikipedia.org/wiki/Smoothstep
+        p = p*p*(3-2*p)
+
+        # Do a linear interpolation of all components of position and rotation
+        self.pos = multi_interpolate(self.anim_frompos, tpos, p)
+        self.rot = multi_interpolate(self.anim_fromrot, trot, p)
+
+        self.redraw()
 
     def redraw(self):
-        self.layer.redraw()
+        #self.layer.redraw()
         self.should_redraw = True
 
     def draw(self):
+        if self.anim_state != "done":
+            self.update_anim()
+
         if self.should_redraw:
             self.on_redraw()
 
-    def on_redraw(self):
-        idx = self.game.slots[self.slot].index(self)
-        self.pos, r = self.layer.get_card_slot_pos_rot(self.slot, idx, len(self.game.slots[self.slot]))
-        self.rot[2] = r
+            self.should_redraw = False
 
-        #self.rot[2] = idx
-        #self.rot[1] = idx*2
+    def on_redraw(self):
 
         # First, set the texture coordinates
         self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
@@ -191,7 +266,83 @@ class Card(object):
         self.vlist_pick.vertices = vf
         self.vlist_back.vertices = vb
 
-    def get_texname(self):
+    def get_card_pos_rot(self, slot: str, index: int, count: int = 1):
+        # First, map virtual slots to physical slots
+        slot = self.layer.norm_card_slot(slot)
+
+        if slot == "stack":
+            # TODO: Implement properly
+            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
+        elif slot == "table":
+            # TODO: implement properly
+            return [.5, 0.1+0.001*index, 0.1*index], [0, 180, 90]
+        elif slot == "poverty":
+            # TODO: implement properly
+            return [-.5, index*0.05, 0], [0, 180, 0]
+        elif slot == "player_self":
+            pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 3)
+            return pos, [0, 180, r]
+        elif slot == "player_left":
+            pos, r = self.get_radial_pos_rot([-4.5, 0.1, 0], index, count, 2, 90, 180, 3)
+            return pos, [0, 180, r]
+        elif slot == "player_right":
+            pos, r = self.get_radial_pos_rot([4.5, 0.1, 0], index, count, 2, 270, 180, 3)
+            return pos, [0, 180, r]
+        elif slot == "player_top":
+            pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 3)
+            return pos, [0, 180, r]
+        elif slot == "ptrick_self":
+            # TODO: implement properly
+            return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+        elif slot == "ptrick_left":
+            # TODO: implement properly
+            return [-2.5-0.1*index, 0.5+0.001*index, -1], [0, 180, 0]
+        elif slot == "ptrick_right":
+            # TODO: implement properly
+            return [-2.5-0.1*index, 0.5+0.001*index, 1], [0, 180, 0]
+        elif slot == "ptrick_top":
+            # TODO: implement properly
+            return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+        else:
+            self.cg.crash(f"Unknown card slot {slot}")
+
+    def get_radial_pos_rot(self,
+                           base: List[float],
+                           index: int,
+                           count: int,
+                           angle_per_card: float,
+                           base_angle: float,
+                           max_angle: float,
+                           radius: float,
+                           ) -> Tuple[List[float], float]:
+        if self.selected:
+            radius += SELECTED_EXTENSION
+        elif self.clicked:
+            radius += CLICK_EXTENSION
+        elif self.hovered:
+            radius += HOVER_EXTENSION
+
+        #if angle_per_card*count > max_angle:
+            # Limits the "spread" of cards to a maximum angle
+            # This prevents large amounts of cards from visually overflowing
+        #    angle_per_card = max_angle/count
+
+        # Calculate the effective angle of the card
+        # Cards are arranged symmetrically around the base angle
+        angle = base_angle + (index-count/2.)*angle_per_card
+        rangle = math.radians(angle)
+
+        #self.cg.info(f"Count: {count} Index: {index} Angle: {angle}")
+
+        pos = [
+            math.sin(rangle)*radius+base[0],
+            base[1]+index*0.001,  # TODO: make this adjustable
+            math.cos(rangle)*radius+base[2],
+        ]
+
+        return pos, angle
+
+    def get_texname(self) -> str:
         if self.value == "":
             name = "unknown_front"
         elif self.value.startswith("j"):
@@ -217,7 +368,7 @@ class Card(object):
         if self.rot[0] != 0:
             self.cg.error(f"Card {self.cardid} with value {self.value} has non-zero short axis rotation of {self.rot[0]}")
         a_l = math.radians(self.rot[1])  # Angle along long axis in radians
-        a_z = math.radians(self.rot[2])  # Angle along z axis in radians
+        a_y = math.radians(self.rot[2])  # Angle along y axis in radians
 
         # Rotations are not "generic" and specifically optimized (for readability...) for
         # cards and how they are moved
@@ -226,8 +377,8 @@ class Card(object):
         # The long axis is used to flip cards
         # TODO: The short axis is currently not implemented
 
-        # Generate and apply the z axis rotation matrix
-        mz = rotation_matrix([0, 0, 1], a_z)
+        # Generate and apply the y axis rotation matrix
+        mz = rotation_matrix([0, 1, 0], a_y)
         vcw = Vector3(np.dot(mz, vcw))
         vch = Vector3(np.dot(mz, vch))
         vcp = Vector3(np.dot(mz, vcp))
@@ -257,6 +408,8 @@ class Card(object):
         return list(c1) + list(c2) + list(c3) + list(c4)
 
     def delete(self):
-        self.vlist.delete()
+        self.vlist_back.delete()
+        self.vlist_front.delete()
+        self.vlist_pick.delete()
 
 
