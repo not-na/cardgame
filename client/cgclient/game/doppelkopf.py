@@ -46,6 +46,8 @@ class DoppelkopfGame(CGame):
     default_intent = "play"
     card_intent_packet = "cg:game.dk.card.intent"
 
+    table_index_shift = 0
+
     def start(self):
         self.menu = self.cg.client.gui.ingame
 

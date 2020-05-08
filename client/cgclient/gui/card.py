@@ -69,6 +69,9 @@ ANIM_STATE_DONE = 0
 ANIM_STATE_ACTIVE = 1
 
 
+DEBUG_CARDS = False
+
+
 def rotation_matrix(axis, theta):
     # From https://stackoverflow.com/a/6802723
     """
@@ -120,7 +123,6 @@ class _FakeTexture(object):
 
 
 class Card(object):
-
     def __init__(self,
                  c: cg.CardGame,
                  layer,
@@ -260,7 +262,7 @@ class Card(object):
 
         # Then, generate and set the vertices
         vf = self.get_vertices(0)
-        vb = self.get_vertices(0.00002)  # 0.2mm
+        vb = self.get_vertices(0.0002)  # 0.2mm
 
         self.vlist_front.vertices = vf
         self.vlist_pick.vertices = vf
@@ -274,8 +276,33 @@ class Card(object):
             # TODO: Implement properly
             return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
         elif slot == "table":
-            # TODO: implement properly
-            return [.5, 0.1+0.001*index, 0.1*index], [0, 180, 90]
+            # Apply the table shift
+            # Causes cards to be aligned with whomever played it
+            index = (index+self.game.table_index_shift) % 4
+            if index == 0:
+                # Left
+                return [
+                    [-0.4, 0.01, -0.1],
+                    [0, 180, 0],
+                ]
+            elif index == 1:
+                # Top
+                return [
+                    [0.15, 0.02, -0.5],
+                    [0, 180, 0],
+                ]
+            elif index == 2:
+                # Right
+                return [
+                    [0.5, 0.03, 0.1],
+                    [0, 180, 0],
+                ]
+            elif index == 3:
+                # Bottom
+                return [
+                    [-0.05, 0.04, 0.3],
+                    [0, 180, 0],
+                ]
         elif slot == "poverty":
             # TODO: implement properly
             return [-.5, index*0.05, 0], [0, 180, 0]
@@ -283,26 +310,46 @@ class Card(object):
             pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_left":
-            pos, r = self.get_radial_pos_rot([-4.5, 0.1, 0], index, count, 2, 90, 180, 3)
+            pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_right":
-            pos, r = self.get_radial_pos_rot([4.5, 0.1, 0], index, count, 2, 270, 180, 3)
+            pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_top":
             pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 3)
             return pos, [0, 180, r]
         elif slot == "ptrick_self":
-            # TODO: implement properly
-            return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+            if DEBUG_CARDS:
+                return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+            else:
+                return [
+                    [1.8, 0.01+0.001*index, 1.5],
+                    [0, 180, 0],
+                ]
         elif slot == "ptrick_left":
-            # TODO: implement properly
-            return [-2.5-0.1*index, 0.5+0.001*index, -1], [0, 180, 0]
+            if DEBUG_CARDS:
+                return [-2.5-0.1*index, 0.5+0.001*index, -1], [0, 180, 0]
+            else:
+                return [
+                    [-3.1, 0.01 + 0.001 * index, 1.5],
+                    [0, 180, 90],
+                ]
         elif slot == "ptrick_right":
-            # TODO: implement properly
-            return [-2.5-0.1*index, 0.5+0.001*index, 1], [0, 180, 0]
+            if DEBUG_CARDS:
+                return [-2.5-0.1*index, 0.5+0.001*index, 1], [0, 180, 0]
+            else:
+                return [
+                    [3.1, 0.01 + 0.001 * index, -1.5],
+                    [0, 180, 90],
+                ]
         elif slot == "ptrick_top":
-            # TODO: implement properly
-            return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+            if DEBUG_CARDS:
+                return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+            else:
+                return [
+                    [-1.8, 0.01 + 0.001 * index, -1.5],
+                    [0, 180, 0],
+                ]
         else:
             self.cg.crash(f"Unknown card slot {slot}")
 

@@ -41,6 +41,8 @@ class TurnPacket(CGPacket):
     ]
     side = SIDE_CLIENT
 
+    last_trick = -1
+
     def receive(self, msg, cid=None):
         cur_player = uuidify(msg["current_player"])
         idx = self.cg.client.gui.ingame.game_layer.player_list.index(cur_player)
@@ -55,3 +57,12 @@ class TurnPacket(CGPacket):
             l.font_color = c
             l._label.color = c
             l.redraw()
+
+        if msg["current_trick"] != self.last_trick:
+            # New trick, re-calculate offset of table cards
+            self.last_trick = msg["current_trick"]
+
+            cidx = self.cg.client.game.player_list.index(cur_player)
+            sidx = self.cg.client.game.player_list.index(self.cg.client.user_id)
+            offset = cidx-sidx-1
+            self.cg.client.game.table_index_shift = offset

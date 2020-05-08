@@ -1,4 +1,4 @@
-git+https://github.com/not-na/peng3d.git@6b5501f2131fed157dc3951d9ac20e60cfee893a
+git+https://github.com/not-na/peng3d.git@73f94ee081f0da78f6228808d885eba5a0c15ab3
 peng3dnet==0.1.3a0
 psutil==5.7.0
 sphinx_rtd_theme==0.2.4
