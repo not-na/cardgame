@@ -298,9 +298,9 @@ class DedicatedServer(object):
 
         self.server.send_message(packet, data, user.cid)
 
-    def send_status_message(self, user: Union[uuid.UUID, cgserver.user.User], t: str, msg: str):
+    def send_status_message(self, user: Union[uuid.UUID, cgserver.user.User], t: str, msg: str, data: Dict = {}):
         # TODO: implement status messages
-        self.cg.info(f"Send status message to {user} with type {t} and message {msg}")
+        self.cg.info(f"Send status message to {user} with type {t} and message {msg} ({data})")
 
     # Event Handlers
     def register_event_handlers(self):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  join.py
+#  leave.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -19,31 +19,33 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
-#
-import cgclient
-from peng3dnet import SIDE_CLIENT
+# 
 
-from cg.constants import STATE_ACTIVE, STATE_LOBBY
+from cg.constants import STATE_LOBBY, STATE_ACTIVE
 from cg.packet import CGPacket
 from cg.util import uuidify
 
 
-class JoinPacket(CGPacket):
-    state = STATE_ACTIVE
+class LeavePacket(CGPacket):
+    state = STATE_LOBBY
     required_keys = [
-        "lobby",
+        "lobby"
     ]
     allowed_keys = [
         "lobby"
     ]
-    side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        self.peer.remote_state = STATE_LOBBY
+        u = self.peer.clients[cid].user
+        lobby = self.cg.server.lobbies.get(u.lobby, None)
+        if lobby is None:
+            self.cg.error(f"{u.username} tried to leave a lobby though he is not in any!")
+            return
+        elif lobby.uuid != uuidify(msg["lobby"]):
+            self.cg.error("The lobby that was sent and the lobby the client is in, don't match")
+            return
 
-        self.cg.client.lobby = cgclient.lobby.Lobby(self.cg, uuidify(msg["lobby"]))
+        lobby.remove_user(u.uuid)
 
-        self.cg.send_event("cg:lobby.join", {"lobby": self.cg.client.lobby})
-        self.cg.info(f"Joined lobby {self.cg.client.lobby.uuid}")
-
-        self.cg.client.gui.servermain.changeSubMenu("lobby")
+    def send(self, msg, cid=None):
+        self.peer.clients[cid].state = STATE_ACTIVE

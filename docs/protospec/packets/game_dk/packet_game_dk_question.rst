@@ -29,6 +29,7 @@ In the course of this, the concerned players will be inquired after *solos*\ ,
 *throwing*\ , *pigs*\ , *superpigs*\ , *poverty* and *wedding*\ .
 In the cases of a *wedding* or a *poverty*\ , the choice of the trick or of the cards to
 exchange are requested by this packet.
+
 .. seealso::
    See :doc:`../../doppelkopf/rules` for further information on special rules.
 

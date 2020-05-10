@@ -67,4 +67,5 @@ class ReadyPacket(CGPacket):
             g = self.cg.server.game_reg[l.game](self.cg, user.lobby)
             self.cg.server.games[g.game_id] = g
 
+            l.started = True
             g.start()

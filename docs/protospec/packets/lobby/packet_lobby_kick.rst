@@ -2,7 +2,7 @@
 ``cg:lobby.kick`` - Kick user from lobby
 ========================================
 
-.. cg:packet:: cg:lobby.invite
+.. cg:packet:: cg:lobby.kick
 
 This packet is used to kick another client from a :term:`lobby`.
 
@@ -33,11 +33,11 @@ Note that all examples shown here contain placeholder data and will have differe
 This is the data sent by the server to the client: ::
 
    {
-      "username":"notna",
+      "uuid":"dc71e5dd-5d4b-4809-8546-068e2628f115",
       "reason":"Pressed Alt-F4 to turn up the volume",
    }
 
-``username`` is the name user that ought to be kicked.
+``uuid`` is the :term:`UUID` of the user that ought to be kicked.
 
 ``reason`` is the justification for the kick.
 

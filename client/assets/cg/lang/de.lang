@@ -7,6 +7,15 @@ meta.name.de=Deutsch
 
 window.caption=Card Game
 
+game.doppelkopf=Doppelkopf
+
+msg.lobby.invite.user_does_not_exist=Der Benutzer {username} existiert nicht!
+msg.lobby.invite.user_not_online=Der Benutzer {username} ist nicht online!
+msg.lobby.invite.user_in_lobby=Der Benutzer {username} ist bereits in einer Lobby!
+msg.lobby.invite.user_in_dk_game=Der Benutzer {username} spielt gerade Doppelkopf!
+msg.lobby.invite.user_cur_not_available=Der Benutzer {username} ist derzeit nicht verfügbar (Status: {state})
+msg.lobby.invite.user_invited=Der Benutzer {username} wurde eingeladen!
+
 gui.menu.load.progress.loading=Laden...
 
 gui.menu.serverselect.title.playbtn.label=Spielen
@@ -61,12 +70,27 @@ gui.menu.smain.play.cnm.label.1=Sonderregeln
 gui.menu.smain.play.cnc.label.0=Canasta
 gui.menu.smain.play.cnc.label.1=Eigenes Spiel
 
+gui.menu.smain.lobby.invitebtn.label=Spieler einladen
+gui.menu.smain.lobby.leavebtn.label=Lobby verlassen
+gui.menu.smain.lobby.gamebtn.label=Spiel ändern
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 gui.menu.smain.lobby.readybtn.label=Bereit zum Spielen
+
+gui.menu.smain.lobby.invite_heading=Benutzername eingeben:
+gui.menu.smain.lobby.invite_okbtn.label=Einladen
+gui.menu.smain.lobby.invite_cancelbtn.label=Abbrechen
+
+gui.menu.smain.lobby_inv.label_main=Du wurdest von {username} in eine Lobby eingeladen. Möchtest du die Einladung annehmen?
+gui.menu.smain.lobby_inv.confirm=Annehmen
+gui.menu.smain.lobby_inv.cancel=Ablehnen
 
 gui.menu.smain.gamerule.backbtn.label=Zurück
 
 gui.menu.settings.exitbtn.label=Zurück
+
+question.unknown.text=Frage?
+question.unknown.choice1=Jain
+question.unknown.choice2=Vielleicht
 
 question.reservation.text=Hast du einen Vorbehalt?
 question.reservation.choice1=Ja

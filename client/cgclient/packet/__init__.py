@@ -59,6 +59,18 @@ def register_default_packets(reg, peer, cg, add):
     # Lobby Ready Packet
     r("cg:lobby.ready", lobby.ready.ReadyPacket)
 
+    # Lobby Invite Packet
+    r("cg:lobby.invite", lobby.invite.InvitePacket)
+
+    # Lobby Invite Accept Packet
+    r("cg:lobby.invite.accept", lobby.invite_accept.InviteAcceptPacket)
+
+    # Lobby Kick Packet
+    r("cg:lobby.kick", lobby.kick.KickPacket)
+
+    # Lobby Leave Packet
+    r("cg:lobby.leave", lobby.leave.LeavePacket)
+
     # GAME PACKETS
 
     from . import game_start

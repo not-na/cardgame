@@ -47,3 +47,7 @@ class User(object):
             "pwd": self.pwd,
             "uuid": self.uuid.hex,
         }
+
+    @property
+    def state(self):
+        return self.server.server.clients[self.cid].state

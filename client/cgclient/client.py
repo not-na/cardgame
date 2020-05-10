@@ -22,7 +22,7 @@
 #
 import time
 import uuid
-from typing import Union, Dict, Optional, Type
+from typing import Dict, Optional, Type, List
 
 import peng3dnet
 import pyglet
@@ -93,6 +93,7 @@ class Client(object):
         self.game: Optional[cgclient.game.CGame] = None
 
         self.lobby: Optional[cgclient.lobby.Lobby] = None
+        self.lobby_invitation: List[uuid.UUID] = []  # (inviter, lobby_id)
 
         # TODO: implement async ping
 
@@ -148,6 +149,23 @@ class Client(object):
 
     def register_game(self, name: str, cls: Type[cgclient.game.CGame]):
         self.game_reg[name] = cls
+
+    def get_user(self, uuid: uuid.UUID):
+        user = self.users_uuid.get(uuid, None)
+
+        if user is not None:
+            return user
+
+        else:
+            self.cg.warn(f"User with uuid {uuid} is unknown to the client!")
+            user = cgclient.user.User(self.cg, {"username": "<unknown>",
+                                                "uuid": uuid,
+                                                "status": "unknown"})
+            self.users_uuid[uuid] = user
+            self.cg.client.send_message("cg:status.user", {
+                "uuid": uuid.hex
+            })
+            return user
 
     # Event Handlers
 

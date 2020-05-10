@@ -536,7 +536,9 @@ class DoppelkopfGame(CGame):
         self.start_round(self.round_num)
 
     @classmethod
-    def check_playercount(cls, count: int):
+    def check_playercount(cls, count: int, ignore_devmode=False):
+        if ignore_devmode:
+            return count == 4
         return cls.DEV_MODE or count == 4
 
 
@@ -2045,6 +2047,8 @@ class DoppelkopfRound(object):
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the solo handling packet is not the current player!")
 
+        print(data)
+
         # Remember, if the player want's to play a valid solo
         if data["type"] == "solo_yes":
             solo_type = data["data"]["type"]
@@ -2065,7 +2069,7 @@ class DoppelkopfRound(object):
                       "solo_no" if data["type"] == "solo_no" else data["data"]["type"])
 
         # Start the solo if the first announcer plays his solo
-        if self.game.gamerules["dk.solo_prio"] == "first":
+        if self.game.gamerules["dk.solo_prio"] == "first" and data["type"] == "solo_yes":
             if self.game.gamerules["dk.pigs"] == "two_reservation":
                 self.start_solo(uuidify(data["player"]), False)
             else:
@@ -3630,6 +3634,8 @@ class DoppelkopfRound(object):
                     return
                 self.game.cg.info(f"Invalid packet: {packet}")
                 return
+            elif data['player'] in ['p0', 'p1', 'p2', 'p3']:
+                player = self.players[int(data["player"][1])]
             else:
                 self.game.cg.info(f"The first argument (fake player) must be an integer, not {data['player']}")
                 return
@@ -3731,7 +3737,7 @@ class DoppelkopfRound(object):
             players = self.players[self.players.index(self.current_player):] + \
                       self.players[:self.players.index(self.current_player)]
             for j in players:
-                p = 'p' if j not in self.game.fake_players else str(self.game.fake_players.index(j))
+                p = 'p'+ str(self.players.index(j))
                 self.game.cg.send_event("cg:game.dk.command", {
                     "packet": "play_card",
                     "player": p,

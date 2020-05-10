@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  join.py
+#  kick.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,30 +20,24 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-import cgclient
-from peng3dnet import SIDE_CLIENT
+from peng3dnet import SIDE_SERVER
 
-from cg.constants import STATE_ACTIVE, STATE_LOBBY
+from cg.constants import STATE_LOBBY
 from cg.packet import CGPacket
 from cg.util import uuidify
 
 
-class JoinPacket(CGPacket):
-    state = STATE_ACTIVE
+class KickPacket(CGPacket):
+    state = STATE_LOBBY
     required_keys = [
-        "lobby",
+        "uuid",
+        "reason"
     ]
     allowed_keys = [
-        "lobby"
+        "uuid",
+        "reason"
     ]
-    side = SIDE_CLIENT
+    side = SIDE_SERVER
 
     def receive(self, msg, cid=None):
-        self.peer.remote_state = STATE_LOBBY
-
-        self.cg.client.lobby = cgclient.lobby.Lobby(self.cg, uuidify(msg["lobby"]))
-
-        self.cg.send_event("cg:lobby.join", {"lobby": self.cg.client.lobby})
-        self.cg.info(f"Joined lobby {self.cg.client.lobby.uuid}")
-
-        self.cg.client.gui.servermain.changeSubMenu("lobby")
+        pass

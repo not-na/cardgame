@@ -47,11 +47,6 @@ class CreatePacket(CGPacket):
         self.cg.server.lobbies[l.uuid] = l
         self.cg.send_event(f"cg:lobby.create", {"uuid": l.uuid, "lobby": l, "creator": u})
 
-        # Let user itself "join" the lobby
-        l.add_user(u, ROLE_CREATOR)
-
-        self.peer.clients[cid].state = STATE_LOBBY
-
         self.cg.info(f"Created lobby with UUID {l.uuid} on behalf of user {u.username}")
 
         if msg.get("game", None) is not None:
@@ -67,5 +62,8 @@ class CreatePacket(CGPacket):
             self.cg.info(f"Game for lobby {l.uuid} not yet set, delaying user invite")
             # Other party members are not yet invited
             # They will be invited once the game has been set
+
+        # Let user itself "join" the lobby
+        l.add_user(u, ROLE_CREATOR)
 
 

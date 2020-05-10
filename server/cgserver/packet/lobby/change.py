@@ -35,41 +35,44 @@ class ChangePacket(CGPacket):
 
     def receive(self, msg, cid=None):
         u = self.peer.clients[cid].user
+        lobby = self.cg.server.lobbies.get(u.lobby, None)
+        if lobby is None:
+            self.cg.warn("Received Lobby Change packet though the sender is in no lobby!")
 
         if "users" in msg:
             for uid, udat in msg["users"].items():
-                if "role" in udat and udat["role"] < u.lobby.user_roles[u.uuid] and uid in u.lobby.users:
+                if "role" in udat and udat["role"] < lobby.user_roles[u.uuid] and uid in lobby.users:
                     # Users can only up/downgrade to below their own level
-                    u.lobby.user_roles[uid] = udat["role"]
-                    u.lobby.send_to_all("cg:lobby.change", {
+                    lobby.user_roles[uid] = udat["role"]
+                    lobby.send_to_all("cg:lobby.change", {
                         "users": {uid: {"role": udat["role"]}},
                     })
 
                     self.cg.send_event("cg:lobby.user.role", {"user": uid, "cause": u.uuid, "role": udat["role"]})
                 else:
-                    self.cg.warn(f"User {u.username} with role {u.lobby.user_roles[u.uuid]} tried to up/downgrade user"
+                    self.cg.warn(f"User {u.username} with role {lobby.user_roles[u.uuid]} tried to up/downgrade user"
                                  f"{uid} to role {udat['role']}")
 
         if "game" in msg and msg["game"] is not None:
-            if u.lobby.user_roles[u.uuid] < ROLE_CREATOR:
+            if lobby.user_roles[u.uuid] < ROLE_CREATOR:
                 self.cg.warn(f"User {u.username} tried to change a lobby game with insufficient rights")
                 return
 
-            oldgame = u.lobby.game
-            u.lobby.game = msg["game"]
+            oldgame = lobby.game
+            lobby.game = msg["game"]
 
-            if oldgame != u.lobby.game:
+            if oldgame != lobby.game:
                 if oldgame is None:
                     # Invite all other party members
                     # TODO: add this after parties are implemented
                     self.cg.warn("Invite of other players of party is not yet implemented")
 
-                self.cg.send_event("cg:lobby.game.change", {"old": oldgame, "lobby": u.lobby})
-                self.cg.send_event(f"cg:lobby.game.change.{u.lobby.game}", {"old": oldgame, "lobby": u.lobby})
+                self.cg.send_event("cg:lobby.game.change", {"old": oldgame, "lobby": lobby})
+                self.cg.send_event(f"cg:lobby.game.change.{lobby.game}", {"old": oldgame, "lobby": lobby})
 
         if "gamerules" in msg:
-            if u.lobby.user_roles[u.uuid] < ROLE_CREATOR:
+            if lobby.user_roles[u.uuid] < ROLE_CREATOR:
                 self.cg.warn(f"User {u.username} tried to change gamerules with insufficient rights")
                 return
 
-            u.lobby.update_gamerules(msg["gamerules"])
+            lobby.update_gamerules(msg["gamerules"])

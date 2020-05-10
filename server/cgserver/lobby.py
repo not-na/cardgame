@@ -20,7 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import Union, Dict, List, Any
+from typing import Union, Dict, List, Any, Set
 
 import uuid
 
@@ -40,6 +40,10 @@ class Lobby(object):
         self.users: List[uuid.UUID] = []
         self.user_roles: Dict[uuid.UUID, int] = {}
         self.user_ready: Dict[uuid.UUID, bool] = {}
+
+        self.invitations: Set[uuid.UUID] = set()
+
+        self.started: bool = False
 
         self.gamerules: Dict[str, Any] = {}
         # Debugging for Doppelkopf
@@ -99,10 +103,20 @@ class Lobby(object):
 
         if not left:
             self.cg.server.send_to_user(user, "cg:lobby.leave", {"lobby": self.uuid.hex})
+            self.cg.server.users_uuid[user].lobby = None
+
+        udat = {user: {"role": ROLE_REMOVE}}
+        for u in self.users:
+            udat[u] = {"index": self.users.index(u)}
 
         self.send_to_all("cg:lobby.change", {
-            "users": {user: {"role": ROLE_REMOVE}},
+            "users": udat,
         })
+
+        # Delete empty lobbies
+        if len(self.users) == 0:
+            self.cg.info(f"Deleting lobby {self.uuid}")
+            del self.cg.server.lobbies[self.uuid]
 
     def add_user(self, user: cgserver.user.User, role: int):
         if user.uuid in self.users:
@@ -131,15 +145,19 @@ class Lobby(object):
             "users": {u.hex: {
                 "ready": self.user_ready[u],
                 "role": self.user_roles[u],
+                "index": self.users.index(u)
                 }
                 for u in self.users
-            }
+            },
+            "game": self.game,
+            "gamerules": self.gamerules
         })
 
         self.send_to_all("cg:lobby.change", {
             "users": {user.uuid.hex: {
                 "ready": self.user_ready[user.uuid],
                 "role": self.user_roles[user.uuid],
+                "index": self.users.index(user.uuid)
             }},
         }, user)
 

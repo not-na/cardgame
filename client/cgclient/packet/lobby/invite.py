@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  join.py
+#  invite.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,30 +20,29 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-import cgclient
-from peng3dnet import SIDE_CLIENT
-
-from cg.constants import STATE_ACTIVE, STATE_LOBBY
+from cg.constants import STATE_ACTIVE, STATE_LOBBY, STATE_GAME_DK
 from cg.packet import CGPacket
 from cg.util import uuidify
 
 
-class JoinPacket(CGPacket):
-    state = STATE_ACTIVE
-    required_keys = [
-        "lobby",
-    ]
+class InvitePacket(CGPacket):
+    state = [STATE_ACTIVE, STATE_LOBBY]
+    required_keys = []
     allowed_keys = [
-        "lobby"
+        "username",
+        "inviter",
+        "lobby_id"
     ]
-    side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
-        self.peer.remote_state = STATE_LOBBY
+        if "inviter" not in msg:
+            self.cg.error("cg:lobby.invite packet must contain key 'inviter'!")
+            return
 
-        self.cg.client.lobby = cgclient.lobby.Lobby(self.cg, uuidify(msg["lobby"]))
+        if "lobby_id" not in msg:
+            self.cg.error("cg:lobby.invite packet must contain key 'lobby_id'!")
+            return
 
-        self.cg.send_event("cg:lobby.join", {"lobby": self.cg.client.lobby})
-        self.cg.info(f"Joined lobby {self.cg.client.lobby.uuid}")
+        self.cg.client.lobby_invitation = [uuidify(msg["inviter"]), uuidify(msg["lobby_id"])]
 
-        self.cg.client.gui.servermain.changeSubMenu("lobby")
+        self.cg.client.gui.servermain.changeSubMenu("lobby_inv")
