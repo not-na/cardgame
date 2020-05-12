@@ -278,29 +278,30 @@ class Card(object):
         elif slot == "table":
             # Apply the table shift
             # Causes cards to be aligned with whomever played it
+            oidx = index+1
             index = (index+self.game.table_index_shift) % 4
             if index == 0:
                 # Left
                 return [
-                    [-0.4, 0.01, -0.1],
+                    [-0.4, 0.01*oidx, -0.1],
                     [0, 180, 0],
                 ]
             elif index == 1:
                 # Top
                 return [
-                    [0.15, 0.02, -0.5],
+                    [0.15, 0.01*oidx, -0.5],
                     [0, 180, 0],
                 ]
             elif index == 2:
                 # Right
                 return [
-                    [0.5, 0.03, 0.1],
+                    [0.5, 0.01*oidx, 0.1],
                     [0, 180, 0],
                 ]
             elif index == 3:
                 # Bottom
                 return [
-                    [-0.05, 0.04, 0.3],
+                    [-0.05, 0.01*oidx, 0.3],
                     [0, 180, 0],
                 ]
         elif slot == "poverty":
