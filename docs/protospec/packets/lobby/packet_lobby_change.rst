@@ -51,6 +51,9 @@ This metadata currently contains the ``ready`` and ``role`` keys. All players mu
 their ``ready`` flag set to true to begin the game. ``role`` determines what the player
 can do. If the ``role`` is ``-1``\ , the player should be removed.
 
+``user_order`` is the order of the users for being shown in the lobby and for determining
+the seat order in the game.
+
 ``game`` is the name of the game that will be played.
 
 ``gamerules`` are the rules by which the game will be played. Note that only updated rules will

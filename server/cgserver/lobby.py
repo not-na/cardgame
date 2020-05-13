@@ -27,7 +27,7 @@ import uuid
 import cgserver
 
 import cg
-from cg.constants import ROLE_REMOVE
+from cg.constants import ROLE_REMOVE, ROLE_CREATOR, ROLE_ADMIN
 
 
 class Lobby(object):
@@ -97,17 +97,23 @@ class Lobby(object):
 
         self.cg.debug(f"Removing user {user} from lobby {self.uuid}")
 
+        creator_left = self.user_roles[user] == ROLE_CREATOR
+
         del self.users[self.users.index(user)]
         del self.user_roles[user]
         del self.user_ready[user]
+
+        if creator_left and len(self.users) > 0:
+            self.user_roles[self.users[0]] = ROLE_ADMIN
 
         if not left:
             self.cg.server.send_to_user(user, "cg:lobby.leave", {"lobby": self.uuid.hex})
             self.cg.server.users_uuid[user].lobby = None
 
-        udat = {user: {"role": ROLE_REMOVE}}
+        udat = {user.hex: {"role": ROLE_REMOVE}}
         for u in self.users:
-            udat[u] = {"index": self.users.index(u)}
+            udat[u.hex] = {"index": self.users.index(u),
+                           "role": self.user_roles[u]}
 
         self.send_to_all("cg:lobby.change", {
             "users": udat,
@@ -141,6 +147,8 @@ class Lobby(object):
             "lobby": self.uuid.hex,
         })
 
+        gamerule_validators = self.cg.server.game_reg.get(self.game, cgserver.game.CGame).GAMERULES
+
         self.cg.server.send_to_user(user, "cg:lobby.change", {
             "users": {u.hex: {
                 "ready": self.user_ready[u],
@@ -150,7 +158,8 @@ class Lobby(object):
                 for u in self.users
             },
             "game": self.game,
-            "gamerules": self.gamerules
+            "gamerules": self.gamerules,
+            "gamerule_validators": gamerule_validators
         })
 
         self.send_to_all("cg:lobby.change", {

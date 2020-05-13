@@ -45,7 +45,6 @@ class InvitePacket(CGPacket):
             self.cg.error("cg:lobby.invite packet can only be sent while in a lobby!")
             return
 
-        print(self.cg.server.users)
         user = self.cg.server.users.get(msg["username"], None)
 
         if self.cg.server.game_reg[lobby.game].check_playercount(len(lobby.users), True):

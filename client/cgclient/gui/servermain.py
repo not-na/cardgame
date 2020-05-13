@@ -20,8 +20,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import math
 import time
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import peng3d
 
@@ -29,16 +30,16 @@ import cgclient.gui
 from pyglet.window.mouse import LEFT
 
 GAMES = [
-    "sk",       # Skat
-    "dk",       # Doppelkopf
-    "rm",       # Romme
-    "cn",       # Canasta
+    "sk",  # Skat
+    "dk",  # Doppelkopf
+    "rm",  # Romme
+    "cn",  # Canasta
 ]
 
 GAME_VARIANTS = [
-    "c",        # Custom
-    "m",        # Modified
-    "s",        # Standard
+    "c",  # Custom
+    "m",  # Modified
+    "s",  # Standard
 ]
 
 ALLOWED_GAMES = [
@@ -68,7 +69,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             bg_idle=("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3),
-            )
+        )
         )
         self.bg.vlist_layer = -1
 
@@ -95,7 +96,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             frame=[[249, 502, 249], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
-            )
+        )
         )
         self.d_create_acc.wbtn_cancel.setBackground(peng3d.gui.FramedImageBackground(
             self.d_create_acc.wbtn_cancel,
@@ -105,11 +106,11 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             frame=[[249, 502, 249], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
-            )
         )
-        self.d_create_acc.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw/2-bw-5, sh/2-bh*2)
-        self.d_create_acc.wbtn_confirm.size = lambda sw, sh: (sw/5, 64)
-        self.d_create_acc.wbtn_cancel.pos = lambda sw, sh, bw, bh: (sw/2+5, sh/2 - bh*2)
+        )
+        self.d_create_acc.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw / 2 - bw - 5, sh / 2 - bh * 2)
+        self.d_create_acc.wbtn_confirm.size = lambda sw, sh: (sw / 5, 64)
+        self.d_create_acc.wbtn_cancel.pos = lambda sw, sh, bw, bh: (sw / 2 + 5, sh / 2 - bh * 2)
         self.d_create_acc.wbtn_cancel.size = lambda sw, sh: (sw / 5, 64)
         self.addSubMenu(self.d_create_acc)
 
@@ -119,10 +120,12 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
                 "pwd": self.s_login.pwd.text,
                 "create": True,
             })
+
         self.d_create_acc.addAction("confirm", f)
 
         def f():
             self.d_create_acc.prev_submenu = "login"
+
         self.d_create_acc.addAction("cancel", f)
 
         # Error Dialog
@@ -140,7 +143,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             scale=(None, 0),
             repeat_edge=True,
             repeat_center=True,
-            )
+        )
         )
         self.addSubMenu(self.d_login_err)
 
@@ -178,21 +181,21 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.addSubMenu(self.d_lobby_inv)
 
         def f():
-            print("hi")
             self.cg.client.send_message("cg:lobby.invite.accept", {
                 "accepted": True,
                 "lobby_id": self.cg.client.lobby_invitation[1].hex,
                 "inviter": self.cg.client.lobby_invitation[0].hex,
             })
+
         self.d_lobby_inv.addAction("confirm", f)
 
         def f():
-            print("bye")
             self.cg.client.send_message("cg:lobby.invite.accept", {
                 "accepted": False,
                 "lobby_id": self.cg.client.lobby_invitation[1].hex,
                 "inviter": self.cg.client.lobby_invitation[0].hex,
             })
+
         self.d_lobby_inv.addAction("cancel", f)
 
         # Login Menu
@@ -206,6 +209,10 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         # Lobby Menu
         self.s_lobby = LobbySubMenu("lobby", self, self.window, self.peng)
         self.addSubMenu(self.s_lobby)
+
+        # Template Menu
+        self.s_template = TemplateSubMenu("template", self, self.window, self.peng)
+        self.addSubMenu(self.s_template)
 
         # Gamerule Menu
         self.s_gamerule = GameruleSubMenu("gamerules", self, self.window, self.peng)
@@ -321,13 +328,15 @@ class MainSubMenu(peng3d.gui.SubMenu):
         w = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[0] / self.window.width
         h = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[1] / self.window.height
         sx = self.subgrid_1.get_cell([1, 1], [2, 3]).size[0] / self.window.width
+
         def s(sw, sh):
-            return sw*sx, sw*sx
+            return sw * sx, sw * sx
+
         # Profile Image
         self.profile_img = peng3d.gui.ImageButton(
             "profileimg", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw*w - bw/2, sh*h - bh/2)),
-            #size=(lambda sw, sh: (sw*sx, sw*sx)),
+            pos=(lambda sw, sh, bw, bh: (sw * w - bw / 2, sh * h - bh / 2)),
+            # size=(lambda sw, sh: (sw*sx, sw*sx)),
             size=s,
             bg_idle=("cg:img.profilbild", "gui"),
             label="",
@@ -371,11 +380,13 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.c_play.visible = True
+
         self.playbtn.addAction("press_down", f1, self.playbtn)
         self.playbtn.addAction("press_down", f)
 
         def f():
             self.c_play.visible = False
+
         self.playbtn.addAction("press_up", f)
         self.addWidget(self.playbtn)
 
@@ -451,6 +462,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         def f():
             self.window.changeMenu("settings")
             self.window.menu.prev_menu = "servermain"
+
         self.settingsbtn.addAction("click", f)
         self.settingsbtn.addAction("click", f1, self.settingsbtn)
 
@@ -458,8 +470,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         # Play Container
         self.c_play = PlayContainer("play", self, self.window, self.peng,
-                                    pos=(lambda sw, sh, bw, bh: (sw/3, 0)),
-                                    size=(lambda sw, sh: (sw*2/3, sh))
+                                    pos=(lambda sw, sh, bw, bh: (sw / 3, 0)),
+                                    size=(lambda sw, sh: (sw * 2 / 3, sh))
                                     )
         self.addWidget(self.c_play)
 
@@ -534,8 +546,9 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         # Game Label
         self.game_label = peng3d.gui.Label("lobby_game_label", self, self.window, self.peng,
-                                           pos=(lambda sw, sh, bw, bh: (sw/2, sh*19/24)),
-                                           size=(lambda sw, sh: (0, sh/6)),
+                                           pos=(lambda sw, sh, bw, bh: (sw / 2, sh * 19 / 24)),
+                                           # TODO Make this adjusting to the font size
+                                           size=(lambda sw, sh: (0, sh / 6)),
                                            label=self.peng.tl("None"),  # This will be changed later
                                            font_size=40,
                                            )
@@ -551,6 +564,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.c_invite.visible = True
+
         self.invitebtn.addAction("click", f)
 
         # Leave Button
@@ -565,6 +579,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             self.menu.cg.client.send_message("cg:lobby.leave", {
                 "lobby": self.menu.cg.client.lobby.uuid.hex
             })
+
         self.leavebtn.addAction("click", f)
 
         # Game Button
@@ -577,6 +592,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         def f():
             pass
+
         self.gamebtn.addAction("click", f)
 
         # Gamerule Button
@@ -589,6 +605,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.menu.changeSubMenu("gamerules")
+
         self.gamerulebtn.addAction("click", f)
 
         # Ready Button
@@ -601,13 +618,14 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.menu.cg.client.send_message("cg:lobby.ready", {"ready": True})
+
         self.readybtn.addAction("click", f)
 
         # Player list
         self.w_player_0 = PlayerButton(
             "player0btn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 3 * 11 / 72))),
-            size=(lambda sw, sh: (sw-6, sh * 11 / 72)),
+            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
             player=None
         )
         self.addWidget(self.w_player_0)
@@ -615,7 +633,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.w_player_1 = PlayerButton(
             "player1btn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 2 * 11 / 72))),
-            size=(lambda sw, sh: (sw-6, sh * 11 / 72)),
+            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
             player=None
         )
         self.addWidget(self.w_player_1)
@@ -623,7 +641,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.w_player_2 = PlayerButton(
             "player2btn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 1 * 11 / 72))),
-            size=(lambda sw, sh: (sw-6, sh * 11 / 72)),
+            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
             player=None
         )
         self.addWidget(self.w_player_2)
@@ -631,7 +649,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.w_player_3 = PlayerButton(
             "player3btn", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9))),
-            size=(lambda sw, sh: (sw-6, sh * 11 / 72)),
+            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
             player=None
         )
         self.addWidget(self.w_player_3)
@@ -655,6 +673,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
     def handle_game_change(self, event: str, data: dict):
         self.game_label.label = self.peng.tl(f"cg:game.{data['game']}")
+        self.menu.s_gamerule.heading.label = self.peng.tl("cg:gui.menu.smain.gamerule.heading", {"game": data["game"]})
 
 
 class GameruleSubMenu(peng3d.gui.SubMenu):
@@ -663,21 +682,48 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.label = peng3d.gui.Label("label", self, self.window, self.peng,
-                                      pos=(lambda sw, sh, bw, bh: (sw / 2, sh/2-bh*2)),
-                                      size=[0, 0],  # (lambda sw, sh: (sw, sh)),
-                                      label="Gamerules here",
-                                      font_size=40,
-                                      anchor_x="center",
-                                      anchor_y="center",
-                                      )
-        self.addWidget(self.label)
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [12, 6], [60, 30])
+
+        # Upper Bar
+        self.w_upper_bar = peng3d.gui.Widget(
+            "upper_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [12, 1], border=0),
+        )
+        self.w_upper_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_upper_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.addWidget(self.w_upper_bar)
+
+        # Lower Bar
+        self.w_lower_bar = peng3d.gui.Widget(
+            "lower_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [12, 1], border=0),
+        )
+        self.w_lower_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_lower_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.addWidget(self.w_lower_bar)
+
+        # Gamerules Heading
+        self.heading = peng3d.gui.Label("gamerules_heading", self, self.window, self.peng,
+                                        pos=(lambda sw, sh, bw, bh: (sw / 2, sh * 19 / 24)),
+                                        # TODO Make this adjusting to the font size
+                                        size=(lambda sw, sh: (0, sh / 6)),
+                                        label=self.peng.tl("None"),  # This will be changed later
+                                        font_size=40,
+                                        )
+        self.addWidget(self.heading)
 
         # Back Button
         self.backbtn = cgclient.gui.CGButton(
             "backbtn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh / 2 - bh / 2 - 5)),
-            size=(lambda sw, sh: (sw / 2, 32)),
+            pos=self.grid.get_cell([0, 0], [4, 1]),
             label=self.peng.tl("cg:gui.menu.smain.gamerule.backbtn.label"),
         )
         self.addWidget(self.backbtn)
@@ -685,6 +731,265 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
         def f():
             self.menu.changeSubMenu("lobby")
         self.backbtn.addAction("click", f)
+
+        # Load Template Button
+        self.loadtmplbtn = cgclient.gui.CGButton(
+            "loadtmplbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 0], [4, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.loadtmplbtn.label"),
+        )
+        self.addWidget(self.loadtmplbtn)
+
+        def f():
+            self.menu.changeSubMenu("template")
+        self.loadtmplbtn.addAction("click", f)
+
+        # Save Template Button
+        self.savetmplbtn = cgclient.gui.CGButton(
+            "savetmplbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 0], [4, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.savetmplbtn.label"),
+        )
+        self.addWidget(self.savetmplbtn)
+
+        def f():
+            self.c_save.visible = True
+        self.savetmplbtn.addAction("click", f)
+
+        # Previous Page Button
+        self.prevpagebtn = cgclient.gui.CGButton(
+            "prevpagebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.prevpagebtn.label"),
+        )
+        self.addWidget(self.prevpagebtn)
+        self.prevpagebtn.enabled = False
+
+        def f():
+            self.gamerule_containers[self.current_page].visible = False
+            self.current_page -= 1
+            self.gamerule_containers[self.current_page].visible = True
+            if self.current_page == 0:
+                self.prevpagebtn.enabled = False
+            self.nextpagebtn.enabled = True
+        self.prevpagebtn.addAction("click", f)
+
+        # Next Page Button
+        self.nextpagebtn = cgclient.gui.CGButton(
+            "nextpagebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([9, 5], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.nextpagebtn.label"),
+        )
+        self.addWidget(self.nextpagebtn)
+
+        def f():
+            self.gamerule_containers[self.current_page].visible = False
+            self.current_page += 1
+            self.gamerule_containers[self.current_page].visible = True
+            if self.current_page == len(self.gamerule_containers) - 1:
+                self.nextpagebtn.enabled = False
+            self.prevpagebtn.enabled = True
+        self.nextpagebtn.addAction("click", f)
+
+        # Gamerule Containers
+        self.gamerule_containers = {}
+        self.rule_buttons = {}
+        self.current_page = 0
+
+        self.c_save = TemplateSaveDialog(
+            "c_save", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 2], [4, 2]),
+            size=None
+        )
+        self.addWidget(self.c_save, 10)
+
+    def on_enter(self, old):
+        if old == "template" and self.menu.submenus["template"].exit_mode == "back":
+            self.gamerule_containers[self.current_page].visible = True
+        else:
+            self.current_page = 0
+            self.nextpagebtn.enabled = True
+            self.prevpagebtn.enabled = False
+            self.gamerule_containers[self.current_page].visible = True
+
+    def on_exit(self, new):
+        self.gamerule_containers[self.current_page].visible = False
+
+
+class TemplateSubMenu(peng3d.gui.SubMenu):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng,
+                         font="Times New Roman",
+                         font_color=[255, 255, 255, 100])
+
+        self.chosen_save = ""
+
+        self.exit_mode = "back"
+
+        self.setBackground(peng3d.gui.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [12, 18], [60, 30])
+
+        # Upper Bar
+        self.w_upper_bar = peng3d.gui.Widget(
+            "upper_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 15], [12, 3], border=0),
+        )
+        self.w_upper_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_upper_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.addWidget(self.w_upper_bar)
+
+        # Lower Bar
+        self.w_lower_bar = peng3d.gui.Widget(
+            "lower_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [12, 3], border=0),
+        )
+        self.w_lower_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_lower_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.addWidget(self.w_lower_bar)
+
+        # Gamerules Heading
+        self.heading = peng3d.gui.Label("template_load_heading", self, self.window, self.peng,
+                                        pos=(lambda sw, sh, bw, bh: (sw / 2, sh * 19 / 24)),
+                                        # TODO Make this adjusting to the font size
+                                        size=(lambda sw, sh: (0, sh / 6)),
+                                        label=self.peng.tl("cg:gui.menu.smain.template.heading"),
+                                        font_size=40,
+                                        )
+        self.addWidget(self.heading)
+
+        # Back Button
+        self.backbtn = cgclient.gui.CGButton(
+            "backbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [4, 3]),
+            label=self.peng.tl("cg:gui.menu.smain.template.backbtn.label"),
+        )
+        self.addWidget(self.backbtn)
+
+        def f():
+            self.exit_mode = "back"
+            self.menu.changeSubMenu("gamerules")
+        self.backbtn.addAction("click", f)
+
+        # Load Template Button
+        self.loadtmplbtn = cgclient.gui.CGButton(
+            "loadtmplbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 0], [4, 3]),
+            label=self.peng.tl("cg:gui.menu.smain.template.loadtmplbtn.label"),
+        )
+        self.addWidget(self.loadtmplbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:lobby.change", {
+                "gamerules": self.saves[self.chosen_save]
+            })
+
+            self.exit_mode = "load"
+            self.menu.changeSubMenu("gamerules")
+        self.loadtmplbtn.addAction("click", f)
+
+        # Delete Template Button
+        self.deletebtn = cgclient.gui.CGButton(
+            "deletebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 0], [4, 3]),
+            label=self.peng.tl("cg:gui.menu.smain.template.deletebtn.label"),
+        )
+        self.addWidget(self.deletebtn)
+
+        def f():
+            _saves = self.saves
+            del _saves[self.chosen_save]
+            self.saves = _saves
+
+            _save_opts = self.save_opts
+            _save_opts.remove(self.chosen_save)
+            self.save_opts = _save_opts
+
+            self.on_enter("template")
+        self.deletebtn.addAction("click", f)
+
+        self.save_btns = []
+        for i in range(6):
+            for j in range(3):
+                btn = peng3d.gui.ToggleButton(
+                    f"button{j}:{i}", self, self.window, self.peng,
+                    pos=self.grid.get_cell([j*4, 13-2*i], [4, 2]),
+                    label="",
+                )
+                btn.setBackground(peng3d.gui.FramedImageBackground(
+                    btn,
+                    bg_idle=("cg:img.btn.btn_idle", "gui"),
+                    bg_hover=("cg:img.btn.btn_hov", "gui"),
+                    bg_pressed=("cg:img.btn.btn_press", "gui"),
+                    bg_disabled=("cg:img.btn.btn_disabled", "gui"),
+                    frame=[[1, 2, 1], [0, 1, 0]],
+                    scale=(None, 0),
+                    repeat_edge=True, repeat_center=True,
+                ))
+                self.addWidget(btn)
+                self.save_btns.append(btn)
+                btn.visible = False
+
+                def f(button):
+                    for b in self.save_btns:
+                        if b != button:
+                            b.pressed = False
+                            b.redraw()
+                    self.chosen_save = button.label
+                    self.loadtmplbtn.enabled = True
+                    self.deletebtn.enabled = True
+                btn.addAction("press_down", f, btn)
+
+                def f():
+                    self.chosen_save = ""
+                    self.loadtmplbtn.enabled = False
+                    self.deletebtn.enabled = False
+                btn.addAction("press_up", f)
+
+    @property
+    def save_opts(self):
+        return self.peng.cg.config_manager.get_config_option("cg:templates.options")
+
+    @save_opts.setter
+    def save_opts(self, value):
+        self.peng.cg.config_manager.set_config_option("cg:templates.options", value)
+
+    @property
+    def saves(self):
+        print("saves", {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts})
+        return {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts}
+
+    @saves.setter
+    def saves(self, value):
+        for key, data in value.items():
+            self.peng.cg.config_manager.set_config_option(f"cg:templates.{key}", data)
+
+    def on_enter(self, old):
+        for i, btn in enumerate(self.save_btns):
+            if i < len(self.save_opts):
+                self.save_btns[i].label = self.save_opts[i]
+                self.save_btns[i].visible = True
+                self.save_btns[i].pressed = False
+            else:
+                self.save_btns[i].label = ""
+                self.save_btns[i].visible = False
+                self.save_btns[i].pressed = False
+
+        self.deletebtn.enabled = False
+        self.loadtmplbtn.enabled = False
 
 
 class PlayContainer(peng3d.gui.Container):
@@ -758,28 +1063,29 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
 
         self.addAction("statechanged", lambda: self.bg_layer.switchImage(self.getState()))
 
-        ar = 12/7  # Aspect ratio of icons
+        ar = 12 / 7  # Aspect ratio of icons
+
         # TODO: maybe do not hardcode this anymore
 
         def b(x, y, sx, sy) -> Tuple[int, int]:
-            if sy/2 > sx:
+            if sy / 2 > sx:
                 # X-Axis is constraining factor
                 s = sx
-                return (sx-s)/2, (sy-s)/2
+                return (sx - s) / 2, (sy - s) / 2
             else:
                 # Y-Axis is constraining factor
-                s = sy/2
-                return (sx-s)/2/ar, (sy-s)/2
+                s = sy / 2
+                return (sx - s) / 2 / ar, (sy - s) / 2
 
         def o(x, y, sx, sy):
-            if sy/2 > sx:
+            if sy / 2 > sx:
                 # X-Axis is constraining factor
                 s = sx
-                return 0, s/2
+                return 0, s / 2
             else:
                 # Y-Axis is constraining factor
-                s = sy/2
-                return 0, s/2
+                s = sy / 2
+                return 0, s / 2
 
         self.icon_layer = peng3d.gui.ImageWidgetLayer(
             "icon_layer", self, 2,
@@ -805,7 +1111,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
             font="Times New Roman",
             font_size=16,
             font_color=[255, 255, 255, 100],
-            offset=[0, -20-22-8],
+            offset=[0, -20 - 22 - 8],
         )
         self.addLayer(self.label2_layer)
 
@@ -817,12 +1123,14 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
                                              })
             self.peng.cg.info("Sent lobby creation request")
             # TODO: add loading screen here
+
         self.addAction("click", f)
 
 
 class _FakeUser:
     username = ""
     ready = False
+    uuid = None
 
 
 class PlayerButton(peng3d.gui.LayeredWidget):
@@ -847,10 +1155,12 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         def f():
             if self._player is not None:
                 self.bg_layer.switchImage("hover")
+
         self.addAction("hover_start", f)
 
         def f():
             self.bg_layer.switchImage("idle")
+
         self.addAction("hover_end", f)
 
         # TODO Add user icon
@@ -863,7 +1173,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             font="Times New Roman",
             font_size=30,
             font_color=[255, 255, 255, 100],
-            offset=(lambda bx, by, bw, bh: (-bw/2 + 20, 0))
+            offset=(lambda bx, by, bw, bh: (-bw / 2 + 20, 0))
         )
         self.username_label_layer._label.anchor_x = "left"
         self.addLayer(self.username_label_layer)
@@ -917,7 +1227,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                     if abs(next_button.pos[1] - self.pos[1]) < self.size[1] / 2:  # Closer to next pos than to own
                         self.submenu.player_buttons[index] = next_button
                         self.submenu.player_buttons[index + 1] = self
-                        next_button.pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + ((3 - index) * 11 / 72))))
+                        next_button.pos = (lambda sw, sh, bw, bh: (
+                        3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
                         next_button.redraw()
 
             if index != 0:  # For the button above
@@ -926,7 +1237,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                     if abs(next_button.pos[1] - self.pos[1]) < self.size[1] / 2:  # Closer to next pos than to own
                         self.submenu.player_buttons[index] = next_button
                         self.submenu.player_buttons[index - 1] = self
-                        next_button.pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + ((3 - index) * 11 / 72))))
+                        next_button.pos = (lambda sw, sh, bw, bh: (
+                        3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
                         next_button.redraw()
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -936,7 +1248,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                 self.mouse_offset = [x - self.pos[0], y - self.pos[1]]
                 self.is_dragged = True
 
-    def on_mouse_release(self,x,y,button,modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         super().on_mouse_press(x, y, button, modifiers)
         if self.is_dragged:
             if button == LEFT:
@@ -945,9 +1257,18 @@ class PlayerButton(peng3d.gui.LayeredWidget):
 
                 for i, btn in self.submenu.player_buttons.items():
                     if btn == self:
-                        self.pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + ((3 - i) * 11 / 72))))
+                        self.pos = (lambda sw, sh, bw, bh: (
+                        3, sh * (2 / 9 + ((3 - i) * 11 / 72))))  # TODO Fix potential memory leak
                         self.redraw()
                         break
+
+                player_order = []
+                for j in range(4):
+                    if self.submenu.player_buttons[j]._player is not None:
+                        player_order.append(self.submenu.player_buttons[j].player.uuid)
+                self.peng.cg.client.send_message("cg:lobby.change", {
+                    "user_order": [p.hex for p in player_order]
+                })
 
 
 class InviteDialog(peng3d.gui.Container):
@@ -1009,6 +1330,7 @@ class InviteDialog(peng3d.gui.Container):
             })
             self.visible = False
             self.input_field.text = ""
+
         self.okbtn.addAction("click", f)
 
         # Cancel Button
@@ -1024,4 +1346,500 @@ class InviteDialog(peng3d.gui.Container):
         def f():
             self.visible = False
             self.input_field.text = ""
+
         self.cancelbtn.addAction("click", f)
+
+
+class TemplateSaveDialog(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng,
+                         pos, size)
+
+        self.visible = False
+
+        self.s_template = self.menu.menu.s_template
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [2, 3], [30, 20])
+
+        self.bg_widget = peng3d.gui.Widget("invite_bg", self, self.window, self.peng,
+                                           pos=(0, 0),
+                                           size=(lambda sw, sh: (sw, sh)))
+        self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.bg_widget,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg_widget.bg.vlist_layer = 10
+        self.addWidget(self.bg_widget)
+
+        # Heading
+        self.save_heading = peng3d.gui.Label(
+            "save_heading", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 2], [2, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.save_template_heading"),
+            font="Times New Roman",
+            font_size=25,
+            label_layer=11,
+        )
+        self.addWidget(self.save_heading)
+
+        # Input field for username
+        self.input_field = cgclient.gui.CGTextInput(
+            "save_input", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 1], [2, 1]),
+            font_size=25
+        )
+        self.input_field.bg.parent.vlist_layer = 11
+        self.input_field.bg.vlist_cursor_layer = 12
+        self.addWidget(self.input_field)
+
+        # Ok Button
+        self.okbtn = cgclient.gui.CGButton(
+            "save_okbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.save_okbtn.label"),
+            label_layer=12,
+        )
+        self.okbtn.bg.vlist_layer = 11
+        self.addWidget(self.okbtn)
+
+        def f():
+            if self.input_field.text != "":
+                if len(self.s_template.save_opts) >= 18:
+                    self.cg.warn("Maximum amount of templates reached, cannot create new template")
+                    return
+
+                gamerule_copy = {
+                    key: value.copy() if type(value) == list else value for key, value in self.peng.cg.client.lobby.gamerules.items()
+                }
+
+                _saves = self.s_template.saves
+                _saves[self.input_field.text] = gamerule_copy
+                self.s_template.saves = _saves
+
+                _save_opts = self.s_template.save_opts
+                _save_opts.append(self.input_field.text)
+                self.s_template.save_opts = _save_opts
+
+                self.visible = False
+                self.input_field.text = ""
+        self.okbtn.addAction("click", f)
+
+        # Cancel Button
+        self.cancelbtn = cgclient.gui.CGButton(
+            "save_cancelbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.gamerule.save_cancelbtn.label"),
+            label_layer=12,
+        )
+        self.cancelbtn.bg.vlist_layer = 11
+        self.addWidget(self.cancelbtn)
+
+        def f():
+            self.visible = False
+            self.input_field.text = ""
+        self.cancelbtn.addAction("click", f)
+
+
+class GameRuleContainer(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size,
+                 page_num, gamerules):
+        super().__init__(name, submenu, window, peng,
+                         pos, size)
+
+        self.visible = False
+
+        self.grid = self.submenu.grid
+
+        self.page = page_num
+        self.gamerules = gamerules
+        self.gamerule_btns = {}
+
+        c = 0
+        for gamerule in self.gamerules:
+            grdat = self.peng.cg.client.lobby.gamerule_validators[gamerule].copy()
+            if grdat["type"] == "bool":
+                cls = BoolRuleButton
+            elif grdat["type"] == "number":
+                cls = NumberRuleButton
+            elif grdat["type"] == "select":
+                cls = SelectRuleButton
+            elif grdat["type"] == "active":
+                cls = ActivetRuleButton
+            elif grdat["type"] == "str":
+                cls = StrRuleButton
+            else:
+                self.peng.cg.fatal(f"Invalid type: {grdat['type']} for gamerule {gamerule}")
+                self.peng.cg.crash("Failed generating gamerule menu for a rule had an invalid type")
+                return
+
+            del grdat["type"]
+            self.gamerule_btns[c] = cls(gamerule, self, window, peng,
+                                        self.grid.get_cell([0, 3 - 2*c], [12, 2], border=0), None,
+                                        gamerule, **grdat)
+            self.addWidget(self.gamerule_btns[c])
+            self.submenu.rule_buttons[gamerule] = self.gamerule_btns[c]
+            c += 1
+
+
+class RuleButton(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size, gamerule, default, requirements):
+        super().__init__(name, submenu, window, peng, pos, size)
+
+        self.gamerule = gamerule
+        self.default_val = default
+        self.requirements = requirements
+
+        self.setBackground(peng3d.gui.FramedImageBackground(
+            self,
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.bg.vlist_layer = -2
+
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [2, 15], [60, 10])
+
+        # 2nd Background
+        self.disabled_background = peng3d.gui.Widget(
+            "bg_disabled", self, self.window, self.peng,
+            self.grid.get_cell([0, 0], [2, 15], border=0)
+        )
+        self.disabled_background.setBackground(peng3d.gui.FramedImageBackground(
+            self.disabled_background,
+            bg_idle=("cg:img.bg.bg_gray", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.disabled_background.bg.vlist_layer = -1
+        self.addWidget(self.disabled_background)
+        self.disabled_background.visible = False
+
+        # Game rule label
+        self.gamerule_label = peng3d.gui.Label(
+            "gamerule_label", self, self.window, self.peng,
+            self.grid.get_cell([0, 13], [2, 2]),
+            label=self.peng.tl(f"cg:gamerule.{self.gamerule}.name"),
+            font="Times New Roman",
+            font_size=30,
+            font_color=[255, 255, 255, 100],
+            multiline=True
+        )
+        self.addWidget(self.gamerule_label)
+
+        # Game rule description
+        self.description_label = peng3d.gui.Label(
+            "description_label", self, self.window, self.peng,
+            self.grid.get_cell([0, 11], [2, 1]),
+            label=self.peng.tl(f"cg:gamerule.{self.gamerule}.description"),
+            font="Times New Roman",
+            font_size=20,
+            font_color=[255, 255, 255, 100],
+            multiline=True
+        )
+        self.addWidget(self.description_label)
+
+    def set_rule(self, data):
+        pass
+
+    @property
+    def enabled(self):
+        return not self.disabled_background.visible
+
+
+class BoolRuleButton(RuleButton):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size,
+                 gamerule, default, requirements):
+        super().__init__(name, submenu, window, peng, pos, size,
+                         gamerule, default, requirements)
+
+        self.opt_grid = peng3d.gui.GridLayout(
+            self.peng, self.grid.get_cell([0, 0], [2, 9]), [2, 1], [100, 0]
+        )
+
+        # Yes Button
+        self.yesbtn = peng3d.gui.ToggleButton(
+            "yesbtn", self, self.window, self.peng,
+            pos=self.opt_grid.get_cell(
+                [0, 0], [1, 1], border=0, anchor_y="center"
+            ),
+            size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
+            label=""
+        )
+        self.yesbtn.setBackground(peng3d.gui.ImageBackground(
+            self.yesbtn,
+            bg_idle=("cg:img.btn.sce", "gui"),
+            bg_pressed=("cg:img.btn.scf", "gui"),
+        ))
+        self.addWidget(self.yesbtn)
+
+        def f():
+            self.nobtn.pressed = False
+            self.nobtn.doAction("press_up")
+            self.nobtn.redraw()
+
+            self.peng.cg.client.send_message("cg:lobby.change", {
+                "gamerules": {self.gamerule: True}
+            })
+        self.yesbtn.addAction("press_down", f)
+
+        def f():
+            self.nobtn.pressed = True
+            self.nobtn.redraw()
+        self.yesbtn.addAction("press_up", f)
+
+        # Yes Label
+        self.yeslbl = peng3d.gui.Label(
+            "yeslbl", self, self.window, self.peng,
+            pos=self.opt_grid.get_cell(
+                [0, 0], [1, 1], anchor_y="center"
+            ),
+            size=(lambda sw, sh: (sw/2 - 120, 0)),
+            label=self.peng.tl("cg:gamerule.opt.true"),
+            multiline=True,
+            font="Times New Roman",
+            font_size=16,
+            font_color=[255, 255, 255, 100],
+            anchor_y="baseline",
+        )
+        self.addWidget(self.yeslbl)
+
+        # No Button
+        self.nobtn = peng3d.gui.ToggleButton(
+            "nobtn", self, self.window, self.peng,
+            pos=self.opt_grid.get_cell(
+                [1, 0], [1, 1], border=0, anchor_y="center"
+            ),
+            size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
+            label=""
+        )
+        self.nobtn.setBackground(peng3d.gui.ImageBackground(
+            self.nobtn,
+            bg_idle=("cg:img.btn.sce", "gui"),
+            bg_pressed=("cg:img.btn.scf", "gui"),
+        ))
+        self.addWidget(self.nobtn)
+
+        def f():
+            self.yesbtn.pressed = False
+            self.yesbtn.doAction("press_up")
+            self.yesbtn.redraw()
+
+            self.peng.cg.client.send_message("cg:lobby.change", {
+                "gamerules": {self.gamerule: False}
+            })
+        self.nobtn.addAction("press_down", f)
+
+        def f():
+            self.yesbtn.pressed = True
+            self.yesbtn.redraw()
+        self.nobtn.addAction("press_up", f)
+
+        # No Label
+        self.nolbl = peng3d.gui.Label(
+            "nolbl", self, self.window, self.peng,
+            pos=self.opt_grid.get_cell(
+                [1, 0], [1, 1], anchor_y="center"
+            ),
+            size=(lambda sw, sh: (sw / 2 - 120, 0)),
+            label=self.peng.tl("cg:gamerule.opt.false"),
+            multiline=True,
+            font="Times New Roman",
+            font_size=16,
+            font_color=[255, 255, 255, 100],
+            anchor_y="baseline",
+        )
+        self.addWidget(self.nolbl)
+
+    def set_rule(self, data):
+        self.yesbtn.pressed = data
+        self.yesbtn.redraw()
+
+        self.nobtn.pressed = not data
+        self.nobtn.redraw()
+
+
+class NumberRuleButton(RuleButton):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size,
+                 gamerule, default, min, max, step, requirements):
+        super().__init__(name, submenu, window, peng, pos, size,
+                         gamerule, default, requirements)
+
+        # TODO Implement this Button
+
+
+class SelectRuleButton(RuleButton):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size,
+                 gamerule, default, options, requirements):
+        super().__init__(name, submenu, window, peng, pos, size,
+                         gamerule, default, requirements)
+
+        self.length = len(options)
+        self.options = options
+
+        self.buttons = {}
+        self.labels = {}
+
+        if self.length in [2, 4]:
+            self.opt_grid = peng3d.gui.GridLayout(
+                self.peng, self.grid.get_cell([0, 0], [2, 9]), [2, self.length/2], [100, 0]
+            )
+        else:
+            self.opt_grid = peng3d.gui.GridLayout(
+                self.peng, self.grid.get_cell([0, 0], [2, 9]), [3, math.ceil(self.length / 3)], [100, 0]
+            )
+
+        def f(button):
+            for i in self.buttons.values():
+                if i != button:
+                    i.pressed = False
+                    i.redraw()
+
+            print({"gamerules": {self.gamerule: button.name}})
+            self.peng.cg.client.send_message("cg:lobby.change", {
+                "gamerules": {self.gamerule: button.name}
+            })
+
+        def f2(button):
+            button.pressed = True
+            button.redraw()
+
+        for i, option in enumerate(self.options):
+            btn = peng3d.gui.ToggleButton(
+                option, self, self.window, self.peng,
+                pos=self.opt_grid.get_cell(
+                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [1, 1], border=0, anchor_y="center"
+                ),
+                size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
+                label=""
+            )
+            btn.setBackground(peng3d.gui.ImageBackground(
+                btn,
+                bg_idle=("cg:img.btn.sce", "gui"),
+                bg_pressed=("cg:img.btn.scf", "gui"),
+            ))
+            self.addWidget(btn)
+
+            btn.addAction("press_down", f, btn)
+            btn.addAction("press_up", f2, btn)
+
+            self.buttons[option] = btn
+
+            lbl = peng3d.gui.Label(
+                option + "lbl", self, self.window, self.peng,
+                pos=self.opt_grid.get_cell(
+                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [1, 1], anchor_y="center"
+                ),
+                size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
+                label=self.peng.tl(f"cg:gamerule.{self.gamerule}.opt.{option}"),
+                multiline=True,
+                font="Times New Roman",
+                font_size=16,
+                font_color=[255, 255, 255, 100],
+                anchor_y="baseline",
+            )
+            self.addWidget(lbl)
+
+            self.labels[option] = lbl
+
+    def set_rule(self, data):
+        for btn in self.buttons.values():
+            btn.pressed = False
+            btn.redraw()
+        self.buttons[data].pressed = True
+        self.buttons[data].redraw()
+
+
+class ActivetRuleButton(RuleButton):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size,
+                 gamerule, default, options, requirements):
+        super().__init__(name, submenu, window, peng, pos, size,
+                         gamerule, default, requirements)
+
+        self.length = len(options)
+        self.options = options
+
+        self.buttons = {}
+        self.labels = {}
+
+        if self.length in [2, 4]:
+            self.opt_grid = peng3d.gui.GridLayout(
+                self.peng, self.grid.get_cell([0, 0], [2, 9]), [2, self.length / 2], [100, 0]
+            )
+        else:
+            self.opt_grid = peng3d.gui.GridLayout(
+                self.peng, self.grid.get_cell([0, 0], [2, 9]), [3, math.ceil(self.length / 3)], [100, 0]
+            )
+
+        for i, option in enumerate(self.options):
+            btn = peng3d.gui.ToggleButton(
+                option, self, self.window, self.peng,
+                pos=self.opt_grid.get_cell(
+                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [1, 1], border=0, anchor_y="center"
+                ),
+                size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
+                label=""
+            )
+            btn.setBackground(peng3d.gui.ImageBackground(
+                btn,
+                bg_idle=("cg:img.btn.mce", "gui"),
+                bg_pressed=("cg:img.btn.mcf", "gui"),
+            ))
+            self.addWidget(btn)
+
+            def f():
+                actives = []
+                for i in self.buttons.values():
+                    if i.pressed:
+                        actives.append(i.name)
+
+                self.peng.cg.client.send_message("cg:lobby.change", {
+                    "gamerules": {self.gamerule: actives}
+                })
+            btn.addAction("press_down", f)
+            btn.addAction("press_up", f)
+
+            self.buttons[option] = btn
+
+            lbl = peng3d.gui.Label(
+                option + "lbl", self, self.window, self.peng,
+                pos=self.opt_grid.get_cell(
+                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [1, 1], anchor_y="center"
+                ),
+                size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
+                label=self.peng.tl(f"cg:gamerule.{self.gamerule}.opt.{option}"),
+                multiline=True,
+                font="Times New Roman",
+                font_size=16,
+                font_color=[255, 255, 255, 100],
+                anchor_y="baseline",
+            )
+            self.addWidget(lbl)
+
+            self.labels[option] = lbl
+
+    def set_rule(self, data):
+        for btn in self.buttons.values():
+            btn.pressed = btn.name in data
+            btn.redraw()
+
+
+class StrRuleButton(RuleButton):
+    def __init__(self, name, submenu, window, peng,
+                 pos, size,
+                 gamerule, default, minlen, maxlen, requirements):
+        super().__init__(name, submenu, window, peng, pos, size,
+                         gamerule, default, requirements)
+
+        # TODO Implement this Button

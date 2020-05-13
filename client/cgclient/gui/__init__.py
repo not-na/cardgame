@@ -59,6 +59,7 @@ CGButton = functools.partial(peng3d.gui.FramedImageButton,  # Button like on the
                              bg_idle=("cg:img.btn.btn_idle", "gui"),
                              bg_hover=("cg:img.btn.btn_hov", "gui"),
                              bg_pressed=("cg:img.btn.btn_press", "gui"),
+                             bg_disabled=("cg:img.btn.btn_disabled", "gui"),
                              frame=[[1, 2, 1], [0, 1, 0]],
                              scale=(None, 0),
                              repeat_edge=True, repeat_center=True,

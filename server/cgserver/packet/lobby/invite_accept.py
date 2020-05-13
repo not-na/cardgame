@@ -42,7 +42,6 @@ class InviteAcceptPacket(CGPacket):
     side = SIDE_SERVER
 
     def receive(self, msg, cid=None):
-        print("INVITE_ACCEPT")
         u = self.peer.clients[cid].user
         lobby = self.cg.server.lobbies.get(uuidify(msg["lobby_id"]), None)
         inviter = self.cg.server.users_uuid.get(uuidify(msg["inviter"]), None)
@@ -58,15 +57,9 @@ class InviteAcceptPacket(CGPacket):
         elif self.cg.server.game_reg[lobby.game].check_playercount(len(lobby.users), True):
             self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.invite.accept.lobby_full")
         else:
-            print("NO ERROR WHILE INVITE_ACCEPT")
             if msg["accepted"]:
-                print("ACCEPTED")
                 lobby.add_user(u, ROLE_PLAYER)
-                self.cg.server.send_to_user(u, "cg:lobby.join", {
-                    "lobby": lobby.uuid.hex
-                })
             else:
-                print("DECLINED")
                 self.cg.server.send_status_message(inviter, "notice", "cg:msg.lobby.invite.decline", data={
                     "username": u.username
                 })

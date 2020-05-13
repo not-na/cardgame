@@ -262,12 +262,6 @@ class DevCommand(cgserver.command.Command):
                 "type": "black_sow_solo",
                 "data": choice
             })
-            print("sent packet", {
-                "packet": "black_sow_solo",
-                "player": fake_player,
-                "type": "black_sow_solo",
-                "data": choice
-            })
 
         elif command == "rdy":
             if choice == "y":

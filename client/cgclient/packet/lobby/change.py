@@ -23,7 +23,9 @@
 
 from cg.constants import STATE_LOBBY, ROLE_NONE, ROLE_REMOVE
 from cg.packet import CGPacket
-from cg.util import uuidify
+from cg.util import uuidify, check_requirements
+
+import cgclient
 
 
 class ChangePacket(CGPacket):
@@ -31,6 +33,7 @@ class ChangePacket(CGPacket):
     required_keys = []
     allowed_keys = [
         "users",
+        "user_order",
         "game",
         "gamerules",
         "gamerule_validators",
@@ -50,7 +53,7 @@ class ChangePacket(CGPacket):
                     player_buttons[self.cg.client.lobby.users.index(uid)].player = None
                     # Remove user from list
                     self.cg.client.lobby.remove_user(uid)
-                    return
+                    continue
                 elif uid not in self.cg.client.lobby.users:
                     # New user, add
                     self.cg.client.lobby.add_user(uid, udat)
@@ -63,13 +66,28 @@ class ChangePacket(CGPacket):
                     if "ready" in udat:
                         self.cg.client.lobby.user_ready[uid] = udat["ready"]
                     if "index" in udat:
-                        # Get old player button
+                        index = self.cg.client.lobby.users.index(uid)
+                        self.cg.client.lobby.users[index] = self.cg.client.lobby.users[udat["index"]]
+                        self.cg.client.lobby.users[udat["index"]] = uid
+
+                        # Swap the player buttons
                         for index, pbtn in player_buttons.copy().items():
                             if pbtn.player.uuid == uid:
-                                # Swap the player buttons
                                 player_buttons[index] = player_buttons[udat["index"]]
                                 player_buttons[udat["index"]] = pbtn
                                 break
+
+            player_buttons[0].pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + (3 * 11 / 72))))  # TODO Fix potential memory leak
+            player_buttons[0].redraw()
+
+            player_buttons[1].pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + (2 * 11 / 72))))
+            player_buttons[1].redraw()
+
+            player_buttons[2].pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9 + (1 * 11 / 72))))
+            player_buttons[2].redraw()
+
+            player_buttons[3].pos = (lambda sw, sh, bw, bh: (3, sh * (2 / 9)))
+            player_buttons[3].redraw()
 
         if "game" in msg:
             if msg["game"] != self.cg.client.lobby.game:
@@ -77,12 +95,55 @@ class ChangePacket(CGPacket):
                 self.cg.client.lobby.game = msg["game"]
                 self.cg.send_event("cg:lobby.game.change", {"game": msg["game"]})
 
+        if "gamerule_validators" in msg:
+            if self.cg.client.lobby.gamerule_validators == msg["gamerule_validators"]:
+                return
+
+            self.cg.client.lobby.gamerule_validators = msg["gamerule_validators"]
+            # No update, just overwrite it
+            self.cg.send_event("cg:lobby.gameruleval.change", {"validators": msg["gamerule_validators"]})
+
+            c = 0
+            page = -1
+            gamerules = {}
+            s_gamerule = self.cg.client.gui.servermain.s_gamerule
+            for gamerule, grdat in self.cg.client.lobby.gamerule_validators.items():
+                c += 1
+                gamerules[gamerule] = grdat
+                if c % 2 == 0:
+                    page += 1
+
+                    # TODO Fix Memory Leak with containers being
+                    s_gamerule.gamerule_containers[page] = cgclient.gui.servermain.GameRuleContainer(
+                        f"grcontainer{page}", s_gamerule,
+                        self.cg.client.gui.window, self.peer.peng,
+                        s_gamerule.grid.get_cell([0, 1], [12, 4], border=0), None,
+                        page, gamerules
+                    )
+                    s_gamerule.addWidget(s_gamerule.gamerule_containers[page])
+                    gamerules.clear()
+            if c % 2 != 0:
+                page += 1
+
+                s_gamerule.gamerule_containers[page] = cgclient.gui.servermain.GameRuleContainer(
+                    f"grcontainer{page}", s_gamerule,
+                    self.cg.client.gui.window, self.peer.peng,
+                    s_gamerule.grid.get_cell([0, 1], [12, 4], border=0), None,
+                    page, gamerules
+                )
+                s_gamerule.addWidget(s_gamerule.gamerule_containers[page])
+                gamerules.clear()
+
         if "gamerules" in msg:
             self.cg.client.lobby.gamerules.update(msg["gamerules"])
 
             self.cg.send_event("cg:lobby.gamerules.change", {"gamerules": msg["gamerules"]})
 
-        if "gamerule_validators" in msg:
-            self.cg.client.lobby.gamerule_validators = msg["gamerule_validators"]
-            # No update, just overwrite it
-            self.cg.send_event("cg:lobby.gameruleval.change", {"validators": msg["gamerule_validators"]})
+            for gamerule, btn in self.cg.client.gui.servermain.s_gamerule.rule_buttons.items():
+                btn.disabled_background.visible = not check_requirements(gamerule, "", self.cg.client.lobby.gamerules,
+                                                                         self.cg.client.lobby.gamerule_validators)
+
+            for gamerule in msg["gamerules"]:
+                self.cg.client.gui.servermain.s_gamerule.rule_buttons[gamerule].set_rule(
+                    self.cg.client.lobby.gamerules[gamerule]
+                )

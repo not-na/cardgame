@@ -89,3 +89,11 @@ def validate(data: Union[float, bool, str, List], validator: Dict) -> Tuple[bool
         return valid, out
     else:
         raise NotImplementedError(f"Validator type {validator['type']} is unknown")
+
+
+def check_requirements(name: str, value: Union[float, bool, str], gamerules: Dict, validator: Dict):
+    for req, valid in validator[name]["requirements"].items():
+        value = gamerules.get(req, validator[req]["default"])
+        if value not in valid:
+            return False
+    return True

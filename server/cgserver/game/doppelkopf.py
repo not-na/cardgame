@@ -221,7 +221,8 @@ class DoppelkopfGame(CGame):
                 "None",
                 "reservation",
                 "throw",
-            ]
+            ],
+            "requirements": {},
         },
         "dk.throw_cases": {
             "type": "active",
@@ -300,11 +301,14 @@ class DoppelkopfGame(CGame):
             },
         },
         "dk.buck_amount": {
-            "type": "number",
-            "default": 4,
-            "min": 1,
-            "max": 4,
-            "step": 1,
+            "type": "select",
+            "default": "4",
+            "options": [
+                "1",
+                "2",
+                "3",
+                "4"
+            ],
             "requirements": {
                 "dk.buck_round": ["succession", "parallel"],
             },
@@ -318,7 +322,8 @@ class DoppelkopfGame(CGame):
         },
         "dk.solist_begins": {
             "type": "bool",
-            "default": False
+            "default": False,
+            "requirements": {},
         },
         "dk.solo_prio": {
             "type": "select",
@@ -327,6 +332,7 @@ class DoppelkopfGame(CGame):
                 "first",
                 "prio"
             ],
+            "requirements": {},
         },
         "dk.solos": {
             "type": "active",
@@ -361,7 +367,8 @@ class DoppelkopfGame(CGame):
                 "solo_pure_diamonds",
                 "solo_null",
                 "solo_boneless",
-            ]
+            ],
+            "requirements": {}
         },
     }
     SOLO_ORDER = [
@@ -477,7 +484,6 @@ class DoppelkopfGame(CGame):
 
         if not remake_round:
             # Handle buckround modifier for points
-            print(f"buckrounds: {self.buckrounds}")
             if self.gamerules["dk.buck_round"] == "succession":
                 if len(self.buckrounds) == 1:
                     m *= 2
@@ -524,12 +530,8 @@ class DoppelkopfGame(CGame):
                         self.buckrounds.append(data["buckround_events"] * int(self.gamerules["dk.buck_amount"]))
             elif self.gamerules["dk.buck_round"] == "parallel":
                 self.buckrounds.extend(data["buckround_events"] * [int(self.gamerules["dk.buck_amount"])])
-            print(f"updated buckrounds: {self.buckrounds}")
 
             self.round_num += 1  # Only increase round_num if the game wasn't cancelled
-
-        else:
-            print("remake")
 
         self.cg.event_manager.del_group(self.current_round.round_id)  # Deinitialise the round's event handlers
 
@@ -2047,8 +2049,6 @@ class DoppelkopfRound(object):
         if uuidify(data["player"]) != self.current_player:
             raise WrongPlayerError(f"The player that sent the solo handling packet is not the current player!")
 
-        print(data)
-
         # Remember, if the player want's to play a valid solo
         if data["type"] == "solo_yes":
             solo_type = data["data"]["type"]
@@ -3223,12 +3223,9 @@ class DoppelkopfRound(object):
 
                 # Check for black sow
                 if self.game_type == "black_sow":
-                    print("game_type: black_sow")
                     for i in sorted_trick:
-                        print(self.cards[i].card_value)
                         if self.cards[i].card_value == "sq":  # Queen of spades played
                             self.spade_queens += 1
-                    print("spade_queens:", self.spade_queens)
                     if self.spade_queens == 2:
                         self.game_state = "black_sow_solo"
                         self.game.send_to_user(self.current_player, "cg:game.dk.question", {
@@ -3640,7 +3637,6 @@ class DoppelkopfRound(object):
                 self.game.cg.info(f"The first argument (fake player) must be an integer, not {data['player']}")
                 return
 
-        print(packet)
         if packet == "cg:game.dk.reservation_solo":
             self.game.cg.send_event(packet, {
                 "player": player.hex,

@@ -20,8 +20,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from cg.constants import STATE_LOBBY, ROLE_CREATOR, ROLE_REMOVE
+from cg.constants import STATE_LOBBY, ROLE_CREATOR, ROLE_REMOVE, ROLE_ADMIN
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class ChangePacket(CGPacket):
@@ -29,8 +30,10 @@ class ChangePacket(CGPacket):
     required_keys = []
     allowed_keys = [
         "users",
+        "user_order",
         "game",
         "gamerules",
+        "gamerule_validators",
     ]
 
     def receive(self, msg, cid=None):
@@ -53,8 +56,27 @@ class ChangePacket(CGPacket):
                     self.cg.warn(f"User {u.username} with role {lobby.user_roles[u.uuid]} tried to up/downgrade user"
                                  f"{uid} to role {udat['role']}")
 
+        if "user_order" in msg:
+            if lobby.user_roles[u.uuid] >= ROLE_ADMIN:
+                user_order = [uuidify(p) for p in msg["user_order"]]
+                lobby.users = user_order
+                for p in lobby.users:
+                    self.cg.server.send_to_user(p, "cg:lobby.change", {
+                        "users": {i.hex: {
+                            "index": lobby.users.index(i)
+                        } for i in lobby.users}
+                    })
+            else:
+                self.cg.server.send_status_message(u, "warn", "Only the lobby creator may change the user order")
+                self.cg.warn(f"User {u.username} tried to change a lobby user order with insufficient rights")
+                self.cg.server.send_to_user(u, "cg:lobby.change", {
+                    "users": {i.hex: {
+                        "index": lobby.users.index(i)
+                    } for i in lobby.users}
+                })
+
         if "game" in msg and msg["game"] is not None:
-            if lobby.user_roles[u.uuid] < ROLE_CREATOR:
+            if lobby.user_roles[u.uuid] < ROLE_ADMIN:
                 self.cg.warn(f"User {u.username} tried to change a lobby game with insufficient rights")
                 return
 
@@ -71,8 +93,11 @@ class ChangePacket(CGPacket):
                 self.cg.send_event(f"cg:lobby.game.change.{lobby.game}", {"old": oldgame, "lobby": lobby})
 
         if "gamerules" in msg:
-            if lobby.user_roles[u.uuid] < ROLE_CREATOR:
+            if lobby.user_roles[u.uuid] < ROLE_ADMIN:
                 self.cg.warn(f"User {u.username} tried to change gamerules with insufficient rights")
+                self.cg.server.send_to_user(u, "cg:lobby.change", {
+                    "gamerules": {gamerule: lobby.gamerules[gamerule] for gamerule in lobby.gamerules}
+                })
                 return
-
+            print(msg["gamerules"])
             lobby.update_gamerules(msg["gamerules"])

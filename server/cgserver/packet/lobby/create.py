@@ -55,9 +55,16 @@ class CreatePacket(CGPacket):
             self.cg.send_event("cg:lobby.game.change", {"old": None, "lobby": l})
             self.cg.send_event(f"cg:lobby.game.change.{l.game}", {"old": None, "lobby": l})
 
-            l.set_variant(msg.get('variant', 'c'))
-
-            self.cg.warn("Invite of other players of party is not yet implemented")
+            variant = msg.get('variant', 'c')
+            l.set_variant(variant)
+            if variant == "c" and self.cg.server.game_reg.get(l.game, None) is not None:
+                gamerules = {gamerule: self.cg.server.game_reg[l.game].GAMERULES[gamerule]["default"] for
+                             gamerule in self.cg.server.game_reg[l.game].GAMERULES}
+                for gamerule, grdat in l.gamerules.items():
+                    if gamerule not in gamerules:
+                        self.cg.crash(f"Invalid gamerule: {gamerule}")
+                    gamerules[gamerule] = grdat
+                l.gamerules = gamerules
         else:
             self.cg.info(f"Game for lobby {l.uuid} not yet set, delaying user invite")
             # Other party members are not yet invited
@@ -65,5 +72,3 @@ class CreatePacket(CGPacket):
 
         # Let user itself "join" the lobby
         l.add_user(u, ROLE_CREATOR)
-
-

@@ -80,11 +80,26 @@ gui.menu.smain.lobby.invite_heading=Benutzername eingeben:
 gui.menu.smain.lobby.invite_okbtn.label=Einladen
 gui.menu.smain.lobby.invite_cancelbtn.label=Abbrechen
 
+
 gui.menu.smain.lobby_inv.label_main=Du wurdest von {username} in eine Lobby eingeladen. Möchtest du die Einladung annehmen?
 gui.menu.smain.lobby_inv.confirm=Annehmen
 gui.menu.smain.lobby_inv.cancel=Ablehnen
 
+gui.menu.smain.gamerule.heading={game} - Spielregeln
 gui.menu.smain.gamerule.backbtn.label=Zurück
+gui.menu.smain.gamerule.savebtn.label=Speichern
+gui.menu.smain.gamerule.loadtmplbtn.label=Vorlage laden
+gui.menu.smain.gamerule.savetmplbtn.label=als Vorlage speichern
+gui.menu.smain.gamerule.prevpagebtn.label=vorige Seite
+gui.menu.smain.gamerule.nextpagebtn.label=nächste Seite
+gui.menu.smain.gamerule.save_template_heading=Als Vorlage speichern:
+gui.menu.smain.gamerule.save_okbtn.label=Speichern
+gui.menu.smain.gamerule.save_cancelbtn.label=Abbrechen
+
+gui.menu.smain.template.heading=Vorlagen
+gui.menu.smain.template.backbtn.label=Zurück
+gui.menu.smain.template.loadtmplbtn.label=Vorlage laden
+gui.menu.smain.template.deletebtn.label=Vorlage löschen
 
 gui.menu.settings.exitbtn.label=Zurück
 
@@ -168,24 +183,27 @@ question.wedding_clarification_trick.choice7=Erster Karostich
 
 question.black_sow_solo.heading=Welches Solo möchtest du spielen?
 
+gamerule.opt.true=Spielregel aktivieren
+gamerule.opt.false=Spielregel deaktivieren
+
 gamerule.general.wrongmove.name=Handhabung ungültiger Spielzüge
 gamerule.general.wrongmove.description=Was passiert im Falle eines ungültigen Spielzugs?
-gamerule.general.wrongmove.opt.disallow=Falsche Spielzüge sind nicht möglich.
-gamerule.general.wrongmove.opt.allow_points=Falsche Spielzüge sind möglich und werden mit Strafpunkten geahndet.
-gamerule.general.wrongmove.opt.allow_stopgame=Falsche Spielzüge sind möglich und werden mit einem Spielabbruch beantwortet.
+gamerule.general.wrongmove.opt.prohibit=Falsche Spielzüge sind nicht möglich
+gamerule.general.wrongmove.opt.allow_points=Falsche Spielzüge sind möglich und werden mit Strafpunkten geahndet
+gamerule.general.wrongmove.opt.allow_stopgame=Falsche Spielzüge sind möglich und werden mit einem Spielabbruch beantwortet
 
 gamerule.dk.heart10.name=Spiel mit den Dullen
 gamerule.dk.heart10.description=Die Herz-10 ist der höchste Trumpf im Spiel.
 
-gamerule.dk.heart10prio.name=Priorität der Herz-10en
-gamerule.dk.heart10prio.description=Falls beide Herz-10en in einem Stich liegen, welche gewinnt den Stich?
-gamerule.dk.heart10prio.opt.first=Die erste Herz-10 sticht die zweite.
-gamerule.dk.heart10prio.opt.second=Die zweite Herz-10 sticht die erste.
+gamerule.dk.heart10_prio.name=Priorität der Herz-10en
+gamerule.dk.heart10_prio.description=Falls beide Herz-10en in einem Stich liegen, welche gewinnt den Stich?
+gamerule.dk.heart10_prio.opt.first=Die erste Herz-10 sticht die zweite
+gamerule.dk.heart10_prio.opt.second=Die zweite Herz-10 sticht die erste
 
 gamerule.dk.heart10_lasttrick.name=Priorität der Herz-10en im letzten Stich
 gamerule.dk.heart10_lasttrick.description=Falls beide Herz-10en im letzen Stich liegen, welche gewinnt den Stich?
-gamerule.dk.heart10_lasttrick.opt.first=Die erste Herz-10 sticht die zweite.
-gamerule.dk.heart10_lasttrick.opt.second=Die zweite Herz-10 sticht die erste.
+gamerule.dk.heart10_lasttrick.opt.first=Die erste Herz-10 sticht die zweite
+gamerule.dk.heart10_lasttrick.opt.second=Die zweite Herz-10 sticht die erste
 
 gamerule.dk.doppelkopf.name=Doppelköpfe
 gamerule.dk.doppelkopf.description=Wenn 40 oder mehr Augen in einem Stich liegen, erhält die den Stich gewinnende Partei einen Sonderpunkt.
@@ -199,18 +217,18 @@ gamerule.dk.fox_lasttrick.description=Wenn der letzte Stich mit einem Karo-Ass g
 gamerule.dk.pigs.name=Schweinchen
 gamerule.dk.pigs.description=Wenn ein Spieler beide Karo-Asse auf der Hand hat, dann werden beide oder nur eins zu Schweinchen, den höchsten Trümpfen im Spiel.
 gamerule.dk.pigs.opt.None=Spielregel deaktivieren
-gamerule.dk.pigs.opt.one_first=Nur das erste Karo-Ass wird zum Schweinchen.
-gamerule.dk.pigs.opt.one_on_play=Nur ein Karo-Ass wird zum Schweinchen. Der Spieler entscheidet selber, welches der beiden und sagt es im Moment des Spielens an.
-gamerule.dk.pigs.opt.one_on_fox=Nur das zweite Karo-Ass wird zum Schweinchen, und auch nur, wenn das erste Karo-Ass sicher nach Hause gebracht wurde.
-gamerule.dk.pigs.opt.two_reservation=Beide Karo-Asse werden zu Schweinchen, müssen allerdings als Anmerkung bekannt gegeben werden, bevor die erste Karte gespielt wird.
-gamerule.dk.pigs.opt.two_on_play=Beide Karo-Asse werden zu Schweinchen. Der Spieler sagt erst beim Spielen des ersten Karo-Asses die Schweinchen an.
+gamerule.dk.pigs.opt.one_first=Nur das erste Karo-Ass wird Schweinchen
+gamerule.dk.pigs.opt.one_on_play=Nur ein Schweinchen; der Spieler entscheidet, welches
+gamerule.dk.pigs.opt.one_on_fox=Nur Schweinchen, wenn der erste Fuchs nach Hause gebracht wurde
+gamerule.dk.pigs.opt.two_reservation=Zwei Schweinchen, als Vorbehalt
+gamerule.dk.pigs.opt.two_on_play=Zwei Schweinchen, Ansage erst beim Ausspielen
 
 gamerule.dk.superpigs.name=Superschweine
-gamerule.dk.superpigs.description=Wenn Schweinchen angesagt wurden, werden die Karo-9en (beim Spiel ohne 9en die Karo-Könige) zu Superschweinen, die noch höher als die Schweine sind.
+gamerule.dk.superpigs.description=Wenn Schweinchen angesagt wurden, werden die Karo-9en (oder Karo-Könige) zu Superschweinen, die noch höher als die Schweine sind.
 gamerule.dk.superpigs.opt.None=Spielregel deaktivieren
-gamerule.dk.superpigs.opt.reservation=Die Superschweine werden als Anmerkung nach den Schweinchen angesagt.
-gamerule.dk.superpigs.opt.on_pig=Die Superschweine werden erst angesagt, wenn das erste Schweinchen gespielt wird.
-gamerule.dk.superpigs.opt.on_play=Die Superschweine werden erst angesagt, wenn das erste Superschwein gespielt wird.
+gamerule.dk.superpigs.opt.reservation=Vorbehalt nach Schweinchen
+gamerule.dk.superpigs.opt.on_pig=Die Superschweine werden erst angesagt, wenn das erste Schweinchen gespielt wird
+gamerule.dk.superpigs.opt.on_play=Die Superschweine werden erst angesagt, wenn das erste Superschwein gespielt wird
 
 gamerule.dk.charlie.name=Karlchen Müller
 gamerule.dk.charlie.description=Wenn der letzte Stich mit einem Kreuz-Buben gemacht wird, erält die den Stich gewinnende Partei einen Sonderpunkt.
@@ -223,14 +241,14 @@ gamerule.dk.jane.description=Wenn im letzten Stich ein Kreuz-Bube von einer Karo
 
 gamerule.dk.charlie_prio.name=Kreuz-Buben Priorität im letzten Stich
 gamerule.dk.charlie_prio.description=Falls beide Kreuz-Buben im letzten Stich liegen, welcher von beiden ist höher?
-gamerule.dk.charlie_prio.opt.first=Der erster Kreuz-Bube schlägt den zweiten.
-gamerule.dk.charlie_prio.opt.second=Der zweite Kreuz-Bube schlägt den ersten.
+gamerule.dk.charlie_prio.opt.first=Der erster Kreuz-Bube schlägt den zweiten
+gamerule.dk.charlie_prio.opt.second=Der zweite Kreuz-Bube schlägt den ersten
 
 gamerule.dk.without9.name=Spiel ohne 9en
 gamerule.dk.without9.description=Von den 9en werden alle oder die Hälfte aus dem Spiel entfernt.
-gamerule.dk.without9.opt.with_all=Die 9en bleiben im Spiel.
-gamerule.dk.without9.opt.with_four=Von jeder Farbe wird eine 9 aus dem Spiel entfernt.
-gamerule.dk.without9.opt.without=Alle 9en werden aus dem Spiel entfernt.
+gamerule.dk.without9.opt.with_all=Die 9en bleiben im Spiel
+gamerule.dk.without9.opt.with_four=Von jeder Farbe wird eine 9 aus dem Spiel entfernt
+gamerule.dk.without9.opt.without=Alle 9en werden aus dem Spiel entfernt
 
 gamerule.dk.heart_trick.name=Herz geht rum
 gamerule.dk.heart_trick.description=Wenn der Herzstich durchkommt, erhält die den Stich gewinnende Partei einen Sonderpunkt.
@@ -241,9 +259,9 @@ gamerule.dk.sec_black_trick.description=Wenn der zweite Stich von Pik oder Kreuz
 gamerule.dk.joker.name=Joker
 gamerule.dk.joker.description=Eine Karo-9 (Karo-König im Spiel ohne 9en) wird durch einen Joker ausgetauscht.
 gamerule.dk.joker.opt.None=Spielregel deaktivieren
-gamerule.dk.joker.opt.over_h10=Der Joker sticht die Herz-10en.
-gamerule.dk.joker.opt.over_pigs=Der Joker sticht auch die Schweinchen.
-gamerule.dk.joker.opt.over_superpigs=Der Joker sticht auch die Superschweine.
+gamerule.dk.joker.opt.over_h10=Der Joker sticht die Herz-10en
+gamerule.dk.joker.opt.over_pigs=Der Joker sticht auch die Schweinchen
+gamerule.dk.joker.opt.over_superpigs=Der Joker sticht auch die Superschweine
 
 gamerule.dk.hobgoblin.name=Klabautermann
 gamerule.dk.hobgoblin.description=Wenn ein Pik-König mit einer Pik-Dame gefangen wird, erhält die den Stich gewinnende Partei einen Sonderpunkt.
@@ -251,74 +269,86 @@ gamerule.dk.hobgoblin.description=Wenn ein Pik-König mit einer Pik-Dame gefange
 gamerule.dk.poverty.name=Armut
 gamerule.dk.poverty.description=Wenn ein Spieler 3 oder weniger Trümpfe hat, kann er eine Armut anmelden. Ein anderer Spieler erhält seine drei Trümpfe, gibt ihm drei belibige Karten zurück, sagt an, wie viele Trümpfe darin enthalten sind, und die beiden spielen zusammen.
 gamerule.dk.poverty.opt.None=Spielregel deaktivieren
-gamerule.dk.poverty.opt.sell=Ein Spieler entscheidet, den Spieler mit der Armut mitzunehmen und erhält dann die Trümpfe.
-gamerule.dk.poverty.opt.circulate=Der Spieler mit der Armut reicht seine Trümpfe im Uhrzeigersinn herum, bis ein Spieler entscheidet, ihn mitzunehmen.
-gamerule.dk.poverty.opt.circulate=Auch hier reicht der Spieler mit der Armut seine Trümpfe im Uhrzeigersinn herum. Allerdings muss ihn der letzte Spieler mitnehmen, wenn sich niemand vorher dazu entschieden hat.
+gamerule.dk.poverty.opt.sell=Ein Spieler entscheidet, den Spieler mit der Armut mitzunehmen und erhält dann die Trümpfe
+gamerule.dk.poverty.opt.circulate=Der Spieler mit der Armut reicht seine Trümpfe im Uhrzeigersinn herum, bis ein Spieler entscheidet, ihn mitzunehmen
+gamerule.dk.poverty.opt.circulate_duty=Der Spieler reicht seine Trümpfe herum. Falls vorher niemand akzeptiert, muss ihn der letzte Spieler mitnehmen
 
 gamerule.dk.poverty_consequence.name=Folgen der Armut
 gamerule.dk.poverty_consequence.description=Was passiert, wenn niemand den Spieler mit der Armut mitgenommen hat?
-gamerule.dk.poverty_consequence.opt.None=Die Vorbehalte gehen weiter und die Runde wird ggf. normal ausgespielt.
-gamerule.dk.poverty_consequence.opt.redeal=Es wird neu gemischt.
-gamerule.dk.poverty_consequence.opt.black_sow=Der Spieler, der den Stich mit der zweiten Pik-Dame holt, muss von diesem Zeitpunkt an ein Solo spielen, dass er selber bestimmt.
-gamerule.dk.poverty_consequence.opt.ramsch=Es wird normal gespielt, allerdings bekommt die Verlierer-Partei die Punkte gutgeschrieben und die Gewinner-Partei abgezogen.
+gamerule.dk.poverty_consequence.opt.None=Die Vorbehalte gehen weiter und die Runde wird ggf. normal ausgespielt
+gamerule.dk.poverty_consequence.opt.redeal=Es wird neu gemischt
+gamerule.dk.poverty_consequence.opt.black_sow=Der Spieler, der den Stich mit der zweiten Pik-Dame holt, muss von diesem Zeitpunkt an ein Solo spielen, das er selber bestimmt
+gamerule.dk.poverty_consequence.opt.ramsch=Es wird normal gespielt, allerdings bekommt die Verlierer-Partei die Punkte gutgeschrieben und die Gewinner-Partei abgezogen
 
 gamerule.dk.throw.name=Schmeißen
 gamerule.dk.throw.description=Hat ein Spieler ein besonders schlechtes Blatt, wird neu gemischt.
-gamerule.dk.throw.opt.None=Spielregel deaktivieren.
-gamerule.dk.throw.opt.reservation=Das Schmeißen muss als Vorbehalt angemeldet werden und kommt zwischen den Soli und einer Armut.
-gamerule.dk.throw.opt.throw=Der Spieler kann sofort seine Karten offenlegen und ein Neumischen bewirken bis der erste Vorbehalt ausgesprochen wird.
+gamerule.dk.throw.opt.None=Spielregel deaktivieren
+gamerule.dk.throw.opt.reservation=Das Schmeißen muss als Vorbehalt angemeldet werden und kommt zwischen den Soli und einer Armut
+gamerule.dk.throw.opt.throw=Der Spieler kann sofort seine Karten offenlegen und ein Neumischen bewirken bis der erste Vorbehalt ausgesprochen wird
 
 gamerule.dk.throw_cases.name=Ursachen für Schmeißen
 gamerule.dk.throw_cases.description=Blätter, bei denen der Spieler schmeißen darf
-gamerule.dk.throw_cases.opt.5_9=Das Blatt enthält mindestens fünf 9en.
-gamerule.dk.throw_cases.opt.5k=Das Blatt enthält mindestens fünf Könige.
-gamerule.dk.throw_cases.opt.4_9+4_k=Das Blatt enthält mindestens vier 9en und mindestens vier Könige.
-gamerule.dk.throw_cases.opt.9_all_c=Das Blatt enthält mindestens eine 9 von jeder Farbe.
-gamerule.dk.throw_cases.opt.k_all_c=Das Blatt enthält mindestens einen König von jeder Farbe.
-gamerule.dk.throw_cases.opt.7full=Das Blatt enthält mindestens sieben Karten mit 10 oder mehr Augen.
-gamerule.dk.throw_cases.opt.t<hj=Das Blatt enthält nur Trümpfe, die kleiner als der Herz-Bube sind.
-gamerule.dk.throw_cases.opt.t<dj=Das Blatt enthält nur Trümpfe, die kleiner als der Karo-Bube sind.
+gamerule.dk.throw_cases.opt.5_9=Fünf 9en
+gamerule.dk.throw_cases.opt.5_k=Fünf Könige
+gamerule.dk.throw_cases.opt.4_9+4_k=Vier 9en und 4 Könige
+gamerule.dk.throw_cases.opt.9_all_c=9 von jeder Farbe
+gamerule.dk.throw_cases.opt.k_all_c=König von jeder Farbe
+gamerule.dk.throw_cases.opt.7full=Sieben Volle
+gamerule.dk.throw_cases.opt.t<hj=Keine höheren Trümpfe als Karo-Bube
+gamerule.dk.throw_cases.opt.t<dj=Keine höheren Trümpfe als Karo-Ass
 
 gamerule.dk.coward.name=Feigheit
 gamerule.dk.coward.description=Wenn eine Partei sehr viele Augen gewinnt, ohne Re bzw. Kontra angesagt zu haben, erhält die Punkte stattdessen die Gegenpartei.
 gamerule.dk.coward.opt.None=Spielregel deaktivieren
-gamerule.dk.coward.opt.210_no_re=Die Strafe tritt ein, wenn mindestens 210 Augen erreicht wurden und kein Re bzw. Kontra angesagt wurde.
-gamerule.dk.coward.opt.240_no_90=Die Strafe tritt ein, wenn 240 Augen erreicht wurden und keine 90 abgesagt wurden.
+gamerule.dk.coward.opt.210_no_re=Die Strafe tritt ein, wenn mindestens 210 Augen erreicht wurden und kein Re bzw. Kontra angesagt wurde
+gamerule.dk.coward.opt.240_no_u90=Die Strafe tritt ein, wenn 240 Augen erreicht wurden und keine 90 abgesagt wurden
 
 gamerule.dk.wedding.name=Hochzeit
 gamerule.dk.wedding.description=Wenn ein Spieler beide Kreuz-Damen hat, kann er eine Hochzeit ansagen.
 gamerule.dk.wedding.opt.None=Spielregel deaktivieren (Zwei Kreuzdamen führen direkt zu stiller Hochzeit)
-gamerule.dk.wedding.opt.3_trick=Der erste fremde Spieler, der einen Stich macht, spielt mit dem Ansager der Hochzeit zusammen. Macht er die ersten drei Stiche allerdings selbst, muss er alleine spielen.
-gamerule.dk.wedding.opt.wish_trick=Der Ansager der Hochzeit darf sich einen bestimmten Stich wünschen. Der Spieler, der diesen Stich macht, spielt mit dem Ansager der Hochzeit zusammen.
+gamerule.dk.wedding.opt.3_trick=Erster Fremder bis Stich 3 wird Partner, sonst Karo-Solo
+gamerule.dk.wedding.opt.wish_trick=Gewinner des Wunschstichs bis Stich 3 wird Partner, sonst Karo-Solo
 
 gamerule.dk.repeat_game.name=Spiel wiederholen
 gamerule.dk.repeat_game.description=Wenn die Gewinnerpartei 0 oder weniger Punkte hat, wird das Spiel nicht gewertet und neu gemischt.
 
 gamerule.dk.re_kontra.name=Re und Kontra
 gamerule.dk.re_kontra.description=Wie wirken sich Re und Kontra auf die Punktevergabe aus?
-gamerule.dk.re_kontra.opt.+2=Re und Kontra addieren jeweils 2 Punkte zum Spielwert.
-gamerule.dk.re_kontra.opt.*2=Re und Kontra verdoppeln den Spielwert, allerdings nicht die Sonderpunkte.
-gamerule.dk.re_kontra.opt.*2_extra=Re und Kontra verdoppeln den Spielwert und die Sonderpunkte.
+gamerule.dk.re_kontra.opt.+2=Re und Kontra addieren jeweils 2 Punkte zum Spielwert
+gamerule.dk.re_kontra.opt.*2=Re und Kontra verdoppeln den Spielwert, allerdings nicht die Sonderpunkte
+gamerule.dk.re_kontra.opt.*2_extra=Re und Kontra verdoppeln den Spielwert und die Sonderpunkte
 
 gamerule.dk.buck_round.name=Bockrunden
 gamerule.dk.buck_round.description=Nach bestimmten Ereignissen wird eine gewisse Anzahl von Runden lang die Punktzahl der Spiele verdoppelt.
 gamerule.dk.buck_round.opt.None=Spielregel deaktivieren
-gamerule.dk.buck_round.opt.succession=Im Falle von mehreren Bockrunden werden die nächsten Bockrunden hinten angehängt.
-gamerule.dk.buck_round.opt.parallel=Im Falle von mehreren Bockrunden werden die Bockrunden parallel gespielt, d.h. der Spielwert wird mehrfach verdoppelt.
+gamerule.dk.buck_round.opt.succession=Im Falle von mehreren Bockrunden werden die nächsten Bockrunden hinten angehängt
+gamerule.dk.buck_round.opt.parallel=Im Falle von mehreren Bockrunden werden die Bockrunden parallel gespielt, d.h. der Spielwert wird mehrfach verdoppelt
 
 gamerule.dk.buck_cause.name=Ursachen für Bockrunden
 gamerule.dk.buck_cause.description=Ereignisse, nach denen Bockrunden gespielt werden.
-gamerule.dk.buck_cause.opt.4hearts=Beim Spiel ohne 9en geht der Herzstich durch.
-gamerule.dk.buck_cause.opt.draw=Beide Partein haben 120 Augen.
-gamerule.dk.buck_cause.opt.0points=Die Gewinnerpartei hat 0 oder weniger Punkte erreicht.
-gamerule.dk.buck_cause.opt.re_kontra_lost=Nach der Ansage von Re oder Kontra hat die jeweilige Partei verloren.
-gamerule.dk.buck_cause.opt.solo_lost=Ein Solo wurde verloren.
+gamerule.dk.buck_cause.opt.4hearts=Beim Spiel ohne 9en geht der Herzstich durch
+gamerule.dk.buck_cause.opt.draw=Beide Partein haben 120 Augen
+gamerule.dk.buck_cause.opt.0points=Die Gewinnerpartei hat 0 oder weniger Punkte erreicht
+gamerule.dk.buck_cause.opt.re_kontra_lost=Nach der Ansage von Re oder Kontra hat die jeweilige Partei verloren
+gamerule.dk.buck_cause.opt.solo_lost=Ein Solo wurde verloren
+
+gamerule.dk.buck_amount.name=Anzahl der Bockrunden
+gamerule.dk.buck_amount.description=Wie viele Bockrunden werden im Falle eines Bockrundenereignisses fällig?
+gamerule.dk.buck_amount.opt.1=1
+gamerule.dk.buck_amount.opt.2=2
+gamerule.dk.buck_amount.opt.3=3
+gamerule.dk.buck_amount.opt.4=4
 
 gamerule.dk.solo_shift_h10.name=Solos ändern Herz-10
 gamerule.dk.solo_shift_h10.description=Im Falle eines Farbsolos sind die Dullen von der Farbe über dem Solo (Herz-Solo -> Pik-10, Pik-Solo -> Kreuz-10, Kreuz-Solo -> Karo-10)
 
 gamerule.dk.solist_begins.name=Solist fängt an
 gamerule.dk.solist_begins.description=Im Falle eines Solos kommt der Solist raus.
+
+gamerule.dk.solo_prio.name=Priorität der Soli
+gamerule.dk.solo_prio.description=Welches Solo hat bei den Vorbehalten Vorrang?
+gamerule.dk.solo_prio.opt.first=Das erste, das angekündigt wird
+gamerule.dk.solo_prio.opt.prio=Das mit dem höchsten Wert
 
 gamerule.dk.solos.name=Solos
 gamerule.dk.solos.description=Solos, die gespielt werden dürfen
@@ -329,17 +359,17 @@ gamerule.dk.solos.opt.solo_spades=Piksolo
 gamerule.dk.solos.opt.solo_hearts=Herzsolo
 gamerule.dk.solos.opt.solo_diamonds=Karosolo
 gamerule.dk.solos.opt.solo_fleshless=Fleischloses Solo
-gamerule.dk.solos.opt.solo_null=Nullsolo (Der Solist darf kein einziges Auge erhalten. Die Trümpfe sind wie beim Normalspiel)
-gamerule.dk.solos.opt.solo_boneless=Knochenloses Solo (Der Solist darf kein einziges Auge erhalten. Wie beim Fleischlosen Solo gibt es keine Trümpfe)
-gamerule.dk.solos.opt.solo_pure_clubs=Reines Kreuzsolo (Die Kartenwerte sind wie bein Fleischlosen Solo, allerdings ist alles Kreuz Trumpf)
+gamerule.dk.solos.opt.solo_null=Nullsolo
+gamerule.dk.solos.opt.solo_boneless=Nullsolo ohne Trümpfe
+gamerule.dk.solos.opt.solo_pure_clubs=Reines Kreuzsolo
 gamerule.dk.solos.opt.solo_pure_spades=Reines Piksolo
 gamerule.dk.solos.opt.solo_pure_hearts=Reines Herzsolo
 gamerule.dk.solos.opt.solo_pure_diamonds=Reines Karosolo
-gamerule.dk.solos.opt.solo_king=Königssolo (Nur Könige sind Trumpf)
-gamerule.dk.solos.opt.solo_brothel=Buben-Damen-Solo (Nur Buben und Damen sind Trümpfe (Reihenfolge wie im Normalspiel))
-gamerule.dk.solos.opt.solo_noble_brothel=Damen-Königs-Solo (Nur Damen und Könige sind Trümpfe (Könige über Damen))
-gamerule.dk.solos.opt.solo_picture=Bildersolo (Nur Buben, Damen und Könige sind Trümpfe (Könige über Damen über Buben))
+gamerule.dk.solos.opt.solo_king=Königssolo
+gamerule.dk.solos.opt.solo_brothel=Buben-Damen-Solo
+gamerule.dk.solos.opt.solo_noble_brothel=Damen-Königs-Solo
+gamerule.dk.solos.opt.solo_picture=Bildersolo
 gamerule.dk.solos.opt.solo_monastery=Buben-Königs-Solo
-gamerule.dk.solos.opt.solo_aces=Assesolo (Nur Asse sind Trumpf)
+gamerule.dk.solos.opt.solo_aces=Assesolo
 gamerule.dk.solos.opt.solo_10s=Zehnensolo
 gamerule.dk.solos.opt.solo_9s=Neunensolo
