@@ -47,6 +47,7 @@ class AuthPacket(CGPacket):
             self.cg.client.gui.servermain.d_create_acc.exitDialog()
             self.cg.client.gui.servermain.changeSubMenu("main")
             self.cg.client.user_id = uuidify(msg["uuid"])
+            self.cg.client.pwd = msg["pwd"]
             self.cg.send_event("cg:network.client.login", {"client": self.cg.client})
         elif status == "wrong_credentials":
             self.cg.info("Wrong credentials, redirecting to login")

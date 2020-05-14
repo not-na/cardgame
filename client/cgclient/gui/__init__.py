@@ -101,9 +101,13 @@ class PengGUI(object):
         self.peng.resourceMgr.addCategory("bg")     # Backgrounds
         self.peng.resourceMgr.addCategory("icn")    # Game icons for play menu
         self.peng.resourceMgr.addCategory("card")   # Cards
+        self.peng.resourceMgr.addCategory("profile")  # Profile images
 
         self.peng.resourceMgr.categoriesSettings["icn"]["minfilter"] = GL_LINEAR_MIPMAP_LINEAR
         self.peng.resourceMgr.categoriesSettings["icn"]["magfilter"] = GL_LINEAR
+
+        self.peng.resourceMgr.categoriesSettings["profile"]["minfilter"] = GL_NEAREST
+        self.peng.resourceMgr.categoriesSettings["profile"]["magfilter"] = GL_LINEAR
 
         self.peng.resourceMgr.categoriesSettings["gui"]["minfilter"] = GL_NEAREST
 

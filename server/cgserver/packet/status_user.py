@@ -34,11 +34,65 @@ class StatusUserPacket(CGPacket):
         "username",
         "uuid",
         "status",
+        "pwd",
+        "profile_img",
     ]
 
     def receive(self, msg, cid=None):
         if "uuid" in msg:
-            self.cg.server.send_user_data(uuidify(msg["uuid"]), cid)
+            u = self.peer.clients[cid].user
+
+            # Request of an other player's user data by uuid
+            if uuidify(msg["uuid"]) != u.uuid:
+                self.cg.server.send_user_data(uuidify(msg["uuid"]), cid)
+
+            # Updating of the own user data
+            else:
+                if "username" in msg:
+                    if msg["username"] in self.cg.server.users:
+                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.username_not_available")
+                        return
+                    else:
+                        del self.cg.server.users[u.username]
+                        u.username = msg["username"]
+                        self.cg.server.users[u.username] = u
+                        self.cg.server.save_server_data()
+                        # TODO Send not to everyone
+                        for user in self.cg.server.users.values():
+                            if user.cid is not None:
+                                self.cg.server.send_user_data(u.uuid, user.uuid)
+
+                if "pwd" in msg:
+                    if msg["pwd"][0] != u.pwd:
+                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.wrong_pwd")
+                        return
+                    else:
+                        u.pwd = msg["pwd"][1]
+                        self.cg.server.save_server_data()
+                        self.peer.send_message("cg:status.user", {
+                            "uuid": u.uuid.hex,
+                            "pwd": u.pwd
+                        }, u.cid)
+
+                if "profile_img" in msg:
+                    if msg["profile_img"] == "":
+                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.empty_img")
+                        return
+                    if len(msg["profile_img"]) > 64:
+                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.img_name_long")
+                        return
+                    u.profile_img = msg["profile_img"]
+                    self.cg.server.save_server_data()
+
+                    # TODO Send not to everyone
+                    for user in self.cg.server.users.values():
+                        if user.cid is not None:
+                            self.cg.server.send_to_user(user, "cg:status.user", {
+                                "uuid": u.uuid.hex,
+                                "profile_img": u.profile_img
+                            })
+
+        # Request of an other player's user data by username
         elif "username" in msg:
             self.cg.server.send_user_data(msg["username"], cid)
         else:

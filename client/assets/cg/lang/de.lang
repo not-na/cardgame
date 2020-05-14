@@ -42,8 +42,8 @@ gui.menu.smain.main.createbtn.label=Lobby erstellen
 gui.menu.smain.main.playbtn.label=Spielen
 gui.menu.smain.main.partybtn.label=Party erstellen
 gui.menu.smain.main.lbbtn.label=Bestenliste
-gui.menu.smain.main.profilebtn.label=Mein Profil
 gui.menu.smain.main.settingsbtn.label=Einstellungen
+gui.menu.smain.main.exitbtn.label=Spiel verlassen
 
 gui.menu.smain.play.sks.label.0=Skat
 gui.menu.smain.play.sks.label.1=Turnierregeln
@@ -69,6 +69,21 @@ gui.menu.smain.play.cnm.label.0=Canasta
 gui.menu.smain.play.cnm.label.1=Sonderregeln
 gui.menu.smain.play.cnc.label.0=Canasta
 gui.menu.smain.play.cnc.label.1=Eigenes Spiel
+
+gui.menu.smain.profile.img_label=Profilbild:
+gui.menu.smain.profile.imgchangebtn.label=Profilbild ändern
+gui.menu.smain.profile.name_label=Benutzername:
+gui.menu.smain.profile.unamechangebtn.label=Benuternamen ändern
+gui.menu.smain.profile.uname_commit.label=Ändern
+gui.menu.smain.profile.uname_cancel.label=Abbrechen
+gui.menu.smain.profile.pwd_label=Passwort:
+gui.menu.smain.profile.pwdchangebtn.label=Passwort ändern
+gui.menu.smain.profile.old_pwd_field.default=Altes Passwort eingeben
+gui.menu.smain.profile.new_pwd_field.default=Neues Passwort eingeben
+gui.menu.smain.profile.confirm_pwd_field.default=Neues Passwort bestätigen
+gui.menu.smain.profile.pwd_commit.label=Ändern
+gui.menu.smain.profile.pwd_cancel.label=Abbrechen
+
 
 gui.menu.smain.lobby.invitebtn.label=Spieler einladen
 gui.menu.smain.lobby.leavebtn.label=Lobby verlassen

@@ -34,11 +34,20 @@ class User(object):
         self.username: str = "<unknown>"
         self.uuid: uuid.UUID = uuid.UUID(int=0)
         self.status: str = "unknown"
+        self.pwd = ""
+
+        self.profile_img = "default"
 
         self.update(dat)
 
     def update(self, dat: Dict[str, Any]):
-        self.username = dat["username"]
-        self.uuid = cg.util.uuidify(dat["uuid"])
-
-        self.status = dat["status"]
+        if "username" in dat:
+            self.username = dat["username"]
+        if "uuid" in dat:
+            self.uuid = cg.util.uuidify(dat["uuid"])
+        if "status" in dat:
+            self.status = dat["status"]
+        if "pwd" in dat:
+            self.pwd = dat["pwd"]
+        if "profile_img" in dat:
+            self.profile_img = dat["profile_img"]

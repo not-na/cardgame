@@ -56,11 +56,9 @@ class AuthPacket(CGPacket):
                 return
             else:
                 if not USER_PATTERN.fullmatch(username):
-                    self.peer.send_message("cg:auth",
-                                           {
-                                               "status": "wrong_credentials",
-                                           }
-                                           )
+                    self.peer.send_message("cg:auth", {
+                       "status": "wrong_credentials",
+                    })
                     return
 
                 # User does not exist, create it
@@ -88,6 +86,7 @@ class AuthPacket(CGPacket):
                     "status": "logged_in",
                     "username": u.username,
                     "uuid": u.uuid.hex,
+                    "pwd": u.pwd
                 }, cid)
         else:
             if username.lower() not in self.cg.server.users:
@@ -114,6 +113,7 @@ class AuthPacket(CGPacket):
                     "status": "logged_in",
                     "username": u.username,
                     "uuid": u.uuid.hex,
+                    "pwd": u.pwd
                 }, cid)
             else:
                 # Incorrect credentials

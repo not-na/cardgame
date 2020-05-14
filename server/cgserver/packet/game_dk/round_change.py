@@ -35,5 +35,7 @@ class RoundChangePacket(CGPacket):
         "player_list",
         "game_type",
         "modifiers",
+        "winner",
+        "eyes",
     ]
     side = SIDE_CLIENT

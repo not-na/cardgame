@@ -20,13 +20,16 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import glob
 import math
+import re
 import time
 from typing import Tuple, Union, Dict
 
 import peng3d
 
 import cgclient.gui
+import pyglet
 from pyglet.window.mouse import LEFT
 
 GAMES = [
@@ -322,26 +325,42 @@ class MainSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.screen_edge)
 
+        def f1(button):
+            # Reset the previously pressed button
+            for btn in self.togglebuttons:
+                if btn != button and btn.pressed:
+                    btn.pressed = False
+                    btn.doAction("press_up")
+                    btn.redraw()
+
         self.subgrid_1 = peng3d.gui.layout.GridLayout(self.peng, self.grid.get_cell([0, 5], [1, 3]),
                                                       [4, 4], [60, 20])
 
-        w = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[0] / self.window.width
-        h = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[1] / self.window.height
-        sx = self.subgrid_1.get_cell([1, 1], [2, 3]).size[0] / self.window.width
-
-        def s(sw, sh):
-            return sw * sx, sw * sx
+        pos_x = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[0] / self.window.width
+        pos_y = self.subgrid_1.get_cell([1, 1], [2, 3], "center", "center").pos[1] / self.window.height
+        sy = self.subgrid_1.get_cell([1, 1], [2, 3]).size[1] / self.window.height
 
         # Profile Image
-        self.profile_img = peng3d.gui.ImageButton(
+        self.profile_img = peng3d.gui.ToggleButton(
             "profileimg", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw * w - bw / 2, sh * h - bh / 2)),
-            # size=(lambda sw, sh: (sw*sx, sw*sx)),
-            size=s,
-            bg_idle=("cg:img.profilbild", "gui"),
+            pos=(lambda sw, sh, bw, bh: (sw * pos_x - (bw / 2), sh * pos_y - (bh / 2))),
+            size=(lambda sw, sh: (sh*sy, sh*sy)),
             label="",
         )
+        self.profile_img.setBackground(peng3d.gui.ImageBackground(
+            self.profile_img,
+            bg_idle=("cg:profile.default", "gui"),
+        ))
         self.addWidget(self.profile_img)
+
+        def f():
+            self.c_profile.visible = True
+        self.profile_img.addAction("press_down", f1, self.profile_img)
+        self.profile_img.addAction("press_down", f)
+
+        def f():
+            self.c_profile.visible = False
+        self.profile_img.addAction("press_up", f)
 
         # Profile Label
         self.profile_label = peng3d.gui.Label(
@@ -352,14 +371,6 @@ class MainSubMenu(peng3d.gui.SubMenu):
             anchor_y="center",
         )
         self.addWidget(self.profile_label)
-
-        def f1(button):
-            # Reset the previously pressed button
-            for btn in self.togglebuttons:
-                if btn != button and btn.pressed:
-                    btn.pressed = False
-                    btn.doAction("press_up")
-                    btn.redraw()
 
         # Play Button
         # This button opens the play_select container
@@ -409,6 +420,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         self.partybtn.addAction("press_down", f1, self.partybtn)
         self.addWidget(self.partybtn)
+        self.partybtn.enabled = False
 
         # Leaderboards Button
         # This button opens the leaderboard container
@@ -429,32 +441,13 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         self.lbbtn.addAction("press_down", f1, self.lbbtn)
         self.addWidget(self.lbbtn)
-
-        # Profile Button
-        # This button switches to the profile container
-        self.profilebtn = peng3d.gui.ToggleButton(
-            "profilebtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 1], [1, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.main.profilebtn.label")
-        )
-        self.profilebtn.setBackground(peng3d.gui.FramedImageBackground(
-            self.profilebtn,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[1, 2, 1], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
-        ))
-
-        self.profilebtn.addAction("press_down", f1, self.profilebtn)
-        self.addWidget(self.profilebtn)
+        self.lbbtn.enabled = False
 
         # Settings Button
         # This button switches to the settings submenu
         self.settingsbtn = cgclient.gui.CGButton(
             "settingsbtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 0], [1, 1]),
+            pos=self.grid.get_cell([0, 1], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.main.settingsbtn.label"),
         )
         self.addWidget(self.settingsbtn)
@@ -462,11 +455,23 @@ class MainSubMenu(peng3d.gui.SubMenu):
         def f():
             self.window.changeMenu("settings")
             self.window.menu.prev_menu = "servermain"
-
         self.settingsbtn.addAction("click", f)
-        self.settingsbtn.addAction("click", f1, self.settingsbtn)
 
-        self.togglebuttons = [self.playbtn, self.partybtn, self.lbbtn, self.profilebtn]
+        # Exit Button
+        # This button switches to the settings submenu
+        self.exitbtn = cgclient.gui.CGButton(
+            "exitbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.main.exitbtn.label"),
+        )
+        self.addWidget(self.exitbtn)
+
+        def f():
+            self.peng.cg.client._client.close_connection(reason="exit")
+            pyglet.app.exit()
+        self.exitbtn.addAction("click", f)
+
+        self.togglebuttons = [self.profile_img, self.playbtn, self.partybtn, self.lbbtn]
 
         # Play Container
         self.c_play = PlayContainer("play", self, self.window, self.peng,
@@ -480,6 +485,11 @@ class MainSubMenu(peng3d.gui.SubMenu):
         # Leaderboard Container
 
         # Profile Container
+        self.c_profile = ProfileContainer("profile", self, self.window, self.peng,
+                                          pos=(lambda sw, sh, bw, bh: (sw / 3, 0)),
+                                          size=(lambda sw, sh: (sw * 2 / 3, sh))
+                                          )
+        self.addWidget(self.c_profile)
 
     def on_exit(self, new):
         super().on_exit(new)
@@ -495,9 +505,23 @@ class MainSubMenu(peng3d.gui.SubMenu):
     def handler_userupdate(self, event: str, data: dict):
         if data["uuid"] == self.menu.cg.client.user_id:
             self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username
+            self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(
+                f"cg:profile.{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img}", "gui"
+            )
+            self.profile_img.bg.bg_hover = self.profile_img.bg.bg_pressed = self.profile_img.bg.bg_texinfo
+
+            self.profile_label.redraw()
+            self.profile_img.redraw()
 
     def handler_login(self, event: str, data: dict):
         self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username
+        self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(
+            f"cg:profile.{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img}", "gui"
+        )
+        self.profile_img.bg.bg_hover = self.profile_img.bg.bg_pressed = self.profile_img.bg.bg_texinfo
+
+        self.profile_label.redraw()
+        self.profile_img.redraw()
 
 
 class LobbySubMenu(peng3d.gui.SubMenu):
@@ -818,9 +842,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
 
 class TemplateSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
-        super().__init__(name, menu, window, peng,
-                         font="Times New Roman",
-                         font_color=[255, 255, 255, 100])
+        super().__init__(name, menu, window, peng)
 
         self.chosen_save = ""
 
@@ -969,7 +991,6 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
 
     @property
     def saves(self):
-        print("saves", {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts})
         return {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts}
 
     @saves.setter
@@ -1031,6 +1052,331 @@ class PlayContainer(peng3d.gui.Container):
 
                 pbtn.enabled = f"{game}{variant}" in ALLOWED_GAMES
                 pbtn.doAction("statechanged")
+
+
+class ProfileContainer(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng, pos, size)
+
+        self.register_event_handlers()
+
+        self.visible = False
+
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [4, 12], [60, 10])
+
+        self.bg_widget = peng3d.gui.Widget("container_bg", self, self.window, self.peng,
+                                           pos=(0, 0),
+                                           size=(lambda sw, sh: (sw, sh)))
+        self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.bg_widget,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg_widget.bg.vlist_layer = -1
+        self.addWidget(self.bg_widget)
+
+        # Profile image label
+        self.img_label = peng3d.gui.Label(
+            "img_label", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 10], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.img_label")
+        )
+        self.addWidget(self.img_label)
+
+        # Profile image change button
+        self.imgchangebtn = cgclient.gui.CGButton(
+            "imgchangebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 10], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.imgchangebtn.label")
+        )
+        self.addWidget(self.imgchangebtn)
+
+        def f():
+            self.c_profile_img_change.visible = True
+        self.imgchangebtn.addAction("click", f)
+
+        # Username label
+        self.name_label = peng3d.gui.Label(
+            "name_label", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 8], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.name_label")
+        )
+        self.addWidget(self.name_label)
+
+        # Username
+        self.uname = peng3d.gui.Label(
+            "uname", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 8], [3, 1]),
+            label="",  # Will be changed later
+        )
+        self.addWidget(self.uname)
+
+        # Change username button
+        self.unamechangebtn = cgclient.gui.CGButton(
+            "unamechangebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 7], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.unamechangebtn.label")
+        )
+        self.addWidget(self.unamechangebtn)
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                self.unamechangebtn.visible = False
+                self.uname_field.visible = True
+                self.uname_commit.visible = True
+                self.uname_cancel.visible = True
+        self.unamechangebtn.addAction("click", f)
+
+        # Change Username Input field
+        self.uname_field = cgclient.gui.CGTextInput(
+            "uname_field", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 7], [2, 1]),
+        )
+        self.addWidget(self.uname_field)
+        self.uname_field.visible = False
+
+        # Commit Username Change Button
+        self.uname_commit = cgclient.gui.CGButton(
+            "uname_commit", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 7], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.uname_commit.label")
+        )
+        self.addWidget(self.uname_commit)
+        self.uname_commit.visible = False
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                if self.uname_field.text != "":
+                    self.peng.cg.client.send_message("cg:status.user", {
+                        "username": self.uname_field.text,
+                        "uuid": self.peng.cg.client.user_id.hex
+                    })
+
+                    self.uname_field.text = ""
+                    self.uname_field.visible = False
+                    self.uname_commit.visible = False
+                    self.uname_cancel.visible = False
+                    self.unamechangebtn.visible = True
+        self.uname_commit.addAction("click", f)
+
+        # Cancel Username Change Button
+        self.uname_cancel = cgclient.gui.CGButton(
+            "uname_cancel", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 6], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.uname_cancel.label")
+        )
+        self.addWidget(self.uname_cancel)
+        self.uname_cancel.visible = False
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                self.uname_field.text = ""
+                self.uname_field.visible = False
+                self.uname_commit.visible = False
+                self.uname_cancel.visible = False
+                self.unamechangebtn.visible = True
+        self.uname_cancel.addAction("click", f)
+
+        # Password label
+        self.pwd_label = peng3d.gui.Label(
+            "pwd_label", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 4], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.pwd_label")
+        )
+        self.addWidget(self.pwd_label)
+
+        # Password
+        self.pwd = peng3d.gui.Label(
+            "pwd", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 4], [3, 1]),
+            label=""  # Will be changed later
+        )
+        self.addWidget(self.pwd)
+
+        # Change Password Button
+        self.pwdchangebtn = cgclient.gui.CGButton(
+            "pwdchangebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 3], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.pwdchangebtn.label")
+        )
+        self.addWidget(self.pwdchangebtn)
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                self.pwdchangebtn.visible = False
+                self.old_pwd_field.visible = True
+                self.new_pwd_field.visible = True
+                self.confirm_pwd_field.visible = True
+                self.pwd_commit.visible = True
+                self.pwd_cancel.visible = True
+        self.pwdchangebtn.addAction("click", f)
+
+        # Old Password Field
+        self.old_pwd_field = cgclient.gui.CGTextInput(
+            "old_pwd_field", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 3], [2, 1]),
+            default=self.peng.tl("cg:gui.menu.smain.profile.old_pwd_field.default"),
+            font_color_default=[255, 255, 255, 50]
+        )
+        self.addWidget(self.old_pwd_field)
+        self.old_pwd_field.visible = False
+
+        # New Password Field
+        self.new_pwd_field = cgclient.gui.CGTextInput(
+            "new_pwd_field", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 2], [2, 1]),
+            default=self.peng.tl("cg:gui.menu.smain.profile.new_pwd_field.default"),
+            font_color_default=[255, 255, 255, 50]
+        )
+        self.addWidget(self.new_pwd_field)
+        self.new_pwd_field.visible = False
+
+        # Confirm Password Field
+        self.confirm_pwd_field = cgclient.gui.CGTextInput(
+            "confirm_pwd_field", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 1], [2, 1]),
+            default=self.peng.tl("cg:gui.menu.smain.profile.confirm_pwd_field.default"),
+            font_color_default=[255, 255, 255, 50]
+        )
+        self.addWidget(self.confirm_pwd_field)
+        self.confirm_pwd_field.visible = False
+
+        # Commit Password Change Button
+        self.pwd_commit = cgclient.gui.CGButton(
+            "pwd_commit", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 3], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.pwd_commit.label")
+        )
+        self.addWidget(self.pwd_commit)
+        self.pwd_commit.visible = False
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                if self.new_pwd_field.text == self.confirm_pwd_field.text:
+                    self.peng.cg.client.send_message("cg:status.user", {
+                        "uuid": self.peng.cg.client.user_id.hex,
+                        "pwd": [self.old_pwd_field.text, self.new_pwd_field.text]
+                    })
+
+                    self.old_pwd_field.text = ""
+                    self.new_pwd_field.text = ""
+                    self.confirm_pwd_field.text = ""
+                    self.old_pwd_field.visible = False
+                    self.new_pwd_field.visible = False
+                    self.confirm_pwd_field.visible = False
+                    self.pwd_commit.visible = False
+                    self.pwd_cancel.visible = False
+                    self.pwdchangebtn.visible = True
+        self.pwd_commit.addAction("click", f)
+
+        # Cancel Password Change Button
+        self.pwd_cancel = cgclient.gui.CGButton(
+            "pwd_cancel", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 2], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.profile.pwd_cancel.label")
+        )
+        self.addWidget(self.pwd_cancel)
+        self.pwd_cancel.visible = False
+
+        def f():
+            if not self.c_profile_img_change.visible:
+                self.old_pwd_field.text = ""
+                self.new_pwd_field.text = ""
+                self.confirm_pwd_field.text = ""
+                self.old_pwd_field.visible = False
+                self.new_pwd_field.visible = False
+                self.confirm_pwd_field.visible = False
+                self.pwd_commit.visible = False
+                self.pwd_cancel.visible = False
+                self.pwdchangebtn.visible = True
+        self.pwd_cancel.addAction("click", f)
+
+        # Profile Image Change Container
+        self.c_profile_img_change = ProfileImageChangeContainer(
+            "c_profile_img_change", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 0], [3, 12], border=0),
+            size=None
+        )
+        self.addWidget(self.c_profile_img_change)
+
+    def register_event_handlers(self):
+        self.peng.cg.add_event_listener("cg:user.update", self.handler_userupdate)
+        self.peng.cg.add_event_listener("cg:network.client.login", self.handler_login)
+
+    def handler_userupdate(self, event: str, data: dict):
+        if data["uuid"] == self.peng.cg.client.user_id:
+            self.uname.label = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].username
+            self.pwd.label = f"*{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].pwd}*"
+
+    def handler_login(self, event: str, data: dict):
+        self.uname.label = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].username
+        self.pwd.label = f"*{self.peng.cg.client.pwd}*"
+
+
+class ProfileImageChangeContainer(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng, pos, size)
+
+        self.visible = False
+
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            self,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg.vlist_layer = 2
+
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [4, 5], [20, 20])
+
+        self.profile_imgs = sorted(self.discover_profile_images())
+        if "default" in self.profile_imgs:
+            self.profile_imgs.remove("default")
+            self.profile_imgs.append("default")
+        self.profile_btns = {}
+
+        def size(sw, sh):
+            cell = self.grid.get_cell([0, 0], [1, 1])
+            return 2 * [min(cell.size[0], cell.size[1])]
+
+        for i, img_name in enumerate(self.profile_imgs):
+            if i == 20:
+                break
+            btn = peng3d.gui.ImageButton(
+                img_name, self, self.window, self.peng,
+                pos=self.grid.get_cell([i % 4, 4 - i // 4], [1, 1]),
+                size=size,
+                label="",
+                bg_idle=(f"cg:profile.{img_name}", "profile"),
+            )
+            self.addWidget(btn, 3)
+            self.profile_btns[img_name] = btn
+
+            def f(button):
+                self.peng.cg.client.send_message("cg:status.user", {
+                    "uuid": self.peng.cg.client.user_id.hex,
+                    "profile_img": button.name
+                })
+                self.visible = False
+            btn.addAction("click", f, btn)
+
+    def discover_profile_images(self, domain="cg"):
+        rsrc = "{domain}:profile.{name}".format(domain=domain, name="*")
+        pattern = self.peng.rsrcMgr.resourceNameToPath(rsrc, ".png")
+        files = glob.glob(pattern)
+
+        names = set()
+        r = re.compile(r".*?/profile/(?P<name>[a-zA-Z0-9_-]{1,64})\.png")
+
+        for f in files:
+            m = r.fullmatch(f.replace("\\", "/"))
+            if m is not None:
+                names.add(m.group("name"))
+
+        return list(names)
 
 
 class GameSelectButton(peng3d.gui.LayeredWidget):
@@ -1098,9 +1444,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
         self.label1_layer = peng3d.gui.LabelWidgetLayer(
             "label1_layer", self, 3,
             label=self.peng.tl(f"cg:gui.menu.smain.play.{self.game}{self.variant}.label.0"),
-            font="Times New Roman",
             font_size=22,
-            font_color=[255, 255, 255, 100],
             offset=[0, -20]
         )
         self.addLayer(self.label1_layer)
@@ -1108,9 +1452,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
         self.label2_layer = peng3d.gui.LabelWidgetLayer(
             "label2_layer", self, 3,
             label=self.peng.tl(f"cg:gui.menu.smain.play.{self.game}{self.variant}.label.1"),
-            font="Times New Roman",
             font_size=16,
-            font_color=[255, 255, 255, 100],
             offset=[0, -20 - 22 - 8],
         )
         self.addLayer(self.label2_layer)
@@ -1170,9 +1512,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             "username_label_layer", self,
             z_index=2,
             label=self.player.username,
-            font="Times New Roman",
             font_size=30,
-            font_color=[255, 255, 255, 100],
             offset=(lambda bx, by, bw, bh: (-bw / 2 + 20, 0))
         )
         self.username_label_layer._label.anchor_x = "left"
@@ -1298,7 +1638,6 @@ class InviteDialog(peng3d.gui.Container):
             "invite_heading", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 2], [2, 1]),
             label=self.peng.tl("cg:gui.menu.smain.lobby.invite_heading"),
-            font="Times New Roman",
             font_size=25,
             label_layer=11,
         )
@@ -1379,7 +1718,6 @@ class TemplateSaveDialog(peng3d.gui.Container):
             "save_heading", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 2], [2, 1]),
             label=self.peng.tl("cg:gui.menu.smain.gamerule.save_template_heading"),
-            font="Times New Roman",
             font_size=25,
             label_layer=11,
         )
@@ -1523,9 +1861,7 @@ class RuleButton(peng3d.gui.Container):
             "gamerule_label", self, self.window, self.peng,
             self.grid.get_cell([0, 13], [2, 2]),
             label=self.peng.tl(f"cg:gamerule.{self.gamerule}.name"),
-            font="Times New Roman",
             font_size=30,
-            font_color=[255, 255, 255, 100],
             multiline=True
         )
         self.addWidget(self.gamerule_label)
@@ -1535,9 +1871,7 @@ class RuleButton(peng3d.gui.Container):
             "description_label", self, self.window, self.peng,
             self.grid.get_cell([0, 11], [2, 1]),
             label=self.peng.tl(f"cg:gamerule.{self.gamerule}.description"),
-            font="Times New Roman",
             font_size=20,
-            font_color=[255, 255, 255, 100],
             multiline=True
         )
         self.addWidget(self.description_label)
@@ -1601,9 +1935,7 @@ class BoolRuleButton(RuleButton):
             size=(lambda sw, sh: (sw/2 - 120, 0)),
             label=self.peng.tl("cg:gamerule.opt.true"),
             multiline=True,
-            font="Times New Roman",
             font_size=16,
-            font_color=[255, 255, 255, 100],
             anchor_y="baseline",
         )
         self.addWidget(self.yeslbl)
@@ -1648,9 +1980,7 @@ class BoolRuleButton(RuleButton):
             size=(lambda sw, sh: (sw / 2 - 120, 0)),
             label=self.peng.tl("cg:gamerule.opt.false"),
             multiline=True,
-            font="Times New Roman",
             font_size=16,
-            font_color=[255, 255, 255, 100],
             anchor_y="baseline",
         )
         self.addWidget(self.nolbl)
@@ -1701,7 +2031,6 @@ class SelectRuleButton(RuleButton):
                     i.pressed = False
                     i.redraw()
 
-            print({"gamerules": {self.gamerule: button.name}})
             self.peng.cg.client.send_message("cg:lobby.change", {
                 "gamerules": {self.gamerule: button.name}
             })
@@ -1741,9 +2070,7 @@ class SelectRuleButton(RuleButton):
                 size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
                 label=self.peng.tl(f"cg:gamerule.{self.gamerule}.opt.{option}"),
                 multiline=True,
-                font="Times New Roman",
                 font_size=16,
-                font_color=[255, 255, 255, 100],
                 anchor_y="baseline",
             )
             self.addWidget(lbl)
@@ -1820,9 +2147,7 @@ class ActivetRuleButton(RuleButton):
                 size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
                 label=self.peng.tl(f"cg:gamerule.{self.gamerule}.opt.{option}"),
                 multiline=True,
-                font="Times New Roman",
                 font_size=16,
-                font_color=[255, 255, 255, 100],
                 anchor_y="baseline",
             )
             self.addWidget(lbl)

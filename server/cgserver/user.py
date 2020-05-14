@@ -35,6 +35,8 @@ class User(object):
         self.pwd: str = udat.get("pwd", "")
         self.uuid: uuid.UUID = cg.util.uuidify(udat.get("uuid", uuid.uuid4()))
 
+        self.profile_img = udat.get("profile_img", "default")
+
         self.cid: Optional[int] = None
         self.lobby: Optional[uuid.UUID] = None
 
@@ -46,6 +48,7 @@ class User(object):
         return {
             "pwd": self.pwd,
             "uuid": self.uuid.hex,
+            "profile_img": self.profile_img,
         }
 
     @property

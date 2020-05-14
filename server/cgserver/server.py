@@ -282,6 +282,7 @@ class DedicatedServer(object):
         self.server.send_message("cg:status.user", {
             "username": u.username,
             "uuid": u.uuid.hex,
+            "profile_img": u.profile_img,
 
             "status": "offline",  # TODO: implement correctly
         }, client)

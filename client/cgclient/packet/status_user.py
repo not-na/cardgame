@@ -35,26 +35,32 @@ class StatusUserPacket(CGPacket):
         "username",
         "uuid",
         "status",
+        "pwd",
+        "profile_img",
     ]
 
     def receive(self, msg, cid=None):
-        if not self.check_keys(msg, self.allowed_keys, self.allowed_keys):
+        if "username" not in msg and "uuid" not in msg:
             self.cg.warn("Ignoring cg:status.user packet with missing information")
             self.cg.debug(f"Keys given: {msg.keys()}")
             return
 
+        # Updating the data of a user by uuid
         if uuidify(msg["uuid"]) in self.cg.client.users_uuid:
             u = self.cg.client.users_uuid[uuidify(msg["uuid"])]
             u.update(msg)
 
             self.cg.send_event("cg:user.update", {"uuid": u.uuid})
+
+        # Updating the data of a user by username
         elif msg["username"].lower() in self.cg.client.users:
             u = self.cg.client.users[msg["username"].lower()]
             u.update(msg)
 
             self.cg.send_event("cg:user.update", {"uuid": u.uuid})
+
+        # New in database, create
         else:
-            # New in database, create
             u = cgclient.user.User(self.cg, msg)
             self.cg.client.users[msg["username"].lower()] = u
             self.cg.client.users_uuid[u.uuid] = u
