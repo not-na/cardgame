@@ -36,6 +36,9 @@ class RoundChangePacket(CGPacket):
         "player_list",
         "game_type",
         "modifiers",
+        "winner",
+        "eyes",
+        "extras",
     ]
     side = SIDE_CLIENT
 
@@ -108,6 +111,6 @@ class RoundChangePacket(CGPacket):
             elif msg["phase"] == "counting":
                 pass
             elif msg["phase"] == "end":
-                pass
+                self.cg.client.gui.ingame.game_layer.clean_up()
             else:
                 self.cg.crash(f"Invalid round phase {msg['phase']}")

@@ -450,6 +450,7 @@ class GameLayer(peng3d.layer.Layer):
         # Delete all cards and reset to beginning
         for c in self.game.cards.values():
             c.delete()
+        self.game.cards = {}
 
         self.color_db = {
             0: None,

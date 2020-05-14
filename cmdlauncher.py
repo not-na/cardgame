@@ -461,6 +461,8 @@ def main(stdscr):
 
     s_time = time.time()
 
+    restart_all = True
+
     # Initialization of curses styles/colors
     curses.use_default_colors()
     curses.init_pair(1, curses.COLOR_GREEN, -1)
@@ -823,12 +825,26 @@ def main(stdscr):
                     s.scroll_v_lock = True
 
                     for p in clients.values():
+                        if p is docs:
+                            # Do not restart the docs
+                            continue
+
                         if p.running:
                             p.kill()
                         p.add_stdout("Restarted all subprocesses", curses.A_BOLD | C_GREEN)
                         p.start()
                         p.scroll_v = 0
                         p.scroll_v_lock = True
+
+                        if not restart_all:
+                            break
+            elif c == ord("f"):
+                # Toggle between all clients and first client for Shift+R
+                restart_all = not restart_all
+                if restart_all:
+                    in_status = "Restarting all clients"
+                else:
+                    in_status = "Restarting only the first client"
             elif c == ord("d"):
                 # Rebuild Sphinx Docs
                 if docs.running:
