@@ -67,6 +67,8 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.gui = gui
         self.cg = gui.cg
 
+        self.register_event_handlers()
+
         self.setBackground(peng3d.gui.button.FramedImageBackground(
             peng3d.gui.FakeWidget(self),
             bg_idle=("cg:img.bg.bg_brown", "gui"),
@@ -201,6 +203,27 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
 
         self.d_lobby_inv.addAction("cancel", f)
 
+        # Status Message Menu
+        self.d_status_message = peng3d.gui.menus.DialogSubMenu(
+            "status_msg", self, self.window, self.peng
+        )
+        self.d_status_message.label_ok = self.peng.tl("cg:gui.menu.status_msg.okbtn.label")
+        self.d_status_message.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
+            self.d_status_message.wbtn_ok,
+            bg_idle=("cg:img.btn.btn_idle", "gui"),
+            bg_hover=("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=("cg:img.btn.btn_press", "gui"),
+            frame=[[249, 502, 249], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+        )
+        )
+        self.addSubMenu(self.d_status_message)
+
+        def f():
+            self.peng.cg.send_event("cg:status.message.close")
+        self.d_status_message.wbtn_ok.addAction("click", f)
+
         # Login Menu
         self.s_login = LoginSubMenu("login", self, self.window, self.peng)
         self.addSubMenu(self.s_login)
@@ -222,6 +245,17 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         self.addSubMenu(self.s_gamerule)
 
         self.changeSubMenu("load")
+
+    def register_event_handlers(self):
+        self.cg.add_event_listener("cg:status.message.open", self.status_message_open)
+        self.cg.add_event_listener("cg:status.message.close", self.status_message_close)
+
+    def status_message_open(self, event: str, data: dict):
+        self.changeSubMenu("status_msg")
+        self.d_status_message.label_main = self.peng.tl(data["message"], data["data"])
+
+    def status_message_close(self, event: str, data: dict):
+        self.d_status_message.exitDialog()
 
 
 class LoginSubMenu(peng3d.gui.SubMenu):
@@ -327,11 +361,13 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         def f1(button):
             # Reset the previously pressed button
+            self.profile_label.pressed = self.profile_label._pressed
             for btn in self.togglebuttons:
                 if btn != button and btn.pressed:
                     btn.pressed = False
                     btn.doAction("press_up")
                     btn.redraw()
+            self.profile_label._pressed = self.profile_label.pressed
 
         self.subgrid_1 = peng3d.gui.layout.GridLayout(self.peng, self.grid.get_cell([0, 5], [1, 3]),
                                                       [4, 4], [60, 20])
@@ -354,23 +390,42 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.profile_img)
 
         def f():
-            self.c_profile.visible = True
+            self.c_profile_img.visible = True
         self.profile_img.addAction("press_down", f1, self.profile_img)
         self.profile_img.addAction("press_down", f)
 
         def f():
-            self.c_profile.visible = False
+            self.c_profile_img.visible = False
         self.profile_img.addAction("press_up", f)
 
         # Profile Label
         self.profile_label = peng3d.gui.Label(
             "profilelbl", self, self.window, self.peng,
-            pos=self.subgrid_1.get_cell([1, 0], [2, 1]),
+            pos=self.subgrid_1.get_cell([0, 0], [4, 1]),
             label="<unknown>",  # This should be the username
             anchor_x="center",
             anchor_y="center",
         )
         self.addWidget(self.profile_label)
+        self.profile_label._pressed = False
+
+        def f():
+            if self.profile_label._pressed:
+                self.profile_label.doAction("press_up")
+                self.profile_label._pressed = False
+            else:
+                self.profile_label.doAction("press_down")
+                self.profile_label._pressed = True
+        self.profile_label.addAction("click", f)
+
+        def f():
+            self.c_upwd.visible = True
+        self.profile_label.addAction("press_down", f1, self.profile_label)
+        self.profile_label.addAction("press_down", f)
+
+        def f():
+            self.c_upwd.visible = False
+        self.profile_label.addAction("press_up", f)
 
         # Play Button
         # This button opens the play_select container
@@ -384,6 +439,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             bg_idle=("cg:img.btn.btn_idle", "gui"),
             bg_hover=("cg:img.btn.btn_hov", "gui"),
             bg_pressed=("cg:img.btn.btn_press", "gui"),
+            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
             frame=[[1, 2, 1], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
@@ -413,6 +469,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             bg_idle=("cg:img.btn.btn_idle", "gui"),
             bg_hover=("cg:img.btn.btn_hov", "gui"),
             bg_pressed=("cg:img.btn.btn_press", "gui"),
+            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
             frame=[[1, 2, 1], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
@@ -434,6 +491,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             bg_idle=("cg:img.btn.btn_idle", "gui"),
             bg_hover=("cg:img.btn.btn_hov", "gui"),
             bg_pressed=("cg:img.btn.btn_press", "gui"),
+            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
             frame=[[1, 2, 1], [0, 1, 0]],
             scale=(None, 0),
             repeat_edge=True, repeat_center=True,
@@ -471,7 +529,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             pyglet.app.exit()
         self.exitbtn.addAction("click", f)
 
-        self.togglebuttons = [self.profile_img, self.playbtn, self.partybtn, self.lbbtn]
+        self.togglebuttons = [self.profile_img, self.profile_label, self.playbtn, self.partybtn, self.lbbtn]
 
         # Play Container
         self.c_play = PlayContainer("play", self, self.window, self.peng,
@@ -484,12 +542,19 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         # Leaderboard Container
 
-        # Profile Container
-        self.c_profile = ProfileContainer("profile", self, self.window, self.peng,
-                                          pos=(lambda sw, sh, bw, bh: (sw / 3, 0)),
-                                          size=(lambda sw, sh: (sw * 2 / 3, sh))
-                                          )
-        self.addWidget(self.c_profile)
+        # Profile Containers
+        self.c_upwd = ProfileContainer("profile", self, self.window, self.peng,
+                                       pos=(lambda sw, sh, bw, bh: (sw * 2/3 - bw/2, sh/2 - bh/2)),
+                                       size=(lambda sw, sh: (sw/3, sh/5))
+                                       )
+        self.addWidget(self.c_upwd)
+
+        self.c_profile_img = ProfileImageChangeContainer(
+            "profile_img_change", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw / 3, 0)),
+            size=(lambda sw, sh: (sw * 2 / 3, sh))
+        )
+        self.addWidget(self.c_profile_img)
 
     def on_exit(self, new):
         super().on_exit(new)
@@ -697,7 +762,10 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
     def handle_game_change(self, event: str, data: dict):
         self.game_label.label = self.peng.tl(f"cg:game.{data['game']}")
-        self.menu.s_gamerule.heading.label = self.peng.tl("cg:gui.menu.smain.gamerule.heading", {"game": data["game"]})
+        self.menu.s_gamerule.heading.label = self.peng.tl(
+            "cg:gui.menu.smain.gamerule.heading",
+            {"game": self.peng.tl(f"cg:game.{data['game']}")}
+        )
 
 
 class GameruleSubMenu(peng3d.gui.SubMenu):
@@ -1055,14 +1123,14 @@ class PlayContainer(peng3d.gui.Container):
 
 
 class ProfileContainer(peng3d.gui.Container):
+    submenu: MainSubMenu
+
     def __init__(self, name, submenu, window, peng, pos, size):
         super().__init__(name, submenu, window, peng, pos, size)
 
-        self.register_event_handlers()
-
         self.visible = False
 
-        self.grid = peng3d.gui.GridLayout(self.peng, self, [4, 12], [60, 10])
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [2, 2], [60, 20])
 
         self.bg_widget = peng3d.gui.Widget("container_bg", self, self.window, self.peng,
                                            pos=(0, 0),
@@ -1077,62 +1145,27 @@ class ProfileContainer(peng3d.gui.Container):
         self.bg_widget.bg.vlist_layer = -1
         self.addWidget(self.bg_widget)
 
-        # Profile image label
-        self.img_label = peng3d.gui.Label(
-            "img_label", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 10], [1, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.profile.img_label")
-        )
-        self.addWidget(self.img_label)
-
-        # Profile image change button
-        self.imgchangebtn = cgclient.gui.CGButton(
-            "imgchangebtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 10], [3, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.profile.imgchangebtn.label")
-        )
-        self.addWidget(self.imgchangebtn)
-
-        def f():
-            self.c_profile_img_change.visible = True
-        self.imgchangebtn.addAction("click", f)
-
-        # Username label
-        self.name_label = peng3d.gui.Label(
-            "name_label", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 8], [1, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.profile.name_label")
-        )
-        self.addWidget(self.name_label)
-
-        # Username
-        self.uname = peng3d.gui.Label(
-            "uname", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 8], [3, 1]),
-            label="",  # Will be changed later
-        )
-        self.addWidget(self.uname)
-
         # Change username button
         self.unamechangebtn = cgclient.gui.CGButton(
             "unamechangebtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 7], [3, 1]),
+            pos=self.grid.get_cell([0, 1], [2, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.unamechangebtn.label")
         )
         self.addWidget(self.unamechangebtn)
 
         def f():
-            if not self.c_profile_img_change.visible:
-                self.unamechangebtn.visible = False
-                self.uname_field.visible = True
-                self.uname_commit.visible = True
-                self.uname_cancel.visible = True
+            self.unamechangebtn.visible = False
+            self.pwdchangebtn.visible = False
+
+            self.uname_field.visible = True
+            self.uname_commit.visible = True
+            self.uname_cancel.visible = True
         self.unamechangebtn.addAction("click", f)
 
         # Change Username Input field
         self.uname_field = cgclient.gui.CGTextInput(
             "uname_field", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 7], [2, 1]),
+            pos=self.grid.get_cell([0, 1], [2, 1]),
         )
         self.addWidget(self.uname_field)
         self.uname_field.visible = False
@@ -1140,83 +1173,79 @@ class ProfileContainer(peng3d.gui.Container):
         # Commit Username Change Button
         self.uname_commit = cgclient.gui.CGButton(
             "uname_commit", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 7], [1, 1]),
+            pos=self.grid.get_cell([0, 0], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.uname_commit.label")
         )
         self.addWidget(self.uname_commit)
         self.uname_commit.visible = False
 
         def f():
-            if not self.c_profile_img_change.visible:
-                if self.uname_field.text != "":
-                    self.peng.cg.client.send_message("cg:status.user", {
-                        "username": self.uname_field.text,
-                        "uuid": self.peng.cg.client.user_id.hex
-                    })
+            if self.uname_field.text != "":
+                self.peng.cg.client.send_message("cg:status.user", {
+                    "username": self.uname_field.text,
+                    "uuid": self.peng.cg.client.user_id.hex
+                })
 
-                    self.uname_field.text = ""
-                    self.uname_field.visible = False
-                    self.uname_commit.visible = False
-                    self.uname_cancel.visible = False
-                    self.unamechangebtn.visible = True
+                self.uname_field.text = ""
+                self.uname_field.visible = False
+                self.uname_commit.visible = False
+                self.uname_cancel.visible = False
+
+                self.unamechangebtn.visible = True
+                self.pwdchangebtn.visible = True
+
+                self.visible = False
+                self.submenu.profile_label._pressed = False
         self.uname_commit.addAction("click", f)
 
         # Cancel Username Change Button
         self.uname_cancel = cgclient.gui.CGButton(
             "uname_cancel", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 6], [1, 1]),
+            pos=self.grid.get_cell([1, 0], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.uname_cancel.label")
         )
         self.addWidget(self.uname_cancel)
         self.uname_cancel.visible = False
 
         def f():
-            if not self.c_profile_img_change.visible:
-                self.uname_field.text = ""
-                self.uname_field.visible = False
-                self.uname_commit.visible = False
-                self.uname_cancel.visible = False
-                self.unamechangebtn.visible = True
+            self.uname_field.text = ""
+            self.uname_field.visible = False
+            self.uname_commit.visible = False
+            self.uname_cancel.visible = False
+
+            self.unamechangebtn.visible = True
+            self.pwdchangebtn.visible = True
+
+            self.visible = False
+            self.submenu.profile_label._pressed = False
         self.uname_cancel.addAction("click", f)
-
-        # Password label
-        self.pwd_label = peng3d.gui.Label(
-            "pwd_label", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 4], [1, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.profile.pwd_label")
-        )
-        self.addWidget(self.pwd_label)
-
-        # Password
-        self.pwd = peng3d.gui.Label(
-            "pwd", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 4], [3, 1]),
-            label=""  # Will be changed later
-        )
-        self.addWidget(self.pwd)
 
         # Change Password Button
         self.pwdchangebtn = cgclient.gui.CGButton(
             "pwdchangebtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 3], [3, 1]),
+            pos=self.grid.get_cell([0, 0], [2, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.pwdchangebtn.label")
         )
         self.addWidget(self.pwdchangebtn)
 
         def f():
-            if not self.c_profile_img_change.visible:
-                self.pwdchangebtn.visible = False
-                self.old_pwd_field.visible = True
-                self.new_pwd_field.visible = True
-                self.confirm_pwd_field.visible = True
-                self.pwd_commit.visible = True
-                self.pwd_cancel.visible = True
+            self.pwdchangebtn.visible = False
+            self.unamechangebtn.visible = False
+
+            self.old_pwd_field.visible = True
+            self.new_pwd_field.visible = True
+            self.confirm_pwd_field.visible = True
+            self.pwd_commit.visible = True
+            self.pwd_cancel.visible = True
+
+            self.size = (lambda sw, sh: (sw / 3, sh / 2.5))
+            self.grid.res = [2, 4]
         self.pwdchangebtn.addAction("click", f)
 
         # Old Password Field
         self.old_pwd_field = cgclient.gui.CGTextInput(
             "old_pwd_field", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 3], [2, 1]),
+            pos=self.grid.get_cell([0, 3], [2, 1]),
             default=self.peng.tl("cg:gui.menu.smain.profile.old_pwd_field.default"),
             font_color_default=[255, 255, 255, 50]
         )
@@ -1226,7 +1255,7 @@ class ProfileContainer(peng3d.gui.Container):
         # New Password Field
         self.new_pwd_field = cgclient.gui.CGTextInput(
             "new_pwd_field", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 2], [2, 1]),
+            pos=self.grid.get_cell([0, 2], [2, 1]),
             default=self.peng.tl("cg:gui.menu.smain.profile.new_pwd_field.default"),
             font_color_default=[255, 255, 255, 50]
         )
@@ -1236,7 +1265,7 @@ class ProfileContainer(peng3d.gui.Container):
         # Confirm Password Field
         self.confirm_pwd_field = cgclient.gui.CGTextInput(
             "confirm_pwd_field", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 1], [2, 1]),
+            pos=self.grid.get_cell([0, 1], [2, 1]),
             default=self.peng.tl("cg:gui.menu.smain.profile.confirm_pwd_field.default"),
             font_color_default=[255, 255, 255, 50]
         )
@@ -1246,81 +1275,79 @@ class ProfileContainer(peng3d.gui.Container):
         # Commit Password Change Button
         self.pwd_commit = cgclient.gui.CGButton(
             "pwd_commit", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 3], [1, 1]),
+            pos=self.grid.get_cell([0, 0], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.pwd_commit.label")
         )
         self.addWidget(self.pwd_commit)
         self.pwd_commit.visible = False
 
         def f():
-            if not self.c_profile_img_change.visible:
-                if self.new_pwd_field.text == self.confirm_pwd_field.text:
-                    self.peng.cg.client.send_message("cg:status.user", {
-                        "uuid": self.peng.cg.client.user_id.hex,
-                        "pwd": [self.old_pwd_field.text, self.new_pwd_field.text]
-                    })
+            if self.new_pwd_field.text == self.confirm_pwd_field.text:
+                self.peng.cg.client.send_message("cg:status.user", {
+                    "uuid": self.peng.cg.client.user_id.hex,
+                    "pwd": [self.old_pwd_field.text, self.new_pwd_field.text]
+                })
 
-                    self.old_pwd_field.text = ""
-                    self.new_pwd_field.text = ""
-                    self.confirm_pwd_field.text = ""
-                    self.old_pwd_field.visible = False
-                    self.new_pwd_field.visible = False
-                    self.confirm_pwd_field.visible = False
-                    self.pwd_commit.visible = False
-                    self.pwd_cancel.visible = False
-                    self.pwdchangebtn.visible = True
+                self.old_pwd_field.text = ""
+                self.new_pwd_field.text = ""
+                self.confirm_pwd_field.text = ""
+
+                self.old_pwd_field.visible = False
+                self.new_pwd_field.visible = False
+                self.confirm_pwd_field.visible = False
+                self.pwd_commit.visible = False
+                self.pwd_cancel.visible = False
+
+                self.size = (lambda sw, sh: (sw / 3, sh / 5))
+                self.grid.res = [2, 2]
+
+                self.pwdchangebtn.visible = True
+                self.unamechangebtn.visible = True
+
+                self.visible = False
+                self.submenu.profile_label._pressed = False
         self.pwd_commit.addAction("click", f)
 
         # Cancel Password Change Button
         self.pwd_cancel = cgclient.gui.CGButton(
             "pwd_cancel", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 2], [1, 1]),
+            pos=self.grid.get_cell([1, 0], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.profile.pwd_cancel.label")
         )
         self.addWidget(self.pwd_cancel)
         self.pwd_cancel.visible = False
 
         def f():
-            if not self.c_profile_img_change.visible:
-                self.old_pwd_field.text = ""
-                self.new_pwd_field.text = ""
-                self.confirm_pwd_field.text = ""
-                self.old_pwd_field.visible = False
-                self.new_pwd_field.visible = False
-                self.confirm_pwd_field.visible = False
-                self.pwd_commit.visible = False
-                self.pwd_cancel.visible = False
-                self.pwdchangebtn.visible = True
+            self.old_pwd_field.text = ""
+            self.new_pwd_field.text = ""
+            self.confirm_pwd_field.text = ""
+
+            self.old_pwd_field.visible = False
+            self.new_pwd_field.visible = False
+            self.confirm_pwd_field.visible = False
+            self.pwd_commit.visible = False
+            self.pwd_cancel.visible = False
+
+            self.size = (lambda sw, sh: (sw / 3, sh / 5))
+            self.grid.res = [2, 2]
+
+            self.pwdchangebtn.visible = True
+            self.unamechangebtn.visible = True
+
+            self.visible = False
+            self.submenu.profile_label._pressed = False
         self.pwd_cancel.addAction("click", f)
-
-        # Profile Image Change Container
-        self.c_profile_img_change = ProfileImageChangeContainer(
-            "c_profile_img_change", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 0], [3, 12], border=0),
-            size=None
-        )
-        self.addWidget(self.c_profile_img_change)
-
-    def register_event_handlers(self):
-        self.peng.cg.add_event_listener("cg:user.update", self.handler_userupdate)
-        self.peng.cg.add_event_listener("cg:network.client.login", self.handler_login)
-
-    def handler_userupdate(self, event: str, data: dict):
-        if data["uuid"] == self.peng.cg.client.user_id:
-            self.uname.label = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].username
-            self.pwd.label = f"*{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].pwd}*"
-
-    def handler_login(self, event: str, data: dict):
-        self.uname.label = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].username
-        self.pwd.label = f"*{self.peng.cg.client.pwd}*"
 
 
 class ProfileImageChangeContainer(peng3d.gui.Container):
+    submenu: MainSubMenu
+
     def __init__(self, name, submenu, window, peng, pos, size):
         super().__init__(name, submenu, window, peng, pos, size)
 
         self.visible = False
 
+        # Background
         self.setBackground(peng3d.gui.button.FramedImageBackground(
             self,
             bg_idle=("cg:img.bg.bg_brown", "gui"),
@@ -1328,31 +1355,37 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
             scale=(.3, .3),
         )
         )
-        self.bg.vlist_layer = 2
 
-        self.grid = peng3d.gui.GridLayout(self.peng, self, [4, 5], [20, 20])
-
+        # Profile image file names
         self.profile_imgs = sorted(self.discover_profile_images())
         if "default" in self.profile_imgs:
             self.profile_imgs.remove("default")
             self.profile_imgs.append("default")
         self.profile_btns = {}
 
+        # Determine Grid size
+        long = math.ceil(math.sqrt(len(self.profile_imgs)))
+        short = math.ceil(len(self.profile_imgs) / long)
+        res = [short, long]
+        if self.size[0] > self.size[1]:
+            res.reverse()
+        self.grid = peng3d.gui.GridLayout(self.peng, self, res, [20, 20])
+
         def size(sw, sh):
             cell = self.grid.get_cell([0, 0], [1, 1])
             return 2 * [min(cell.size[0], cell.size[1])]
 
         for i, img_name in enumerate(self.profile_imgs):
-            if i == 20:
+            if i == len(self.profile_imgs):
                 break
             btn = peng3d.gui.ImageButton(
                 img_name, self, self.window, self.peng,
-                pos=self.grid.get_cell([i % 4, 4 - i // 4], [1, 1]),
+                pos=self.lambda_pos(i),
                 size=size,
                 label="",
                 bg_idle=(f"cg:profile.{img_name}", "profile"),
             )
-            self.addWidget(btn, 3)
+            self.addWidget(btn)
             self.profile_btns[img_name] = btn
 
             def f(button):
@@ -1361,6 +1394,7 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
                     "profile_img": button.name
                 })
                 self.visible = False
+                self.submenu.profile_img.pressed = False
             btn.addAction("click", f, btn)
 
     def discover_profile_images(self, domain="cg"):
@@ -1369,7 +1403,7 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
         files = glob.glob(pattern)
 
         names = set()
-        r = re.compile(r".*?/profile/(?P<name>[a-zA-Z0-9_-]{1,64})\.png")
+        r = re.compile(r".*?/profile/(?P<name>[a-zA-Z0-9_ -]{1,64})\.png")
 
         for f in files:
             m = r.fullmatch(f.replace("\\", "/"))
@@ -1377,6 +1411,19 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
                 names.add(m.group("name"))
 
         return list(names)
+
+    def lambda_pos(self, i):
+        res = self.grid.res
+
+        def pos(sw, sh, bw, bh):
+            base_pos = self.grid.get_cell(
+                [i % res[0], res[1] - 1 - i // res[0]],
+                [1, 1],
+                anchor_x="center", anchor_y="center"
+            ).pos
+            base_pos = [base_pos[0] - self.grid.pos[0], base_pos[1] - self.grid.pos[1]]
+            return base_pos[0] - bw / 2, base_pos[1] - bh / 2
+        return pos
 
 
 class GameSelectButton(peng3d.gui.LayeredWidget):

@@ -275,7 +275,10 @@ class PopenSubProcess(SubProcess):
             except queue.Empty:
                 break  # Should be rare due to the loop condition
             else:
-                self.add_stdout(line.decode(sys.stdout.encoding).replace("\r", ""), attr)
+                try:
+                    self.add_stdout(line.decode(sys.stdout.encoding).replace("\r", ""), attr)
+                except UnicodeDecodeError:
+                    self.add_stdout("ERROR: Could not decode Unicode Sequence", C_RED | curses.A_BOLD)
 
         # Check if the process is still running and we don't know it yet
         if self.running and self.popen.poll() is not None:

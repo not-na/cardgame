@@ -44,6 +44,10 @@ def register_default_packets(reg, peer, cg, add):
     # Status User Packet
     r("cg:status.user", status_user.StatusUserPacket)
 
+    from . import status_message
+    # Status Message Packet
+    r("cg:status.message", status_message.StatusMessagePacket)
+
     # LOBBY PACKETS
     from . import lobby
 

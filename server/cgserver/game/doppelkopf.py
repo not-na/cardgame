@@ -2578,9 +2578,7 @@ class DoppelkopfRound(object):
             if card not in player_hand:
                 raise InvalidMoveError("The players hand must contain the chosen card!")
 
-        # This packet must be received 3 times before continuing
         self.poverty_cards = cards
-
         # When the three cards have been chosen
         if len(self.poverty_cards) == 3:
             # If the poverty player passes the cards
@@ -2605,11 +2603,10 @@ class DoppelkopfRound(object):
 
                 # If the poverty mode is circulate...
                 # ...make them visible for the next player
-                if self.reserv_state == "poverty_circulate":
-                    for c in self.poverty_cards:
-                        self.transfer_card(self.cards[c],
-                                           "poverty",
-                                           "poverty")
+                for c in self.poverty_cards:
+                    self.transfer_card(self.cards[c],
+                                       "poverty",
+                                       "poverty")
 
                 # Ask the next player if he accepts the poverty
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {

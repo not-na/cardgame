@@ -285,8 +285,8 @@ class RestartRotateFileHandler(logging.handlers.RotatingFileHandler):
 
         super().__init__(fname, *args, **kwargs)
 
-        if platform.system() != "Windows":  # For Windows, the rollover generates a permission error
-            self.doRollover()               # (The file is accessed multiple times)
+        # if platform.system() != "Windows":  # For Windows, the rollover generates a permission error
+        self.doRollover()                     # (The file is accessed multiple times)
 
     def shouldRollover(self, record):
         return False

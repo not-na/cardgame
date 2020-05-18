@@ -44,6 +44,8 @@ class IngameMenu(peng3d.gui.Menu):
         self.gui = gui
         self.cg = gui.cg
 
+        self.register_event_handlers()
+
         self.bg_layer: BackgroundLayer = BackgroundLayer(self, self.window, self.peng)
         self.addLayer(self.bg_layer)
 
@@ -58,6 +60,22 @@ class IngameMenu(peng3d.gui.Menu):
 
         self.gui_layer: GUILayer = GUILayer("game_gui", self, self.window, self.peng)
         self.addLayer(self.gui_layer)
+
+        self.status_layer: StatusLayer = StatusLayer("status_msg", self, self.window, self.peng)
+        self.addLayer(self.gui_layer)
+
+        self.d_status_message = self.status_layer.d_status_message
+
+    def register_event_handlers(self):
+        self.cg.add_event_listener("cg:status.message.open", self.status_message_open)
+        self.cg.add_event_listener("cg:status.message.close", self.status_message_close)
+
+    def status_message_open(self, event: str, data: dict):
+        self.status_layer.enabled = True
+        self.d_status_message.label_main = self.peng.tl(data["message"], data["data"])
+
+    def status_message_close(self, event: str, data: dict):
+        self.status_layer.enabled = False
 
 
 class BackgroundLayer(peng3d.layer.Layer):
@@ -803,3 +821,28 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
 class PauseGUISubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
+
+
+class StatusLayer(peng3d.gui.GUILayer):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.d_status_message = peng3d.gui.menus.DialogSubMenu(
+            "status_msg", self, self.window, self.peng
+        )
+        self.d_status_message.label_ok = self.peng.tl("cg:gui.menu.status_msg.okbtn.label")
+        self.d_status_message.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
+            self.d_status_message.wbtn_ok,
+            bg_idle=("cg:img.btn.btn_idle", "gui"),
+            bg_hover=("cg:img.btn.btn_hov", "gui"),
+            bg_pressed=("cg:img.btn.btn_press", "gui"),
+            frame=[[249, 502, 249], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+        )
+        )
+        self.addSubMenu(self.d_status_message)
+
+        def f():
+            self.peng.cg.send_event("cg:status.message.close")
+        self.d_status_message.wbtn_ok.addAction("click", f)

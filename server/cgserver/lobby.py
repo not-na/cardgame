@@ -50,42 +50,8 @@ class Lobby(object):
         if cgserver.game.CGame.DEV_MODE:
             self.gamerules = {
                 "dk.wedding": "None",
-                "dk.solos": [
-                    "solo_aces",
-                    "solo_10s",
-                    "solo_picture",
-                    "solo_noble_brothel",
-                    "solo_monastery",
-                    "solo_king",
-                    "solo_brothel",
-                    "solo_queen",
-                    "solo_jack",
-                    "solo_9s",
-                    "solo_clubs",
-                    "solo_spades",
-                    "solo_hearts",
-                    "solo_diamonds",
-                    "solo_pure_clubs",
-                    "solo_pure_spades",
-                    "solo_pure_hearts",
-                    "solo_pure_diamonds",
-                    "solo_fleshless",
-                    "solo_null",
-                    "solo_boneless"
-                ],
                 "dk.pigs": "two_reservation",
                 "dk.superpigs": "reservation",
-                # "dk.throw": "throw",
-                # "dk.throw_cases": [
-                   # "5_9",
-                   # "5_k",
-                   # "4_9+4_k",
-                   # "9_all_c",
-                   # "k_all_c",
-                   # "7full",
-                   # "t<hj",
-                   # "t<dj"
-                # ],
                 "dk.poverty": "sell",
                 "dk.poverty_consequence": "black_sow",
             }

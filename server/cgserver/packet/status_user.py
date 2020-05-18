@@ -50,7 +50,7 @@ class StatusUserPacket(CGPacket):
             else:
                 if "username" in msg:
                     if msg["username"] in self.cg.server.users:
-                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.username_not_available")
+                        self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.username_not_available")
                         return
                     else:
                         del self.cg.server.users[u.username]
@@ -64,7 +64,7 @@ class StatusUserPacket(CGPacket):
 
                 if "pwd" in msg:
                     if msg["pwd"][0] != u.pwd:
-                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.wrong_pwd")
+                        self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.wrong_pwd")
                         return
                     else:
                         u.pwd = msg["pwd"][1]
@@ -76,10 +76,10 @@ class StatusUserPacket(CGPacket):
 
                 if "profile_img" in msg:
                     if msg["profile_img"] == "":
-                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.empty_img")
+                        self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.empty_img")
                         return
                     if len(msg["profile_img"]) > 64:
-                        self.cg.server.send_status_message(u, "warn", "cg:message.status.user.img_name_long")
+                        self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.img_name_long")
                         return
                     u.profile_img = msg["profile_img"]
                     self.cg.server.save_server_data()

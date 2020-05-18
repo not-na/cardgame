@@ -9,12 +9,34 @@ window.caption=Card Game
 
 game.doppelkopf=Doppelkopf
 
+msg.status.user.username_not_available=Benutzername nicht verfügbar!
+msg.status.user.wrong_pwd=Falsches Passwort!
+msg.status.user.empty_img=Ungültiger Profilbildname!
+msg.status.user.img_name_long=Profilbildname zu lang!
+
+msg.lobby.invite.lobby_full=Die Lobby ist bereits voll!
 msg.lobby.invite.user_does_not_exist=Der Benutzer {username} existiert nicht!
 msg.lobby.invite.user_not_online=Der Benutzer {username} ist nicht online!
 msg.lobby.invite.user_in_lobby=Der Benutzer {username} ist bereits in einer Lobby!
 msg.lobby.invite.user_in_dk_game=Der Benutzer {username} spielt gerade Doppelkopf!
 msg.lobby.invite.user_cur_not_available=Der Benutzer {username} ist derzeit nicht verfügbar (Status: {state})
 msg.lobby.invite.user_invited=Der Benutzer {username} wurde eingeladen!
+
+msg.lobby.invite.accept.lobby_not_exists=Diese Lobby existiert nicht!
+msg.lobby.invite.accept.invalid_inviter=Diese Einladung stammt von einem unbefugten Benutzer!
+msg.lobby.invite.accept.not_invited=Du wurdest nie in diese Lobby eingeladen!
+msg.lobby.invite.accept.lobby_started_game=Die Lobby hat bereits ein Spiel angefangen!
+msg.lobby.invite.accept.lobby_full=Die Lobby ist bereits voll!
+msg.lobby.invite.decline=Der Benutzer {username} hat deine Einladung abgelehnt!
+
+msg.lobby.kick.user_not_exist=Der Benutzer mit der UUID {uuid} existiert nicht!
+msg.lobby.kick.user_not_in_lobby=Der Benutzer {username} ist nicht in dieser Lobby!
+msg.lobby.kick.lobby_started=Das Spiel wurde bereits gestartet!
+msg.lobby.kick.no_reason=Du wurdest aus der Lobby gekickt!
+msg.lobby.kick.reason=Du wurdest aus der Lobby gekickt!\nGrund: {reason}
+msg.lobby.kick.success=Der Benutzer {username} wurde erfolgreich aus der Lobby gekickt!
+
+gui.menu.status_msg.okbtn.label=Ok
 
 gui.menu.load.progress.loading=Laden...
 
