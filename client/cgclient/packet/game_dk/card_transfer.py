@@ -96,7 +96,9 @@ class CardTransferPacket(CGPacket):
 
             # Regardless of where the card was, whatever caused it to be selected is likely not valid anymore
             card.selected = False
-            # TODO: check if we need to re-compute card.hovered
+            card.hovered = False
+            card.dragged = False
+            card.clicked = False
 
             card.slot = msg["to_slot"]
             card.start_anim(from_slot, msg["to_slot"])

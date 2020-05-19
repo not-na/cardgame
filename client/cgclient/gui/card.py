@@ -305,8 +305,19 @@ class Card(object):
                     [0, 180, 0],
                 ]
         elif slot == "poverty":
-            # TODO: implement properly
-            return [-.5, index*0.05, 0], [0, 180, 0]
+            self.cg.info(f"Poverty pos: {self.game.poverty_pos}")
+            if self.game.poverty_pos == "self":
+                pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 4)
+                return pos, [0, 180, r]
+            elif self.game.poverty_pos == "left":
+                pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 4)
+                return pos, [0, 180, r]
+            elif self.game.poverty_pos == "right":
+                pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 4)
+                return pos, [0, 180, r]
+            elif self.game.poverty_pos == "top":
+                pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 4)
+                return pos, [0, 180, r]
         elif slot == "player_self":
             pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 3)
             return pos, [0, 180, r]
@@ -459,5 +470,3 @@ class Card(object):
         self.vlist_back.delete()
         self.vlist_front.delete()
         self.vlist_pick.delete()
-
-

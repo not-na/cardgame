@@ -22,6 +22,7 @@
 #
 from cg.constants import STATE_GAME_DK
 from cg.packet import CGPacket
+from cg.util import uuidify
 
 
 class AnnouncePacket(CGPacket):
@@ -37,3 +38,14 @@ class AnnouncePacket(CGPacket):
 
     def receive(self, msg, cid=None):
         self.cg.info(f"Announce: {msg}")
+
+        if msg["type"] in ["poverty_decline", "poverty_yes"]:
+            # Set the poverty slot to be in front of the next player
+
+            cidx = self.cg.client.game.player_list.index(uuidify(msg["announcer"]))
+            nname = self.cg.client.gui.ingame.game_layer.hand_to_player[(cidx+1) % 4]
+
+            self.cg.client.game.poverty_pos = nname
+
+            for c in self.cg.client.game.slots["poverty"]:
+                c.start_anim("poverty", "poverty")

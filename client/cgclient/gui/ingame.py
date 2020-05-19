@@ -67,14 +67,14 @@ class IngameMenu(peng3d.gui.Menu):
         self.d_status_message = self.status_layer.d_status_message
 
     def register_event_handlers(self):
-        self.cg.add_event_listener("cg:status.message.open", self.status_message_open)
-        self.cg.add_event_listener("cg:status.message.close", self.status_message_close)
+        self.cg.add_event_listener("cg:status.message.open", self.handler_status_message_open)
+        self.cg.add_event_listener("cg:status.message.close", self.handler_status_message_close)
 
-    def status_message_open(self, event: str, data: dict):
+    def handler_status_message_open(self, event: str, data: dict):
         self.status_layer.enabled = True
         self.d_status_message.label_main = self.peng.tl(data["message"], data["data"])
 
-    def status_message_close(self, event: str, data: dict):
+    def handler_status_message_close(self, event: str, data: dict):
         self.status_layer.enabled = False
 
 
@@ -788,8 +788,8 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
 class GUILayer(peng3d.gui.GUILayer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.font = "Times New Roman",
-        self.font_size = 25,
+        self.font = "Times New Roman"
+        self.font_size = 25
         self.font_color = [255, 255, 255, 100]
 
         self.setBackground([255, 0, 255, 0])
