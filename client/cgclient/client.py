@@ -20,6 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import threading
 import time
 import uuid
 from typing import Dict, Optional, Type, List
@@ -95,7 +96,8 @@ class Client(object):
         self.lobby: Optional[cgclient.lobby.Lobby] = None
         self.lobby_invitation: List[uuid.UUID] = []  # (inviter, lobby_id)
 
-        # TODO: implement async ping
+        self._pingcount = 1
+        self._pinglock = threading.Lock()
 
         self.register_event_handlers()
 
@@ -110,7 +112,8 @@ class Client(object):
     def connect_to(self, addr, ref=None):
         self.cg.info(f"Connecting to server {addr}")
 
-        self.server = peng3dnet.util.normalize_addr_socketstyle(addr, self.cg.get_config_option("cg:network.default_port"))
+        self.server = peng3dnet.util.normalize_addr_socketstyle(addr,
+                                                                self.cg.get_config_option("cg:network.default_port"))
         self.cg.debug(f"Normalized address {self.server[0]}:{self.server[1]}")
         # TODO: save the last server we connected to
 
@@ -167,6 +170,71 @@ class Client(object):
             })
             return user
 
+    def ping_server(self, server, ref=None):
+        # Synchronous, see async_ping_server() for async variant
+        self.cg.info(f"Starting ping to server '{server}'")
+
+        server_addr = peng3dnet.util.normalize_addr_socketstyle(server, self.cg.get_config_option("cg:network.default_port"))
+        try:
+            # Request handled synchronously
+            rdata = peng3dnet.ext.ping.pingServer(
+                self.gui.peng,
+                server_addr,
+                data={"user": ""},  # TODO: send UUID to server
+            )
+
+            # Sanitize data
+            ndata = {
+                "name": rdata.get("name", "A CardGame Server"),
+                "visiblename": rdata.get("visiblename", ""),
+                "slogan": rdata.get("slogan", "A CG Server"),
+                "maxplayers": int(rdata.get("maxplayers", 10)),
+                "canonical_address": rdata.get("canonical_address", server_addr),
+                "playercount": int(rdata.get("playercount", len(rdata.get("playerlist", [])))),
+                "playerlist": rdata.get("playerlist", []),
+                "canlogon": bool(rdata.get("canlogon", True)),
+                "version": int(rdata.get("version", -1)),
+                "timestamp": float(rdata.get("timestamp", -1)),
+            }
+
+            rdata.update(ndata)
+            data = rdata
+
+        except Exception:
+            self.cg.exception(f"Exception during server ping of '{server}'")
+            data = {
+                "name": "A CardGame Server",
+                "visiblename": "",
+                "slogan": "A CG Server",
+                "maxplayers": 10,
+                "canonical_address": server_addr,
+                "playercount": 0,
+                "playerlist": [],
+                "canlogon": False,
+                "version": -1,
+                "delay": -1,
+                "timestamp": -1,
+            }
+
+            self.cg.send_event("cg:client.ping.error", {"server": server, "data": data, "ref": ref})
+        else:
+            self.cg.send_event("cg:client.ping.complete", {"server": server, "data": data, "ref": ref})
+            self.cg.debug(f"Raw Ping Response from server: {data}")
+            self.cg.info(
+                f"Ping to '{server}' finished, {data['delay'] * 1000:.2f}ms latency with name '{data['name']}'")
+
+        return data
+
+    def async_ping_server(self, *args, **kwargs):
+        # asynchronously, notifies via events only
+        with self._pinglock:
+            t = threading.Thread(name=f"Ping Thread #{self._pingcount}", target=self.ping_server, args=args,
+                                 kwargs=kwargs)
+            self._pingcount += 1
+
+            t.daemon = True
+            t.start()
+
     # Event Handlers
 
     def register_event_handlers(self):
@@ -176,7 +244,7 @@ class Client(object):
         self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
 
     def handler_connestablish(self, event: str, data: dict):
-        self.cg.info(f"Connection established after {(time.time()-data['peer'].start_time)*1000:.2f}ms!")
+        self.cg.info(f"Connection established after {(time.time() - data['peer'].start_time) * 1000:.2f}ms!")
 
     def handler_dopacketregister(self, event: str, data: dict):
         cgclient.packet.register_default_packets(data["reg"], data["peer"], self.cg, data["registrar"])

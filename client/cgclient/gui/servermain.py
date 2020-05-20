@@ -1523,6 +1523,8 @@ class _FakeUser:
 
 
 class PlayerButton(peng3d.gui.LayeredWidget):
+    submenu: LobbySubMenu
+
     def __init__(self, name, submenu, window, peng, pos, size,
                  player):
         super().__init__(name, submenu, window, peng, pos, size)
@@ -1535,14 +1537,15 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             z_index=1,
             imgs={
                 "idle": ("cg:img.bg.transparent", "gui"),
-                "hover": ("cg:img.bg.gray_brown", "gui")
+                "hover": ("cg:img.bg.gray_brown", "gui"),
+                "press": ("cg:img.bg.dark_gray_brown", "gui")
             }
         )
         self.bg_layer.switchImage("idle")
         self.addLayer(self.bg_layer)
 
         def f():
-            if self._player is not None:
+            if self._player is not None and not self.submenu.c_invite.visible:
                 self.bg_layer.switchImage("hover")
 
         self.addAction("hover_start", f)
@@ -1551,6 +1554,16 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             self.bg_layer.switchImage("idle")
 
         self.addAction("hover_end", f)
+
+        def f():
+            self.bg_layer.switchImage("press")
+
+        self.addAction("press", f)
+
+        def f():
+            self.bg_layer.switchImage("hover")
+
+        self.addAction("click", f)
 
         # TODO Add user icon
 
@@ -1570,7 +1583,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
 
     @property
     def clickable(self):
-        return super().clickable and self.player.username != ""
+        return super().clickable and self._player is not None and not self.submenu.c_invite.visible
 
     @property
     def player(self):

@@ -43,7 +43,7 @@ of the command.
 Privileges
 ----------
 
-It requires either a privilege level of ``100`` or the permission :roum:permission:`roum:command.help`
+It requires either a privilege level of ``100`` or the permission :cg:permission:`cg:command.help`
 and can be run by any user at any time. The results will only be displayed to the calling user.
 
 Examples

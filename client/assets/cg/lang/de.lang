@@ -45,6 +45,25 @@ gui.menu.serverselect.title.settingsbtn.label=Einstellungen
 
 gui.menu.serverselect.serverselect.okbtn.label=Verbinden
 
+gui.menu.serverselect.serverselect.connectbtn.label=Verbinden
+gui.menu.serverselect.serverselect.addbtn.label=Server hinzufügen
+gui.menu.serverselect.serverselect.editbtn.label=Server bearbeiten
+gui.menu.serverselect.serverselect.deletebtn.label=Server löschen
+gui.menu.serverselect.serverselect.refreshbtn.label=Neuladen
+gui.menu.serverselect.serverselect.cancelbtn.label=Abbrechen
+
+gui.menu.serverselect.serverselect.add.heading=Server hinzufügen
+gui.menu.serverselect.serverselect.add.addr.default=Adresse eingeben
+gui.menu.serverselect.serverselect.add.name.default=Servername eingeben
+gui.menu.serverselect.serverselect.add.okbtn.label=Fertig
+gui.menu.serverselect.serverselect.add.cancelbtn.label=Abbrechen
+
+gui.menu.serverselect.serverselect.edit.heading=Server bearbeiten
+gui.menu.serverselect.serverselect.edit.addr.default=Adresse eingeben
+gui.menu.serverselect.serverselect.edit.name.default=Servername eingeben
+gui.menu.serverselect.serverselect.edit.okbtn.label=Fertig
+gui.menu.serverselect.serverselect.edit.cancelbtn.label=Abbrechen
+
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
 gui.menu.smain.load.login=Anmelden...

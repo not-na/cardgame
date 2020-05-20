@@ -104,8 +104,8 @@ class ConfigManager(object):
         spaths = [
             # No F-Strings used here, since the placeholders are replaced multiple times
             os.path.join(self.cg.get_instance_path(), "config", "{domain}", "{fname}.yaml"),
-            # os.path.join(self.roum.get_instance_path(), "plugins", "{plugin}", "config", "{fname}.yaml"),
-            # os.path.join(self.roum.get_instance_path(), "plugins", "{plugin}", "{fname}.yaml"),
+            # os.path.join(self.cg.get_instance_path(), "plugins", "{plugin}", "config", "{fname}.yaml"),
+            # os.path.join(self.cg.get_instance_path(), "plugins", "{plugin}", "{fname}.yaml"),
         ]
 
         domain, f = key.split(":")

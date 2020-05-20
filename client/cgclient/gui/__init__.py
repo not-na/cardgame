@@ -102,6 +102,7 @@ class PengGUI(object):
         self.peng.resourceMgr.addCategory("icn")    # Game icons for play menu
         self.peng.resourceMgr.addCategory("card")   # Cards
         self.peng.resourceMgr.addCategory("profile")  # Profile images
+        self.peng.resourceMgr.addCategory("server")
 
         self.peng.resourceMgr.categoriesSettings["icn"]["minfilter"] = GL_LINEAR_MIPMAP_LINEAR
         self.peng.resourceMgr.categoriesSettings["icn"]["magfilter"] = GL_LINEAR

@@ -1,12 +1,10 @@
 name: server
-visiblename: CG Server
+visiblename: None
 is_public: false
 maxplayers: 20
 address: localhost
 port: 11225
-slogan: |
-  A CG Server
-  Default Slogan
+slogan: A CG Server
 default_privilege_level: 100
 default_permissions:
   - cg:chat.lobby.write

@@ -49,8 +49,9 @@ class CGServer(peng3dnet.ext.ping.PingableServerMixin, peng3dnet.net.Server):
         return {
             "name": self.cg.get_config_option("cg:server.name"),
             "visiblename": self.cg.get_config_option("cg:server.visiblename"),
+            "slogan": self.cg.get_config_option("cg:server.slogan"),
             "maxplayers": self.cg.get_config_option("cg:server.maxplayers"),
-            "canonical_address": socket.getfqdn(),
+            #"canonical_address": socket.getfqdn(),
             "playercount": 0,  # TODO: implement player count
             "playerlist": [],  # TODO: implement player list
             "canlogon": True,  # TODO: implement properly

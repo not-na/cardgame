@@ -75,7 +75,7 @@ class StatusUserPacket(CGPacket):
                         }, u.cid)
 
                 if "profile_img" in msg:
-                    if msg["profile_img"] == "":
+                    if msg["profile_img"].strip() == "":
                         self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.empty_img")
                         return
                     if len(msg["profile_img"]) > 64:

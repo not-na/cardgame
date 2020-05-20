@@ -62,7 +62,7 @@ class KickPacket(CGPacket):
         else:
             lobby.remove_player(user.uuid)
 
-            if msg["reason"] == "":
+            if msg["reason"].strip() == "":
                 self.cg.server.send_status_message(user, "notice", "cg:msg.lobby.kick.no_reason")
             else:
                 self.cg.server.send_status_message(user, "notice", "cg:msg.lobby.kick.reason", data={
