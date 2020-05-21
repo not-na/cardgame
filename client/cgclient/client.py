@@ -56,6 +56,11 @@ class CGClient(peng3dnet.net.Client):
 
         self.conntype = peng3dnet.CONNTYPE_CLASSIC
 
+        self.cg.send_event("cg:network.client.conn_establish", {
+            "ref": self.cg.client.server_ref,
+            "peer": self,
+        })
+
     def on_close(self, reason=None):
         super().on_close(reason)
 
@@ -96,6 +101,8 @@ class Client(object):
         self.lobby: Optional[cgclient.lobby.Lobby] = None
         self.lobby_invitation: List[uuid.UUID] = []  # (inviter, lobby_id)
 
+        self.server_ref: Optional[str] = None
+
         self._pingcount = 1
         self._pinglock = threading.Lock()
 
@@ -115,7 +122,7 @@ class Client(object):
         self.server = peng3dnet.util.normalize_addr_socketstyle(addr,
                                                                 self.cg.get_config_option("cg:network.default_port"))
         self.cg.debug(f"Normalized address {self.server[0]}:{self.server[1]}")
-        # TODO: save the last server we connected to
+        self.server_ref = ref
 
         self._client = CGClient(self.cg, self, self.gui.peng, self.server)
 

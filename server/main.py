@@ -48,7 +48,6 @@ class CardgameApp(cli.Application):
         print("Server starting...")
         sys.stdout.flush()
 
-        # TODO...
         print(f"--address={self.addr}")
         c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
 

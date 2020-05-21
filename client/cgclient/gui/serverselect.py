@@ -377,7 +377,7 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
                 self.peng.cg.client.async_ping_server(data["address"], data["uuid"])
                 self.peng.cg.debug(f"Added Server with UUID {btn.uuid} to server list")
                 return
-        self.peng.cg.ward("Didn't find the serverbutton, that should be updated!")
+        self.peng.cg.warn("Didn't find the serverbutton, that should be updated!")
 
     def save_server_list(self):
         with self.server_lock:

@@ -319,8 +319,6 @@ class DedicatedServer(object):
         self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
 
     def handler_commandstop(self, event: str, data: Dict):
-        # TODO: implement server stop
-
         # Ensure that the server console loop exits if a stop command is issued via the network
         self.run_console = False
         # TODO: actually interrupt the console loop
