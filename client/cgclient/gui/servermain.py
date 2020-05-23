@@ -342,6 +342,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         )
         )
         self.sidebar.bg.vlist_layer = -1
+        self.sidebar.clickable = False
         self.addWidget(self.sidebar)
 
         # Screen Edge
@@ -357,6 +358,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
             scale=(.3, .3),
         )
         )
+        self.screen_edge.clickable = False
         self.addWidget(self.screen_edge)
 
         def f1(button):
@@ -618,6 +620,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_upper_bar.clickable = False
         self.addWidget(self.w_upper_bar)
 
         # Lower Bar
@@ -631,6 +634,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_lower_bar.clickable = False
         self.addWidget(self.w_lower_bar)
 
         # Game Label
@@ -641,6 +645,7 @@ class LobbySubMenu(peng3d.gui.SubMenu):
                                            label=self.peng.tl("None"),  # This will be changed later
                                            font_size=40,
                                            )
+        self.game_label.clickable = False
         self.addWidget(self.game_label)
 
         # Invite Player Button
@@ -787,6 +792,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_upper_bar.clickable = False
         self.addWidget(self.w_upper_bar)
 
         # Lower Bar
@@ -800,6 +806,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_lower_bar.clickable = False
         self.addWidget(self.w_lower_bar)
 
         # Gamerules Heading
@@ -810,6 +817,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
                                         label=self.peng.tl("None"),  # This will be changed later
                                         font_size=40,
                                         )
+        self.heading.clickable = False
         self.addWidget(self.heading)
 
         # Back Button
@@ -936,6 +944,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_upper_bar.clickable = False
         self.addWidget(self.w_upper_bar)
 
         # Lower Bar
@@ -949,6 +958,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3)
         ))
+        self.w_lower_bar.clickable = False
         self.addWidget(self.w_lower_bar)
 
         # Gamerules Heading
@@ -959,6 +969,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
                                         label=self.peng.tl("cg:gui.menu.smain.template.heading"),
                                         font_size=40,
                                         )
+        self.heading.clickable = False
         self.addWidget(self.heading)
 
         # Back Button
@@ -1104,6 +1115,7 @@ class PlayContainer(peng3d.gui.Container):
         )
         )
         self.bg_widget.bg.vlist_layer = -1
+        self.bg_widget.clickable = False
         self.addWidget(self.bg_widget)
 
         self.playbtns = {}
@@ -1143,6 +1155,7 @@ class ProfileContainer(peng3d.gui.Container):
         )
         )
         self.bg_widget.bg.vlist_layer = -1
+        self.bg_widget.clickable = False
         self.addWidget(self.bg_widget)
 
         # Change username button
@@ -1691,6 +1704,7 @@ class InviteDialog(peng3d.gui.Container):
         )
         )
         self.bg_widget.bg.vlist_layer = 10
+        self.bg_widget.clickable = False
         self.addWidget(self.bg_widget)
 
         # Heading
@@ -1701,6 +1715,7 @@ class InviteDialog(peng3d.gui.Container):
             font_size=25,
             label_layer=11,
         )
+        self.invite_heading.clickable = False
         self.addWidget(self.invite_heading)
 
         # Input field for username
@@ -1771,6 +1786,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
         )
         )
         self.bg_widget.bg.vlist_layer = 10
+        self.bg_widget.clickable = False
         self.addWidget(self.bg_widget)
 
         # Heading
@@ -1781,6 +1797,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
             font_size=25,
             label_layer=11,
         )
+        self.save_heading.clickable = False
         self.addWidget(self.save_heading)
 
         # Input field for username
@@ -1913,6 +1930,7 @@ class RuleButton(peng3d.gui.Container):
             scale=(.3, .3)
         ))
         self.disabled_background.bg.vlist_layer = -1
+        self.disabled_background.clickable = False
         self.addWidget(self.disabled_background)
         self.disabled_background.visible = False
 
@@ -1924,6 +1942,7 @@ class RuleButton(peng3d.gui.Container):
             font_size=30,
             multiline=True
         )
+        self.gamerule_label.clickable = False
         self.addWidget(self.gamerule_label)
 
         # Game rule description
@@ -1934,6 +1953,7 @@ class RuleButton(peng3d.gui.Container):
             font_size=20,
             multiline=True
         )
+        self.description_label.clickable = False
         self.addWidget(self.description_label)
 
     def set_rule(self, data):
@@ -1998,6 +2018,7 @@ class BoolRuleButton(RuleButton):
             font_size=16,
             anchor_y="baseline",
         )
+        self.yeslbl.clickable = False
         self.addWidget(self.yeslbl)
 
         # No Button
@@ -2043,6 +2064,7 @@ class BoolRuleButton(RuleButton):
             font_size=16,
             anchor_y="baseline",
         )
+        self.nolbl.clickable = False
         self.addWidget(self.nolbl)
 
     def set_rule(self, data):
@@ -2133,6 +2155,7 @@ class SelectRuleButton(RuleButton):
                 font_size=16,
                 anchor_y="baseline",
             )
+            lbl.clickable = False
             self.addWidget(lbl)
 
             self.labels[option] = lbl
@@ -2210,6 +2233,7 @@ class ActivetRuleButton(RuleButton):
                 font_size=16,
                 anchor_y="baseline",
             )
+            lbl.clickable = False
             self.addWidget(lbl)
 
             self.labels[option] = lbl

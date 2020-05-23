@@ -39,6 +39,7 @@ class RoundChangePacket(CGPacket):
         "winner",
         "eyes",
         "extras",
+        "game_summary",
     ]
     side = SIDE_CLIENT
 
@@ -101,6 +102,16 @@ class RoundChangePacket(CGPacket):
         if "phase" in msg:
             self.cg.info(f"Now in round phase {msg['phase']}")
             if msg["phase"] == "loading":
+                self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.label = self.cg.client.gui.peng.tl(
+                    "cg:gui.menu.ingame.scoreboard.continuebtn.label")
+                self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.pressed = False
+                self.cg.client.game.player_decisions = {
+                    "continue": set(),
+                    "adjourn": set(),
+                    "cancel": set(),
+                    "end": set()
+                }
+
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
             elif msg["phase"] == "dealing":
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("ingame")
@@ -111,6 +122,17 @@ class RoundChangePacket(CGPacket):
             elif msg["phase"] == "counting":
                 pass
             elif msg["phase"] == "end":
+                if not ("game_type" in msg and "winner" in msg and "eyes" in msg and "modifiers" in msg
+                        and "extras" in msg and "round" in msg):
+                    self.cg.warn("Missing parameters in cg:game.dk.change packet with phase 'end'")
+                    return
                 self.cg.client.gui.ingame.game_layer.clean_up()
+
+                self.cg.client.game.scoreboard_data["winner"] = msg["winner"]
+                self.cg.client.game.scoreboard_data["game_type"] = msg["game_type"]
+                self.cg.client.game.scoreboard_data["eyes"] = msg["eyes"]
+                self.cg.client.game.scoreboard_data["game_summary"] = msg["game_summary"]
+
+                self.cg.client.game.round_num = msg["round"]
             else:
                 self.cg.crash(f"Invalid round phase {msg['phase']}")

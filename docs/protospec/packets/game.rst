@@ -11,6 +11,7 @@ Packets
    :maxdepth: 1
 
    packet_game_start
+   packet_game_end
 
    game_dk/packet_game_dk_question
    game_dk/packet_game_dk_announce

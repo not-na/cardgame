@@ -37,7 +37,114 @@ class AnnouncePacket(CGPacket):
     ]
 
     def receive(self, msg, cid=None):
+        if self.cg.client.game is None:
+            self.cg.error("Received announce packet although not being in a game!")
+            return
         self.cg.info(f"Announce: {msg}")
+
+        if msg["type"] == "continue_yes":
+            self.cg.client.game.player_decisions["continue"].add(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.continuebtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["continue"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.continuebtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["continue"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "continue_no":
+            self.cg.client.game.player_decisions["continue"].discard(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.continuebtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["continue"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.continuebtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["continue"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "adjourn_yes":
+            self.cg.client.game.player_decisions["adjourn"].add(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.adjournbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["adjourn"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.adjournbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["adjourn"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.adjournbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "adjourn_no":
+            self.cg.client.game.player_decisions["adjourn"].discard(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.adjournbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["adjourn"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.adjournbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["adjourn"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.adjournbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "quit_yes":
+            self.cg.client.game.player_decisions["quit"].add(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.quitbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["quit"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.quitbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["quit"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "quit_no":
+            self.cg.client.game.player_decisions["quit"].discard(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.quitbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["quit"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.quitbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["quit"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "cancel_yes":
+            self.cg.client.game.player_decisions["cancel"].add(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.cancelbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["cancel"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.cancelbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["cancel"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.cancelbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
+
+        elif msg["type"] == "cancel_no":
+            self.cg.client.game.player_decisions["cancel"].discard(msg["announcer"])
+
+            label = "cg:gui.menu.ingame.scoreboard.cancelbtn.label"
+            data = {}
+            if len(self.cg.client.game.player_decisions["cancel"]) > 0:
+                label = "cg:gui.menu.ingame.scoreboard.cancelbtn.label2"
+                data = {"amount": len(self.cg.client.game.player_decisions["cancel"])}
+
+            self.cg.client.gui.ingame.gui_layer.s_scoreboard.cancelbtn.label = self.cg.client.gui.peng.tl(
+                label, data
+            )
 
         if msg["type"] in ["poverty_decline", "poverty_yes"]:
             # Set the poverty slot to be in front of the next player

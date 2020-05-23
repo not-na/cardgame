@@ -9,6 +9,76 @@ window.caption=Card Game
 
 game.doppelkopf=Doppelkopf
 
+game.doppelkopf.game_type.None=Spieltyp NONE
+game.doppelkopf.game_type.normal=Normales Spiel
+game.doppelkopf.game_type.silent_wedding=Stille Hochzeit
+
+game.doppelkopf.extra.re_win=Re gewinnt
+game.doppelkopf.extra.kontra_win=Kontra gewinnt
+game.doppelkopf.extra.no_win=Keiner gewinnt
+
+game.doppelkopf.extra.re=+ Re
+game.doppelkopf.extra.kontra=+ Kontra
+game.doppelkopf.extra.no90=+ Unter 90 gespielt
+game.doppelkopf.extra.no60=+ Unter 60 gespielt
+game.doppelkopf.extra.no30=+ Unter 30 gespielt
+game.doppelkopf.extra.black=+ Schwarz gespielt
+game.doppelkopf.extra.c_no90=+ Unter 90 angesagt
+game.doppelkopf.extra.c_no60=+ Unter 60 angesagt
+game.doppelkopf.extra.c_no30=+ Unter 30 angesagt
+game.doppelkopf.extra.c_black=+ Schwarz angesagt
+game.doppelkopf.extra.fc_no90=+ Unter 90 nicht erreicht
+game.doppelkopf.extra.fc_no60=+ Unter 60 nicht erreicht
+game.doppelkopf.extra.fc_no30=+ Unter 30 nicht erreicht
+game.doppelkopf.extra.fc_black=+ Schwarz nicht erreicht
+
+game.doppelkopf.extra.240vs_no90+ =240 gegen unter 90 erreicht
+game.doppelkopf.extra.240vs_no60+ =240 gegen unter 60 erreicht
+game.doppelkopf.extra.240vs_no30+ =240 gegen unter 30 erreicht
+game.doppelkopf.extra.240vs_black=+ 240 gegen schwarz erreicht
+game.doppelkopf.extra.210vs_no90=+ 210 gegen unter 90 erreicht
+game.doppelkopf.extra.210vs_no60=+ 210 gegen unter 60 erreicht
+game.doppelkopf.extra.210vs_no30=+ 210 gegen unter 30 erreicht
+game.doppelkopf.extra.210vs_black=+ 210 gegen schwarz erreicht
+game.doppelkopf.extra.180vs_no90=+ 180 gegen unter 90 erreicht
+game.doppelkopf.extra.180vs_no60=+ 180 gegen unter 60 erreicht
+game.doppelkopf.extra.180vs_no30=+ 180 gegen unter 30 erreicht
+game.doppelkopf.extra.180vs_black=+ 180 gegen schwarz erreicht
+game.doppelkopf.extra.150vs_no90=+ 150 gegen unter 90 erreicht
+game.doppelkopf.extra.150vs_no60=+ 150 gegen unter 60 erreicht
+game.doppelkopf.extra.150vs_no30=+ 150 gegen unter 30 erreicht
+game.doppelkopf.extra.150vs_black=+ 150 gegen schwarz erreicht
+game.doppelkopf.extra.120vs_no90=+ 120 gegen unter 90 erreicht
+game.doppelkopf.extra.120vs_no60=+ 120 gegen unter 60 erreicht
+game.doppelkopf.extra.120vs_no30=+ 120 gegen unter 30 erreicht
+game.doppelkopf.extra.120vs_black=+ 120 gegen schwarz erreicht
+game.doppelkopf.extra.90vs_no60=+ 90 gegen unter 60 erreicht
+game.doppelkopf.extra.90vs_no30=+ 90 gegen unter 30 erreicht
+game.doppelkopf.extra.90vs_black=+ 90 gegen schwarz erreicht
+game.doppelkopf.extra.60vs_no30=+ 60 gegen unter 30 erreicht
+game.doppelkopf.extra.60vs_black=+ 60 gegen schwarz erreicht
+game.doppelkopf.extra.30vs_black=+ 30 gegen schwarz erreicht
+
+game.doppelkopf.extra.p_against_cqs=+ Gegen die Alten
+game.doppelkopf.extra.p_fox=+ Fuchs
+game.doppelkopf.extra.p_doppelkopf=+ Doppelkopf
+game.doppelkopf.extra.p_charlie=+ Karlchen Müller
+game.doppelkopf.extra.p_fox_lasttrick=+ Letzten Stich mit Fuchs
+game.doppelkopf.extra.p_jane=+ Lieschen Müller
+game.doppelkopf.extra.p_charlie_broken=+ Karlchen Kaputt
+game.doppelkopf.extra.p_heart_trick=+ Herz geht rum
+game.doppelkopf.extra.p_sec_black_trick=+ Zweiter schwarzer Stich
+game.doppelkopf.extra.p_hobgoblin=+ Klabautermann
+game.doppelkopf.extra.n_fox=- Fuchs
+game.doppelkopf.extra.n_doppelkopf=- Doppelkopf
+game.doppelkopf.extra.n_charlie=- Karlchen Müller
+game.doppelkopf.extra.n_fox_lasttrick=- Letzten Stich mit Fuchs
+game.doppelkopf.extra.n_jane=- Lieschen Müller
+game.doppelkopf.extra.n_charlie_broken=- Karlchen Kaputt
+game.doppelkopf.extra.n_heart_trick=- Herz geht rum
+game.doppelkopf.extra.n_sec_black_trick=- Zweiter schwarzer Stich
+game.doppelkopf.extra.n_hobgoblin=- Klabautermann
+
 msg.status.user.username_not_available=Benutzername nicht verfügbar!
 msg.status.user.wrong_pwd=Falsches Passwort!
 msg.status.user.empty_img=Ungültiger Profilbildname!
@@ -35,6 +105,8 @@ msg.lobby.kick.lobby_started=Das Spiel wurde bereits gestartet!
 msg.lobby.kick.no_reason=Du wurdest aus der Lobby gekickt!
 msg.lobby.kick.reason=Du wurdest aus der Lobby gekickt!\nGrund: {reason}
 msg.lobby.kick.success=Der Benutzer {username} wurde erfolgreich aus der Lobby gekickt!
+
+msg.game.cancel=Das Spiel wurde abgebrochen!
 
 gui.menu.status_msg.okbtn.label=Ok
 
@@ -156,6 +228,18 @@ gui.menu.smain.template.heading=Vorlagen
 gui.menu.smain.template.backbtn.label=Zurück
 gui.menu.smain.template.loadtmplbtn.label=Vorlage laden
 gui.menu.smain.template.deletebtn.label=Vorlage löschen
+
+gui.menu.ingame.scoreboard.heading=Runde {round}
+gui.menu.ingame.scoreboard.continuebtn.label=Weiterspielen
+gui.menu.ingame.scoreboard.continuebtn.label2=Weiterspielen ({amount})
+gui.menu.ingame.scoreboard.adjournbtn.label=Spiel vertagen
+gui.menu.ingame.scoreboard.adjournbtn.label2=Spiel vertagen ({amount})
+gui.menu.ingame.scoreboard.quitbtn.label=Spiel verlassen
+gui.menu.ingame.scoreboard.quitbtn.label2=Spiel verlassen ({amount})
+gui.menu.ingame.scoreboard.quitbtn.label3=Spiel verlassen (noch {rounds} Runden)
+gui.menu.ingame.scoreboard.cancelbtn.label=Spiel abbrechen
+gui.menu.ingame.scoreboard.cancelbtn.label2=Spiel abbrechen ({amount})
+
 
 gui.menu.settings.exitbtn.label=Zurück
 

@@ -46,7 +46,7 @@ class DevCommand(cgserver.command.Command):
             return
         if args[1] == "q":
             self.cg.send_event("cg:game.dk.command", {
-                "packet": "reservation",
+                "packet": "q",
                 "player": "all",
                 "type": "reservation_no"
             })

@@ -20,10 +20,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import uuid
 from typing import List
 
 import cgclient
 
+from cg import CardGame
 from . import CGame
 
 
@@ -49,7 +51,29 @@ class DoppelkopfGame(CGame):
     table_index_shift = 0
     poverty_pos = "self"
 
+    def __init__(self, c: CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID]):
+        super().__init__(c, game_id, player_list)
+        self.round_num = 0
+
+        self.scoreboard_data = {
+            "receives": 0,
+            "winner": "None",
+            "game_type": "None",
+            "eyes": (0, 0),
+            "game_summary": [],
+            "point_change": [0, 0, 0, 0],
+            "points": [0, 0, 0, 0],
+        }
+
+        self.player_decisions = {
+            "continue": set(),
+            "adjourn": set(),
+            "cancel": set(),
+            "quit": set()
+        }
+
     def start(self):
         self.menu = self.cg.client.gui.ingame
 
         self.menu.game_layer.reinit()
+        self.menu.gui_layer.s_scoreboard.init_game(self.player_list)

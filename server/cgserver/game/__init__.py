@@ -86,6 +86,7 @@ class CGame(object, metaclass=abc.ABCMeta):
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]
 
         self.players: List[uuid.UUID] = self.lobby.users
+        self.fake_players = []
 
         self.register_event_handlers()
 
@@ -106,6 +107,19 @@ class CGame(object, metaclass=abc.ABCMeta):
         for rule in self.GAMERULES:
             if rule not in self.gamerules:
                 self.gamerules[rule] = self.GAMERULES[rule]["default"]
+
+    def cancel_game(self):
+        for p in self.players:
+            if self.DEV_MODE and p in self.fake_players:
+                continue
+
+            self.cg.server.users_uuid[p].game = None
+            self.cg.server.send_to_user(p, "cg:game.end", {
+                "next_state": "lobby"
+            })
+
+        self.delete()
+        del self.cg.server.games[self.game_id]
 
     @abc.abstractmethod
     def start(self):

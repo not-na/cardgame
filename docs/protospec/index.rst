@@ -52,6 +52,7 @@ Packets
    packets/party/packet_party_kick
 
    packets/packet_game_start
+   packets/packet_game_end
 
    packets/game_dk/packet_game_dk_question
    packets/game_dk/packet_game_dk_announce

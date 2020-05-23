@@ -803,6 +803,9 @@ class GUILayer(peng3d.gui.GUILayer):
         self.s_pause = PauseGUISubMenu("pause", self, self.window, self.peng)
         self.addSubMenu(self.s_pause)
 
+        self.s_scoreboard = ScoreboardGUISubMenu("scoreboard", self, self.window, self.peng)
+        self.addSubMenu(self.s_scoreboard)
+
         self.changeSubMenu("loadingscreen")
 
 
@@ -821,6 +824,377 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
 class PauseGUISubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
+
+
+class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.player_list = []
+
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [20, 8], [30, 30])
+
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+
+        # Upper Bar
+        self.w_upper_bar = peng3d.gui.Widget(
+            "upper_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 7], [20, 1], border=0),
+        )
+        self.w_upper_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_upper_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.w_upper_bar.clickable = False
+        self.addWidget(self.w_upper_bar)
+
+        # Lower Bar
+        self.w_lower_bar = peng3d.gui.Widget(
+            "lower_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [20, 1], border=0),
+        )
+        self.w_lower_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_lower_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.w_lower_bar.clickable = False
+        self.addWidget(self.w_lower_bar)
+
+        self.vertical_lines = []
+        for i in range(4):
+            line = peng3d.gui.ImageButton(
+                f"line{i}", self, self.window, self.peng,
+                pos=self.grid.get_cell([4 * (i+1), 1], [1, 6], border=0),
+                size=(lambda sw, sh: (3, sh * 3/4)),
+                bg_idle=("cg:img.bg.horizontal", "gui"),
+                label="",
+            )
+            line.clickable = False
+            self.addWidget(line)
+            self.vertical_lines.append(line)
+
+        self.w_upper_line = peng3d.gui.ImageButton(
+            "upper_line", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 6], [20, 1], border=0),
+            size=(lambda sw, sh: (sw, 3)),
+            bg_idle=("cg:img.bg.vertical", "gui"),
+            label="",
+        )
+        self.w_upper_line.clickable = False
+        self.addWidget(self.w_upper_line)
+
+        self.w_lower_line = peng3d.gui.ImageButton(
+            "lower_line", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 2], [20, 1], border=0),
+            size=(lambda sw, sh: (sw, 3)),
+            bg_idle=("cg:img.bg.vertical", "gui"),
+            label="",
+        )
+        self.w_lower_line.clickable = False
+        self.addWidget(self.w_lower_line)
+
+        def f1(button):
+            # Reset the previously pressed button
+            for btn in self.togglebuttons:
+                if btn != button and btn.pressed:
+                    btn.pressed = False
+                    btn.doAction("press_up")
+                    btn.redraw()
+
+        # Continue Button
+        self.continuebtn = peng3d.gui.ToggleButton(
+            "continuebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [5, 1]),
+            label=self.peng.tl("cg:gui.menu.ingame.scoreboard.continuebtn.label")
+        )
+        self.continuebtn.setBackground(cgclient.gui.CGButtonBG(self.continuebtn))
+        self.addWidget(self.continuebtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "continue_yes",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.continuebtn.addAction("press_down", f)
+        self.continuebtn.addAction("press_down", f1, self.continuebtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "continue_no",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+            print("SEND CONTINUE NO!")
+        self.continuebtn.addAction("press_up", f)
+
+        # Continue Later Button
+        self.adjournbtn = peng3d.gui.ToggleButton(
+            "adjournbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([5, 0], [5, 1]),
+            label=self.peng.tl("cg:gui.menu.ingame.scoreboard.adjournbtn.label")
+        )
+        self.adjournbtn.setBackground(cgclient.gui.CGButtonBG(self.adjournbtn))
+        self.addWidget(self.adjournbtn)
+
+        self.adjournbtn.enabled = False
+        # TODO Implement adjourning games
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "adjourn_yes",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.adjournbtn.addAction("press_down", f)
+        self.adjournbtn.addAction("press_down", f1, self.adjournbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "adjourn_no",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.adjournbtn.addAction("press_up", f)
+
+        # Quit Button
+        self.quitbtn = peng3d.gui.ToggleButton(
+            "quitbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([10, 0], [5, 1]),
+            label=self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label")
+        )
+        self.quitbtn.setBackground(cgclient.gui.CGButtonBG(self.quitbtn))
+        self.addWidget(self.quitbtn)
+        self.quitbtn.enabled = False
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "quit_yes",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.quitbtn.addAction("press_down", f)
+        self.quitbtn.addAction("press_down", f1, self.quitbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "quit_no",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.quitbtn.addAction("press_up", f)
+
+        # Cancel Button
+        self.cancelbtn = peng3d.gui.ToggleButton(
+            "cancelbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([15, 0], [5, 1]),
+            label=self.peng.tl("cg:gui.menu.ingame.scoreboard.cancelbtn.label")
+        )
+        self.cancelbtn.setBackground(cgclient.gui.CGButtonBG(self.cancelbtn))
+        self.addWidget(self.cancelbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "cancel_yes",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.cancelbtn.addAction("press_down", f)
+        self.cancelbtn.addAction("press_down", f1, self.cancelbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "cancel_no",
+                "announcer": self.peng.cg.client.user_id.hex
+            })
+        self.cancelbtn.addAction("press_up", f)
+
+        self.togglebuttons = [self.continuebtn, self.adjournbtn, self.quitbtn, self.cancelbtn]
+
+        self.heading = peng3d.gui.Label(
+            "heading", self, self.window, self.peng,
+            pos=self.grid.get_cell([9, 7], [2, 1]),
+            label="Round -1",
+        )
+        self.heading.clickable = False
+        self.addWidget(self.heading)
+
+        # Player Labels
+        self.player_labels = []
+        for i in range(4):
+            label = peng3d.gui.Label(
+                f"p_label{i}", self, self.window, self.peng,
+                pos=self.grid.get_cell([i*4, 6], [4, 1]),
+                label="player label",
+            )
+            label.clickable = False
+            self.addWidget(label)
+            self.player_labels.append(label)
+
+        # Scores
+        self.score_labels = []
+        for i in range(4):
+            label = peng3d.gui.Label(
+                f"s_label{i}", self, self.window, self.peng,
+                pos=self.grid.get_cell([i*4, 1], [4, 1]),
+                label="score_label",
+            )
+            label.clickable = False
+            self.addWidget(label)
+            self.score_labels.append(label)
+
+        self.container = peng3d.gui.ScrollableContainer(
+            "container", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 2], [20, 4], border=0),
+            size=(lambda sw, sh: (sw, 0)),
+            content_height=0
+        )
+        self.container.pos = (lambda sw, sh, bw, bh: (
+            self.grid.get_cell([0, 2], [20, 4], anchor_y="top", border=0).pos[0],
+            self.grid.get_cell([0, 2], [20, 4], anchor_y="top", border=0).pos[1] - bh
+        ))
+        self.container._scrollbar.visible = False
+        self.addWidget(self.container)
+
+        # Player scores
+        self.player_scores = [[], [], [], []]
+
+        # Game Summary
+        self.game_summaries = []
+
+        # Seperation Bars
+        self.separation_bars = [[], [], [], [], []]
+
+    def init_game(self, player_list: List[uuid.UUID]):
+        self.player_list = player_list
+        for i, uid in enumerate(self.player_list):
+            self.player_labels[i].label = self.peng.cg.client.get_user(uid).username
+
+    def add_round(self, round_num: int, winner: str,
+                  game_type: str, eyes: List[int], extras: List[List[str]],
+                  point_change: List[int], points: List[str]):
+        # Heading
+        self.heading.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.heading", {"round": round_num})
+
+        # Quit button / Cancel button
+        if round_num % 4 == 0:
+            self.quitbtn.enabled = True
+            self.quitbtn._label.font_size = 25
+            self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label")
+        else:
+            self.quitbtn.enabled = False
+            self.quitbtn._label.font_size = 16
+            self.quitbtn.label = self.peng.tl(
+                "cg:gui.menu.ingame.scoreboard.quitbtn.label3", {"rounds": 4 - (round_num % 4)})
+
+        # Height of the new widgets
+        font = pyglet.font.load("Times New Roman", 16)
+        font_height = font.ascent - font.descent
+        h = font_height * (len(extras) + 2) + 8
+
+        # Adjust height of the container
+        old_container_height = self.container.size[1]
+        if old_container_height + h > self.window.height * 1/2 - 3:
+            self.container.size = (lambda sw, sh: (sw, sh * 1/2 - 3))
+            self.container.content_height = old_container_height + h - (self.window.height * 1/2 - 3)
+        else:
+            self.container.size = (lambda sw, sh: (sw, old_container_height + h))
+
+        # Move old widgets upwards
+        # Scores
+        for i, l in enumerate(self.player_scores):
+            for j in l:
+                old_widget_pos = j.pos[1] - self.container.pos[1]
+                j.pos = self._lambda_score_pos(i, old_widget_pos + h)
+
+        # Summaries
+        for j in self.game_summaries:
+            old_widget_pos = j.pos[1] - self.container.pos[1]
+            j.pos = self._lambda_bar_pos(4, old_widget_pos + h)
+
+        # Bars
+        for i, l in enumerate(self.separation_bars):
+            for j in l:
+                old_widget_pos = j.pos[1] - self.container.pos[1]
+                if not j.visible:  # Workaround because of the pos being [-10000, -10000] when invisible
+                    j.visible = True
+                    old_widget_pos = j.pos[1] - self.container.pos[1]
+                    j.visible = False
+                j.pos = self._lambda_bar_pos(i, old_widget_pos + h)
+
+        # Create new widgets
+        for i in range(5):
+            # Scores
+            if i < 4:
+                score = peng3d.gui.Label(
+                    f"score{i}.{round_num}", self.container, self.window, self.peng,
+                    pos=self._lambda_score_pos(i, 0),
+                    size=(lambda sw, sh: (sw / 5, h)),
+                    label=str(point_change[i])
+                )
+                score.clickable = False
+                self.container.addWidget(score)
+                self.player_scores[i].append(score)
+
+            # Summary
+            elif i == 4:
+                summary_label = ""
+                summary_label += str(self.peng.tl(f"cg:game.doppelkopf.game_type.{game_type}")) + "\n"
+                summary_label += f"{eyes[0]} : {eyes[1]}\n"
+                for extra in extras:
+                    # TODO This kind of undermines the whole point of peng.tl...
+                    summary_label += str(self.peng.tl(f"cg:game.doppelkopf.extra.{extra}")) + "\n"
+                print(summary_label)
+                summary = peng3d.gui.Label(
+                    f"summary{round_num}", self.container, self.window, self.peng,
+                    pos=self._lambda_bar_pos(i, 0),
+                    size=(lambda sw, sh: (sw / 5 - 60, h)),
+                    label=summary_label,
+                    multiline=True,
+                    font_size=16,
+                )
+                summary.clickable = False
+                self.container.addWidget(summary)
+                self.game_summaries.append(summary)
+
+            # Separation bar
+            bar = peng3d.gui.ImageButton(
+                f"separation_bar{i}.{round_num}", self.container, self.window, self.peng,
+                pos=self._lambda_bar_pos(i, 0),
+                size=(lambda sw, sh: (sw / 5 - 60, 3)),
+                bg_idle=("cg:img.bg.gray_brown", "gui"),
+                label=""
+            )
+            bar.clickable = False
+            bar.visible = False
+            self.container.addWidget(bar)
+            self.separation_bars[i].append(bar)
+
+            # Previous separation bar
+            if round_num > 1:
+                self.container.getWidget(f"separation_bar{i}.{round_num - 1}").visible = True
+
+        # Update total scores
+        for i, j in enumerate(self.score_labels):
+            j.label = points[i]
+
+    def _lambda_score_pos(self, i, y):
+        return lambda sw, sh, ww, wh: (sw / 5 * i, y-3)
+
+    def _lambda_bar_pos(self, i, y):
+        return lambda sw, sh, ww, wh: (sw / 5 * i + 30, y)
+
+    def register_event_handlers(self):
+        self.peng.cg.add_event_listener("cg:user.update", self.handle_user_update)
+
+    def handle_user_update(self, event: str, data: dict):
+        if data["uuid"] in self.player_list:
+            u = self.peng.cg.client.users_uuid.get(data["uuid"], None)
+            if u is not None:
+                self.player_labels[self.player_list.index(data["uuid"])].label = u.username
 
 
 class StatusLayer(peng3d.gui.GUILayer):

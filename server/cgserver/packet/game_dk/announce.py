@@ -38,7 +38,15 @@ class AnnouncePacket(CGPacket):
     def receive(self, msg, cid=None):
         t = msg["type"]
 
-        if t in ["reservation_yes", "reservation_no"]:
+        if t in ["continue_yes", "continue_no",
+                 "adjourn_yes", "adjourn_no",
+                 "cancel_yes", "cancel_no",
+                 "end_yes", "end_no"]:
+            self.cg.send_event(f"cg:game.dk.play.{t}", {
+                "player": self.peer.clients[cid].user.uuid.hex
+            })
+
+        elif t in ["reservation_yes", "reservation_no"]:
             self.cg.send_event("cg:game.dk.reservation", {
                 "player": self.peer.clients[cid].user.uuid.hex,
                 "type": t

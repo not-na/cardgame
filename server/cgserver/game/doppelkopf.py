@@ -406,6 +406,13 @@ class DoppelkopfGame(CGame):
                 self.players.append(pid)
                 self.fake_players.append(pid)
 
+        self.player_decisions: Dict[str, Set[uuid.UUID]] = {
+            "continue": set(),
+            "adjourn": set(),
+            "cancel": set(),
+            "end": set()
+        }
+
         self.rounds: List[DoppelkopfRound] = []
         self.round_num: int = 0
         self.current_round: Optional[DoppelkopfRound] = None
@@ -462,6 +469,11 @@ class DoppelkopfGame(CGame):
 
         self.cg.add_event_listener("cg:game.dk.end_round", self.handle_end_round, group=self.game_id)
 
+        self.cg.add_event_listener("cg:game.dk.play.continue_yes", self.handle_continue_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.continue_no", self.handle_not_continue_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.cancel_yes", self.handle_cancel_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.cancel_no", self.handle_not_cancel_play, group=self.game_id)
+
     def handle_end_round(self, event: str, data: Dict):
         # Send the information on the round
         self.send_to_all("cg:game.dk.round.change", {
@@ -470,7 +482,9 @@ class DoppelkopfGame(CGame):
             "winner": data["winner"],
             "eyes": data["eyes"],
             "modifiers": data["modifiers"],
-            "extras": data["extras"]
+            "extras": data["extras"],
+            "round": self.round_num,
+            "game_summary": data["game_summary"]
         })
 
         # Determine if the round should be played again
@@ -535,7 +549,55 @@ class DoppelkopfGame(CGame):
 
         self.cg.event_manager.del_group(self.current_round.round_id)  # Deinitialise the round's event handlers
 
-        self.start_round(self.round_num)
+    def handle_continue_play(self, event: str, data: Dict):
+        self.player_decisions["continue"].add(data["player"])
+        if self.DEV_MODE:
+            for p in self.fake_players:
+                self.player_decisions["continue"].add(p)
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "continue_yes"
+        })
+        if len(self.player_decisions["continue"]) == 4:
+            self.player_decisions: Dict[str, Set[uuid.UUID]] = {
+                "continue": set(),
+                "adjourn": set(),
+                "cancel": set(),
+                "end": set()
+            }
+            self.start_round(self.round_num)
+
+    def handle_not_continue_play(self, event: str, data: Dict):
+        self.player_decisions["continue"].discard(data["player"])
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "continue_no"
+        })
+
+    def handle_cancel_play(self, event: str, data: Dict):
+        self.player_decisions["cancel"].add(data["player"])
+        if self.DEV_MODE:
+            for p in self.fake_players:
+                self.player_decisions["cancel"].add(p)
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "cancel_yes"
+        })
+        if len(self.player_decisions["cancel"]) == 4:
+            self.player_decisions: Dict[str, Set[uuid.UUID]] = {
+                "continue": set(),
+                "adjourn": set(),
+                "cancel": set(),
+                "end": set()
+            }
+            self.cancel_game()
+
+    def handle_not_cancel_play(self, event: str, data: Dict):
+        self.player_decisions["cancel"].discard(data["player"])
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "cancel_no"
+        })
 
     @classmethod
     def check_playercount(cls, count: int, ignore_devmode=False):
@@ -545,7 +607,7 @@ class DoppelkopfGame(CGame):
 
 
 class DoppelkopfRound(object):
-    DEV_MODE_PREP_CARDS = True
+    DEV_MODE_PREP_CARDS = False
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game
@@ -1592,6 +1654,9 @@ class DoppelkopfRound(object):
             self.parties["kontra"].add(p)
         self.parties["none"].clear()
 
+        # Game Summary
+        game_summary = []
+
         # Count the eyes and extra_points of the parties
         re_eyes, kontra_eyes = 0, 0
         re_extra, kontra_extra = 0, 0
@@ -1651,8 +1716,10 @@ class DoppelkopfRound(object):
         winner = None
         if re_eyes >= re_win:
             winner = "re"
+            game_summary.append("re_win")
         elif kontra_eyes >= kontra_win:
             winner = "kontra"
+            game_summary.append("kontra_win")
 
         if re_eyes >= re_win and kontra_eyes >= kontra_win:
             raise GameStateError("Only one party can win!")
@@ -1663,90 +1730,155 @@ class DoppelkopfRound(object):
             game_value = 1
         elif winner == "kontra":
             game_value = -1
+        else:
+            game_summary.append("no_win")
+
+        # Game summary re and kontra
+        if winner is not None:
+            if "re" in self.modifiers["re"]:
+                game_summary.append("re")
+            if "kontra" in self.modifiers["kontra"]:
+                game_summary.append("kontra")
 
         # Eyes, under which a party was played
         if winner != "kontra":
             if kontra_eyes < 90:
                 game_value += 1
+                game_summary.append("no90")
             if kontra_eyes < 60:
                 game_value += 1
+                game_summary.remove("no90")
+                game_summary.append("no60")
             if kontra_eyes < 30:
                 game_value += 1
+                game_summary.remove("no60")
+                game_summary.append("no30")
             if kontra_eyes == 0:
                 game_value += 1
+                game_summary.remove("no30")
+                game_summary.append("black")
 
         if winner != "re":
             if re_eyes < 90:
                 game_value -= 1
+                game_summary.append("no90")
             if re_eyes < 60:
                 game_value -= 1
+                game_summary.remove("no90")
+                game_summary.append("no60")
             if re_eyes < 30:
                 game_value -= 1
+                game_summary.remove("no60")
+                game_summary.append("no30")
             if re_eyes == 0:
                 game_value -= 1
+                game_summary.remove("no30")
+                game_summary.append("black")
 
         # Denials that the winner reached
         if winner == "re":
             if kontra_eyes < 90 and "no90" in self.modifiers["re"]:
                 game_value += 1
+                game_summary.append("c_no90")
             if kontra_eyes < 60 and "no60" in self.modifiers["re"]:
                 game_value += 1
+                game_summary.remove("c_no90")
+                game_summary.append("c_no60")
             if kontra_eyes < 30 and "no30" in self.modifiers["re"]:
                 game_value += 1
+                game_summary.remove("c_no60")
+                game_summary.append("c_no30")
             if kontra_eyes == 0 and "black" in self.modifiers["re"]:
                 game_value += 1
+                game_summary.remove("c_no30")
+                game_summary.append("c_black")
 
         if winner == "kontra":
             if re_eyes < 90 and "no90" in self.modifiers["kontra"]:
                 game_value -= 1
+                game_summary.append("c_no90")
             if re_eyes < 60 and "no60" in self.modifiers["kontra"]:
                 game_value -= 1
+                game_summary.remove("c_no90")
+                game_summary.append("c_no60")
             if re_eyes < 30 and "no30" in self.modifiers["kontra"]:
                 game_value -= 1
+                game_summary.remove("c_no60")
+                game_summary.append("c_no30")
             if re_eyes == 0 and "black" in self.modifiers["kontra"]:
                 game_value -= 1
+                game_summary.remove("c_no30")
+                game_summary.append("c_black")
 
         # Denials that the looser didn't reach
         if winner == "kontra":
             if "no90" in self.modifiers["re"]:
                 game_value -= 1
+                game_summary.append("fc_no90")
             if "no60" in self.modifiers["re"]:
                 game_value -= 1
+                game_summary.remove("fc_no90")
+                game_summary.append("fc_no60")
             if "no30" in self.modifiers["re"]:
                 game_value -= 1
+                game_summary.remove("fc_no60")
+                game_summary.append("fc_no30")
             if "black" in self.modifiers["re"]:
                 game_value -= 1
+                game_summary.remove("fc_no30")
+                game_summary.append("fc_black")
 
         if winner == "re":
             if "no90" in self.modifiers["kontra"]:
                 game_value += 1
+                game_summary.append("fc_no90")
             if "no60" in self.modifiers["kontra"]:
                 game_value += 1
+                game_summary.remove("fc_no90")
+                game_summary.append("fc_no60")
             if "no30" in self.modifiers["kontra"]:
                 game_value += 1
+                game_summary.remove("fc_no60")
+                game_summary.append("fc_no30")
             if "black" in self.modifiers["kontra"]:
                 game_value += 1
+                game_summary.remove("fc_no30")
+                game_summary.append("fc_black")
 
         # Denials that were overshot by 30 points
         if winner != "re":
             if "no90" in self.modifiers["re"] and kontra_eyes >= 120:
                 game_value -= 1
+                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no90")
             if "no60" in self.modifiers["re"] and kontra_eyes >= 90:
                 game_value -= 1
+                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no90")
+                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no60")
             if "no30" in self.modifiers["re"] and kontra_eyes >= 60:
                 game_value -= 1
+                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no60")
+                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no30")
             if "black" in self.modifiers["re"] and kontra_eyes >= 30:
                 game_value -= 1
+                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no30")
+                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_black")
 
         if winner != "kontra":
             if "no90" in self.modifiers["kontra"] and re_eyes >= 120:
                 game_value += 1
+                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no90")
             if "no60" in self.modifiers["kontra"] and re_eyes >= 90:
                 game_value += 1
+                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no90")
+                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no60")
             if "no30" in self.modifiers["kontra"] and re_eyes >= 60:
                 game_value += 1
+                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no60")
+                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no30")
             if "black" in self.modifiers["kontra"] and re_eyes >= 30:
                 game_value += 1
+                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no30")
+                game_summary.append(f"{int(re_eyes / 30) * 30}vs_black")
 
         # Re and Kontra as adding multipliers
         if self.game.gamerules["dk.re_kontra"] == "+2":
@@ -1771,7 +1903,7 @@ class DoppelkopfRound(object):
 
         # One point if Kontra won against the queens of clubs
         if winner == "kontra" and self.game_type in ["normal", "ramsch", "wedding"]:
-            kontra_extras.append("against_cqs")
+            kontra_extras.insert(0, "against_cqs")
             kontra_extra += 1
 
         # Punishment for cowardice
@@ -1779,19 +1911,36 @@ class DoppelkopfRound(object):
             if winner == "re" and re_eyes > 210:
                 if "re" not in self.modifiers["re"]:
                     game_value *= -1
+                    game_summary.append("cowardice")
                 elif "no90" not in self.modifiers["re"]:  # Re is in modifiers, so it isn't handled two times
                     if self.game.gamerules["dk.coward"] == "240_no_u90" and re_eyes == 240:
                         game_value *= -1
+                        game_summary.append("cowardice")
             elif winner == "kontra" and kontra_eyes > 210:
                 if "kontra" not in self.modifiers["kontra"]:
                     game_value *= -1
+                    game_summary.append("cowardice")
                 elif "no90" not in self.modifiers["kontra"]:
                     if self.game.gamerules["dk.coward"] == "240_no_u90" and kontra_eyes == 240:
                         game_value *= -1
+                        game_summary.append("cowardice")
 
         # Adding the extra points
         game_value += re_extra
         game_value -= kontra_extra
+
+        # Extra points in summary
+        if winner != "kontra":
+            for extra in re_extras:
+                game_summary.append(f"p_{extra}")
+            for extra in kontra_extras:
+                game_summary.append(f"n_{extra}")
+
+        if winner != "re":
+            for extra in kontra_extras:
+                game_summary.append(f"p_{extra}")
+            for extra in re_extras:
+                game_summary.append(f"n_{extra}")
 
         # Re and Kontra as doubling multipliers after adding the extra points
         if self.game.gamerules["dk.re_kontra"] == "*2_extra":
@@ -1830,6 +1979,7 @@ class DoppelkopfRound(object):
             "modifiers": self.modifiers,
             "extras": [re_extras, kontra_extras],
             "buckround_events": self.buckround_events,
+            "game_summary": game_summary
         })
 
     def register_event_handlers(self):
@@ -3021,7 +3171,7 @@ class DoppelkopfRound(object):
 
         # Trick is full
         elif len(self.current_trick) == 4:
-            time.sleep(2)
+            #time.sleep(2)
             self.game.cg.info(f"Game Type: {self.game_type}")
             self.game.cg.info(f"Obvious Parties {self.obvious_parties}")
 
@@ -3098,7 +3248,7 @@ class DoppelkopfRound(object):
                 # Doppelkopf
                 if self.game.gamerules["dk.doppelkopf"]:
                     if gain >= 40:
-                        self.extra_points[trick_winner].append("doppelkopf!")
+                        self.extra_points[trick_winner].append("doppelkopf")
 
                 # Fox
                 if self.game.gamerules["dk.fox"]:
@@ -3619,8 +3769,13 @@ class DoppelkopfRound(object):
                             "type": "ready"
                         })
                     return
-                elif packet == "cg:game.dk.reservation":
-                    for p in self.players[1:]:
+                elif packet == "cg:game.dk.q":
+                    for p in self.players:
+                        self.game.cg.send_event("cg:game.dk.ready", {
+                            "player": p.hex,
+                            "type": "ready"
+                        })
+                    for p in self.players:
                         self.game.cg.send_event("cg:game.dk.reservation", {
                             "player": p.hex,
                             "type": "reservation_no"
@@ -3737,7 +3892,7 @@ class DoppelkopfRound(object):
                     "type": "play",
                     "card": "-1"
                 })
-                time.sleep(1.5)
+                #time.sleep(1.5)
 
                 if self.game_state == "counting":
                     return
