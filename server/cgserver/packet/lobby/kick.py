@@ -52,7 +52,7 @@ class KickPacket(CGPacket):
             self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.kick.user_not_exist", data={
                 "uuid": msg["uuid"]
             })
-        elif user not in lobby.users:
+        elif user.uuid not in lobby.users:
             self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.kick.user_not_in_lobby", data={
                 "username": user.username
             })
@@ -60,7 +60,7 @@ class KickPacket(CGPacket):
             self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.kick.lobby_started")
 
         else:
-            lobby.remove_player(user.uuid)
+            lobby.remove_user(user.uuid)
 
             if msg["reason"].strip() == "":
                 self.cg.server.send_status_message(user, "notice", "cg:msg.lobby.kick.no_reason")

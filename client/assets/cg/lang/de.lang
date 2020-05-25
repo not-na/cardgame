@@ -84,6 +84,11 @@ msg.status.user.wrong_pwd=Falsches Passwort!
 msg.status.user.empty_img=Ungültiger Profilbildname!
 msg.status.user.img_name_long=Profilbildname zu lang!
 
+msg.lobby.change_user_order.missing_rights=Nur Admins dürfen die Spielerreihenfolge verändern!
+msg.lobby.change_gamerules.missing_rights=Nur Admins dürfen die Spielregeln verändern!
+msg.lobby.change_game.missing_rights=Nur Admins dürfen das Spiel ändern!
+msg.lobby.change_admin.missing_rights=Nur Admins dürfen andere Spieler zu Admins machen!
+
 msg.lobby.invite.lobby_full=Die Lobby ist bereits voll!
 msg.lobby.invite.user_does_not_exist=Der Benutzer {username} existiert nicht!
 msg.lobby.invite.user_not_online=Der Benutzer {username} ist nicht online!
@@ -197,17 +202,20 @@ gui.menu.smain.profile.confirm_pwd_field.default=Neues Passwort bestätigen
 gui.menu.smain.profile.pwd_commit.label=Ändern
 gui.menu.smain.profile.pwd_cancel.label=Abbrechen
 
-
 gui.menu.smain.lobby.invitebtn.label=Spieler einladen
 gui.menu.smain.lobby.leavebtn.label=Lobby verlassen
 gui.menu.smain.lobby.gamebtn.label=Spiel ändern
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 gui.menu.smain.lobby.readybtn.label=Bereit zum Spielen
+gui.menu.smain.lobby.loadgamebtn.label=Vertagtes Spiel laden
+
+gui.menu.smain.lobby.kick_okbtn.label=Kicken
+gui.menu.smain.lobby.kick_cancelbtn.label=Abbrechen
+gui.menu.smain.lobby.kick_heading=Warum möchtest du {username} kicken?
 
 gui.menu.smain.lobby.invite_heading=Benutzername eingeben:
 gui.menu.smain.lobby.invite_okbtn.label=Einladen
 gui.menu.smain.lobby.invite_cancelbtn.label=Abbrechen
-
 
 gui.menu.smain.lobby_inv.label_main=Du wurdest von {username} in eine Lobby eingeladen. Möchtest du die Einladung annehmen?
 gui.menu.smain.lobby_inv.confirm=Annehmen

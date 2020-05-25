@@ -22,6 +22,8 @@
 #
 
 import functools
+import glob
+import re
 
 import peng3d
 import peng3dnet
@@ -183,6 +185,21 @@ class PengGUI(object):
     def start_main_loop(self):
         self.run = True
         self.peng.run()
+
+    def discover_profile_images(self, domain="cg"):
+        rsrc = "{domain}:profile.{name}".format(domain=domain, name="*")
+        pattern = self.peng.rsrcMgr.resourceNameToPath(rsrc, ".png")
+        files = glob.glob(pattern)
+
+        names = set()
+        r = re.compile(r".*?/profile/(?P<name>[a-zA-Z0-9_ -]{1,64})\.png")
+
+        for f in files:
+            m = r.fullmatch(f.replace("\\", "/"))
+            if m is not None:
+                names.add(m.group("name"))
+
+        return list(names)
 
     # Event Handlers
 

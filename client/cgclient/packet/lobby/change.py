@@ -34,6 +34,7 @@ class ChangePacket(CGPacket):
     allowed_keys = [
         "users",
         "user_order",
+        "user_roles",
         "game",
         "gamerules",
         "gamerule_validators",
@@ -65,6 +66,10 @@ class ChangePacket(CGPacket):
                         self.cg.client.lobby.user_roles[uid] = udat["role"]
                     if "ready" in udat:
                         self.cg.client.lobby.user_ready[uid] = udat["ready"]
+                        self.cg.send_event("cg:lobby.player.ready", {
+                            "player": uid,
+                            "ready": udat["ready"]
+                        })
                     if "index" in udat:
                         index = self.cg.client.lobby.users.index(uid)
                         self.cg.client.lobby.users[index] = self.cg.client.lobby.users[udat["index"]]
@@ -147,3 +152,16 @@ class ChangePacket(CGPacket):
                 self.cg.client.gui.servermain.s_gamerule.rule_buttons[gamerule].set_rule(
                     self.cg.client.lobby.gamerules[gamerule]
                 )
+
+        if "user_roles" in msg:
+            for i in msg["user_roles"]:
+                if uuidify(i) in self.cg.client.lobby.user_roles:
+                    self.cg.client.lobby.user_roles[uuidify(i)] = msg["user_roles"][i]
+                else:
+                    self.cg.warn("Tried to set user role of user that is not in the conderned lobby (on the client)!")
+                    return
+            print(self.cg.client.lobby.user_roles)
+            self.cg.send_event("cg:lobby.admin.change", {
+                uuidify(k): v for k, v in msg["user_roles"].items()
+            })
+

@@ -31,6 +31,7 @@ class ChangePacket(CGPacket):
     allowed_keys = [
         "users",
         "user_order",
+        "user_roles",
         "game",
         "gamerules",
         "gamerule_validators",
@@ -67,7 +68,7 @@ class ChangePacket(CGPacket):
                         } for i in lobby.users}
                     })
             else:
-                self.cg.server.send_status_message(u, "warn", "Only the lobby creator may change the user order")
+                self.cg.server.send_status_message(u, "warn", "cg:msg.lobby.change_user_order.missing_rights")
                 self.cg.warn(f"User {u.username} tried to change a lobby user order with insufficient rights")
                 self.cg.server.send_to_user(u, "cg:lobby.change", {
                     "users": {i.hex: {
@@ -77,6 +78,7 @@ class ChangePacket(CGPacket):
 
         if "game" in msg and msg["game"] is not None:
             if lobby.user_roles[u.uuid] < ROLE_ADMIN:
+                self.cg.server.send_status_message(u, "warn", "cg:msg.lobby.change_game.missing_rights")
                 self.cg.warn(f"User {u.username} tried to change a lobby game with insufficient rights")
                 return
 
@@ -94,6 +96,7 @@ class ChangePacket(CGPacket):
 
         if "gamerules" in msg:
             if lobby.user_roles[u.uuid] < ROLE_ADMIN:
+                self.cg.server.send_status_message(u, "warn", "cg:msg.lobby.change_gamerules.missing_rights")
                 self.cg.warn(f"User {u.username} tried to change gamerules with insufficient rights")
                 self.cg.server.send_to_user(u, "cg:lobby.change", {
                     "gamerules": {gamerule: lobby.gamerules[gamerule] for gamerule in lobby.gamerules}
@@ -101,3 +104,18 @@ class ChangePacket(CGPacket):
                 return
             print(msg["gamerules"])
             lobby.update_gamerules(msg["gamerules"])
+
+        if "user_roles" in msg:
+            if lobby.user_roles[u.uuid] < ROLE_ADMIN:
+                self.cg.server.send_status_message(u, "warn", "cg:msg.lobby.change_admin.missing_rights")
+                self.cg.warn(f"User {u.username} tried to make someone an admin with insufficient rights")
+                return
+            for i in msg["user_roles"]:
+                if uuidify(i) in lobby.user_roles:
+                    lobby.user_roles[uuidify(i)] = msg["user_roles"][i]
+                else:
+                    self.cg.warn("Tried to set user role of user that is not in the conderned lobby!")
+
+            lobby.send_to_all("cg:lobby.change", {
+                "user_roles": {k.hex: v for k, v in lobby.user_roles.items()}
+            })

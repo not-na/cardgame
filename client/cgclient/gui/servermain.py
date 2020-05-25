@@ -32,6 +32,8 @@ import cgclient.gui
 import pyglet
 from pyglet.window.mouse import LEFT
 
+from cg.constants import ROLE_ADMIN
+
 GAMES = [
     "sk",  # Skat
     "dk",  # Doppelkopf
@@ -222,6 +224,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
 
         def f():
             self.peng.cg.send_event("cg:status.message.close")
+
         self.d_status_message.wbtn_ok.addAction("click", f)
 
         # Login Menu
@@ -382,7 +385,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.profile_img = peng3d.gui.ToggleButton(
             "profileimg", self, self.window, self.peng,
             pos=(lambda sw, sh, bw, bh: (sw * pos_x - (bw / 2), sh * pos_y - (bh / 2))),
-            size=(lambda sw, sh: (sh*sy, sh*sy)),
+            size=(lambda sw, sh: (sh * sy, sh * sy)),
             label="",
         )
         self.profile_img.setBackground(peng3d.gui.ImageBackground(
@@ -393,11 +396,13 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.c_profile_img.visible = True
+
         self.profile_img.addAction("press_down", f1, self.profile_img)
         self.profile_img.addAction("press_down", f)
 
         def f():
             self.c_profile_img.visible = False
+
         self.profile_img.addAction("press_up", f)
 
         # Profile Label
@@ -418,15 +423,18 @@ class MainSubMenu(peng3d.gui.SubMenu):
             else:
                 self.profile_label.doAction("press_down")
                 self.profile_label._pressed = True
+
         self.profile_label.addAction("click", f)
 
         def f():
             self.c_upwd.visible = True
+
         self.profile_label.addAction("press_down", f1, self.profile_label)
         self.profile_label.addAction("press_down", f)
 
         def f():
             self.c_upwd.visible = False
+
         self.profile_label.addAction("press_up", f)
 
         # Play Button
@@ -515,6 +523,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         def f():
             self.window.changeMenu("settings")
             self.window.menu.prev_menu = "servermain"
+
         self.settingsbtn.addAction("click", f)
 
         # Exit Button
@@ -529,6 +538,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         def f():
             self.peng.cg.client._client.close_connection(reason="exit")
             pyglet.app.exit()
+
         self.exitbtn.addAction("click", f)
 
         self.togglebuttons = [self.profile_img, self.profile_label, self.playbtn, self.partybtn, self.lbbtn]
@@ -546,8 +556,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         # Profile Containers
         self.c_upwd = ProfileContainer("profile", self, self.window, self.peng,
-                                       pos=(lambda sw, sh, bw, bh: (sw * 2/3 - bw/2, sh/2 - bh/2)),
-                                       size=(lambda sw, sh: (sw/3, sh/5))
+                                       pos=(lambda sw, sh, bw, bh: (sw * 2 / 3 - bw / 2, sh / 2 - bh / 2)),
+                                       size=(lambda sw, sh: (sw / 3, sh / 5))
                                        )
         self.addWidget(self.c_upwd)
 
@@ -572,9 +582,11 @@ class MainSubMenu(peng3d.gui.SubMenu):
     def handler_userupdate(self, event: str, data: dict):
         if data["uuid"] == self.menu.cg.client.user_id:
             self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username
-            self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(
-                f"cg:profile.{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img}", "gui"
-            )
+
+            profile_img = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img
+            if profile_img not in self.peng.cg.client.gui.discover_profile_images():
+                profile_img = "default"
+            self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(f"cg:profile.{profile_img}", "gui")
             self.profile_img.bg.bg_hover = self.profile_img.bg.bg_pressed = self.profile_img.bg.bg_texinfo
 
             self.profile_label.redraw()
@@ -582,9 +594,11 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
     def handler_login(self, event: str, data: dict):
         self.profile_label.label = self.menu.cg.client.users_uuid[self.menu.cg.client.user_id].username
-        self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(
-            f"cg:profile.{self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img}", "gui"
-        )
+
+        profile_img = self.peng.cg.client.users_uuid[self.peng.cg.client.user_id].profile_img
+        if profile_img not in self.peng.cg.client.gui.discover_profile_images():
+            profile_img = "default"
+        self.profile_img.bg.bg_texinfo = self.peng.resourceMgr.normTex(f"cg:profile.{profile_img}", "gui")
         self.profile_img.bg.bg_hover = self.profile_img.bg.bg_pressed = self.profile_img.bg.bg_texinfo
 
         self.profile_label.redraw()
@@ -673,6 +687,8 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             self.menu.cg.client.send_message("cg:lobby.leave", {
                 "lobby": self.menu.cg.client.lobby.uuid.hex
             })
+            for btn in self.player_buttons.values():
+                btn.player = None
 
         self.leavebtn.addAction("click", f)
 
@@ -682,7 +698,10 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             pos=self.grid.get_cell([0, 0], [3, 2]),
             label=self.peng.tl("cg:gui.menu.smain.lobby.gamebtn.label")
         )
+        self.gamebtn.enabled = False
         self.addWidget(self.gamebtn)
+
+        # TODO Implement changing games
 
         def f():
             pass
@@ -703,57 +722,46 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.gamerulebtn.addAction("click", f)
 
         # Ready Button
-        self.readybtn = cgclient.gui.CGButton(
+        self.readybtn = peng3d.gui.ToggleButton(
             "readybtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 0], [3, 4]),
+            pos=self.grid.get_cell([3, 2], [3, 2]),
             label=self.peng.tl("cg:gui.menu.smain.lobby.readybtn.label"),
         )
+        self.readybtn.setBackground(cgclient.gui.CGButtonBG(self.readybtn))
         self.addWidget(self.readybtn)
 
         def f():
             self.menu.cg.client.send_message("cg:lobby.ready", {"ready": True})
 
-        self.readybtn.addAction("click", f)
+        self.readybtn.addAction("press_down", f)
+
+        def f():
+            self.menu.cg.client.send_message("cg:lobby.ready", {"ready": False})
+
+        self.readybtn.addAction("press_up", f)
+
+        # Load Game Button
+        self.loadgamebtn = cgclient.gui.CGButton(
+            "loadgamebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 0], [3, 2]),
+            label=self.peng.tl("cg:gui.menu.smain.lobby.loadgamebtn.label")
+        )
+        self.loadgamebtn.enabled = False
+        self.addWidget(self.loadgamebtn)
+
+        # TODO implement adjourning games
 
         # Player list
-        self.w_player_0 = PlayerButton(
-            "player0btn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 3 * 11 / 72))),
-            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
-            player=None
-        )
-        self.addWidget(self.w_player_0)
-
-        self.w_player_1 = PlayerButton(
-            "player1btn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 2 * 11 / 72))),
-            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
-            player=None
-        )
-        self.addWidget(self.w_player_1)
-
-        self.w_player_2 = PlayerButton(
-            "player2btn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9 + 1 * 11 / 72))),
-            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
-            player=None
-        )
-        self.addWidget(self.w_player_2)
-
-        self.w_player_3 = PlayerButton(
-            "player3btn", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (3, sh * (2 / 9))),
-            size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
-            player=None
-        )
-        self.addWidget(self.w_player_3)
-
-        self.player_buttons = {
-            0: self.w_player_0,
-            1: self.w_player_1,
-            2: self.w_player_2,
-            3: self.w_player_3
-        }
+        self.player_buttons = {}
+        for i in range(4):
+            btn = PlayerButton(
+                f"player{i}btn", self, self.window, self.peng,
+                pos=(lambda sw, sh, bw, bh, x=i: (3, sh * (2 / 9 + 3 - x * 11 / 72))),
+                size=(lambda sw, sh: (sw - 6, sh * 11 / 72)),
+                player=None
+            )
+            self.addWidget(btn)
+            self.player_buttons[i] = btn
 
         self.c_invite = InviteDialog(
             "c_invite", self, self.window, self.peng,
@@ -761,6 +769,13 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             size=None
         )
         self.addWidget(self.c_invite)
+
+        self.c_kick = KickDialog(
+            "c_kick", self, self.window, self.peng,
+            pos=self.grid.get_cell([3, 6], [3, 6]),
+            size=None
+        )
+        self.addWidget(self.c_kick)
 
     def register_event_handlers(self):
         self.menu.cg.add_event_listener("cg:lobby.game.change", self.handle_game_change)
@@ -830,6 +845,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.menu.changeSubMenu("lobby")
+
         self.backbtn.addAction("click", f)
 
         # Load Template Button
@@ -842,6 +858,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.menu.changeSubMenu("template")
+
         self.loadtmplbtn.addAction("click", f)
 
         # Save Template Button
@@ -854,6 +871,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.c_save.visible = True
+
         self.savetmplbtn.addAction("click", f)
 
         # Previous Page Button
@@ -872,6 +890,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
             if self.current_page == 0:
                 self.prevpagebtn.enabled = False
             self.nextpagebtn.enabled = True
+
         self.prevpagebtn.addAction("click", f)
 
         # Next Page Button
@@ -889,6 +908,7 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
             if self.current_page == len(self.gamerule_containers) - 1:
                 self.nextpagebtn.enabled = False
             self.prevpagebtn.enabled = True
+
         self.nextpagebtn.addAction("click", f)
 
         # Gamerule Containers
@@ -983,6 +1003,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
         def f():
             self.exit_mode = "back"
             self.menu.changeSubMenu("gamerules")
+
         self.backbtn.addAction("click", f)
 
         # Load Template Button
@@ -1000,6 +1021,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
 
             self.exit_mode = "load"
             self.menu.changeSubMenu("gamerules")
+
         self.loadtmplbtn.addAction("click", f)
 
         # Delete Template Button
@@ -1020,6 +1042,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
             self.save_opts = _save_opts
 
             self.on_enter("template")
+
         self.deletebtn.addAction("click", f)
 
         self.save_btns = []
@@ -1027,7 +1050,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
             for j in range(3):
                 btn = peng3d.gui.ToggleButton(
                     f"button{j}:{i}", self, self.window, self.peng,
-                    pos=self.grid.get_cell([j*4, 13-2*i], [4, 2]),
+                    pos=self.grid.get_cell([j * 4, 13 - 2 * i], [4, 2]),
                     label="",
                 )
                 btn.setBackground(peng3d.gui.FramedImageBackground(
@@ -1052,12 +1075,14 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
                     self.chosen_save = button.label
                     self.loadtmplbtn.enabled = True
                     self.deletebtn.enabled = True
+
                 btn.addAction("press_down", f, btn)
 
                 def f():
                     self.chosen_save = ""
                     self.loadtmplbtn.enabled = False
                     self.deletebtn.enabled = False
+
                 btn.addAction("press_up", f)
 
     @property
@@ -1173,6 +1198,7 @@ class ProfileContainer(peng3d.gui.Container):
             self.uname_field.visible = True
             self.uname_commit.visible = True
             self.uname_cancel.visible = True
+
         self.unamechangebtn.addAction("click", f)
 
         # Change Username Input field
@@ -1209,6 +1235,7 @@ class ProfileContainer(peng3d.gui.Container):
 
                 self.visible = False
                 self.submenu.profile_label._pressed = False
+
         self.uname_commit.addAction("click", f)
 
         # Cancel Username Change Button
@@ -1231,6 +1258,7 @@ class ProfileContainer(peng3d.gui.Container):
 
             self.visible = False
             self.submenu.profile_label._pressed = False
+
         self.uname_cancel.addAction("click", f)
 
         # Change Password Button
@@ -1253,6 +1281,7 @@ class ProfileContainer(peng3d.gui.Container):
 
             self.size = (lambda sw, sh: (sw / 3, sh / 2.5))
             self.grid.res = [2, 4]
+
         self.pwdchangebtn.addAction("click", f)
 
         # Old Password Field
@@ -1319,6 +1348,7 @@ class ProfileContainer(peng3d.gui.Container):
 
                 self.visible = False
                 self.submenu.profile_label._pressed = False
+
         self.pwd_commit.addAction("click", f)
 
         # Cancel Password Change Button
@@ -1349,6 +1379,7 @@ class ProfileContainer(peng3d.gui.Container):
 
             self.visible = False
             self.submenu.profile_label._pressed = False
+
         self.pwd_cancel.addAction("click", f)
 
 
@@ -1370,7 +1401,7 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
         )
 
         # Profile image file names
-        self.profile_imgs = sorted(self.discover_profile_images())
+        self.profile_imgs = sorted(self.peng.cg.client.gui.discover_profile_images())
         if "default" in self.profile_imgs:
             self.profile_imgs.remove("default")
             self.profile_imgs.append("default")
@@ -1408,22 +1439,8 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
                 })
                 self.visible = False
                 self.submenu.profile_img.pressed = False
+
             btn.addAction("click", f, btn)
-
-    def discover_profile_images(self, domain="cg"):
-        rsrc = "{domain}:profile.{name}".format(domain=domain, name="*")
-        pattern = self.peng.rsrcMgr.resourceNameToPath(rsrc, ".png")
-        files = glob.glob(pattern)
-
-        names = set()
-        r = re.compile(r".*?/profile/(?P<name>[a-zA-Z0-9_ -]{1,64})\.png")
-
-        for f in files:
-            m = r.fullmatch(f.replace("\\", "/"))
-            if m is not None:
-                names.add(m.group("name"))
-
-        return list(names)
 
     def lambda_pos(self, i):
         res = self.grid.res
@@ -1436,6 +1453,7 @@ class ProfileImageChangeContainer(peng3d.gui.Container):
             ).pos
             base_pos = [base_pos[0] - self.grid.pos[0], base_pos[1] - self.grid.pos[1]]
             return base_pos[0] - bw / 2, base_pos[1] - bh / 2
+
         return pos
 
 
@@ -1531,6 +1549,7 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
 
 class _FakeUser:
     username = ""
+    profile_img = "transparent"
     ready = False
     uuid = None
 
@@ -1541,6 +1560,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
     def __init__(self, name, submenu, window, peng, pos, size,
                  player):
         super().__init__(name, submenu, window, peng, pos, size)
+
+        self.register_event_handlers()
 
         self._player = player
 
@@ -1578,18 +1599,93 @@ class PlayerButton(peng3d.gui.LayeredWidget):
 
         self.addAction("click", f)
 
-        # TODO Add user icon
+        # Admin Icon
+        self.admin_icon = peng3d.gui.DynImageWidgetLayer(
+            "admin_icon", self,
+            z_index=3,
+            border=(lambda bx, by, bw, bh: (bw / 2 - bh / 8, bh * 3 / 8)),
+            offset=(lambda bx, by, bw, bh: (-bw / 2 + bh / 8 + 20, 0)),
+            imgs={
+                "transparent": ("cg:img.bg.transparent", "gui"),
+                "admin": ("cg:img.btn.admin", "gui")
+            },
+        )
+        self.admin_icon.switchImage("transparent")
+        self.addLayer(self.admin_icon)
+
+        # User icon
+        profile_img = self.player.profile_img
+        if profile_img not in self.peng.cg.client.gui.discover_profile_images():
+            profile_img = "default"
+        self.icon_layer = peng3d.gui.DynImageWidgetLayer(
+            "img", self,
+            z_index=3,
+            border=(lambda bx, by, bw, bh: (bw / 2 - bh / 3, bh / 6)),
+            offset=(lambda bx, by, bw, bh: (-bw/2 + bh * 7/12 + 40, 0)),
+            imgs={
+                "transparent": ("cg:img.bg.transparent", "gui"),
+                profile_img: (f"cg:profile.{profile_img}", "profile")
+            },
+        )
+        self.icon_layer.switchImage("transparent")
+        self.addLayer(self.icon_layer)
 
         # Username
         self.username_label_layer = peng3d.gui.LabelWidgetLayer(
             "username_label_layer", self,
-            z_index=2,
+            z_index=3,
             label=self.player.username,
             font_size=30,
-            offset=(lambda bx, by, bw, bh: (-bw / 2 + 20, 0))
+            offset=(lambda bx, by, bw, bh: (-bw/2 + bh * 11/12 + 60, 0))
         )
         self.username_label_layer._label.anchor_x = "left"
         self.addLayer(self.username_label_layer)
+
+        # Ready icon
+        self.readybtn = peng3d.gui.DynImageWidgetLayer(
+            "readybtn", self,
+            z_index=3,
+            border=(lambda bx, by, bw, bh: (bw / 2 - bh / 8, bh * 3 / 8)),
+            offset=(
+                lambda bx, by, bw, bh: (-bw/2 + bh * 25/24 + 80 + self.username_label_layer._label.content_width, 0)
+            ),
+            imgs={
+                "transparent": ("cg:img.bg.transparent", "gui"),
+                "default": ("cg:img.btn.ok", "gui")
+            },
+        )
+        self.readybtn.switchImage("transparent")
+        self.addLayer(self.readybtn)
+
+        # Kick Button
+        self.kickbtn = peng3d.gui.DynImageWidgetLayer(
+            "kickbtn", self,
+            z_index=3,
+            border=(lambda bx, by, bw, bh: (bw / 2 - bh / 6, bh * 1 / 3)),
+            offset=(lambda bx, by, bw, bh: (bw / 2 - bh / 6 - 20, 0)),
+            imgs={
+                "transparent": ("cg:img.bg.transparent", "gui"),
+                "default": ("cg:img.btn.kick", "gui")
+            },
+        )
+        self.kickbtn.pressed = False
+        self.kickbtn.switchImage("transparent")
+        self.addLayer(self.kickbtn)
+
+        # Make Admin Button
+        self.make_admin_btn = peng3d.gui.DynImageWidgetLayer(
+            "make_admin_btn", self,
+            z_index=3,
+            border=(lambda bx, by, bw, bh: (bw / 2 - bh / 6, bh * 1 / 3)),
+            offset=(lambda bx, by, bw, bh: (bw / 2 - bh / 2 - 40, 0)),
+            imgs={
+                "transparent": ("cg:img.bg.transparent", "gui"),
+                "default": ("cg:img.btn.admin", "gui")
+            },
+        )
+        self.make_admin_btn.pressed = False
+        self.make_admin_btn.switchImage("transparent")
+        self.addLayer(self.make_admin_btn)
 
         self.mouse_offset = []
         self.is_dragged = False
@@ -1608,16 +1704,32 @@ class PlayerButton(peng3d.gui.LayeredWidget):
     @player.setter
     def player(self, value: Union[cgclient.user.User, _FakeUser]):
         self._player = value
+
+        # Username
         self.username_label_layer.label = self.player.username
 
-    @property
-    def ready(self):
-        return self.player.ready
+        # User icon
+        if value is not None:
+            self.icon_layer.addImage(self.player.profile_img, (f"cg:profile.{self.player.profile_img}", "profile"))
 
-    @ready.setter
-    def ready(self, value):
-        pass
-        # TODO Update ready indicator
+            # Kick button
+            if self.peng.cg.client.lobby.user_roles.get(self.peng.cg.client.user_id, 0) >= ROLE_ADMIN:
+                self.kickbtn.switchImage("default")
+
+                # Make Admin button
+                if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) < ROLE_ADMIN:
+                    self.make_admin_btn.switchImage("default")
+
+            # Admin Icon
+            if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) >= ROLE_ADMIN:
+                self.admin_icon.switchImage("admin")
+
+        else:
+            self.kickbtn.switchImage("transparent")
+            self.admin_icon.switchImage("transparent")
+            self.make_admin_btn.switchImage("transparent")
+
+        self.icon_layer.switchImage(self.player.profile_img)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         super().on_mouse_drag(x, y, dx, dy, button, modifiers)
@@ -1641,7 +1753,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                         self.submenu.player_buttons[index] = next_button
                         self.submenu.player_buttons[index + 1] = self
                         next_button.pos = (lambda sw, sh, bw, bh: (
-                        3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
+                            3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
                         next_button.redraw()
 
             if index != 0:  # For the button above
@@ -1651,37 +1763,119 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                         self.submenu.player_buttons[index] = next_button
                         self.submenu.player_buttons[index - 1] = self
                         next_button.pos = (lambda sw, sh, bw, bh: (
-                        3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
+                            3, sh * (2 / 9 + ((3 - index) * 11 / 72))))  # TODO Fix potential memory leak
                         next_button.redraw()
 
     def on_mouse_press(self, x, y, button, modifiers):
         super().on_mouse_press(x, y, button, modifiers)
         if self.clickable and self.is_hovering:
             if button == LEFT:
-                self.mouse_offset = [x - self.pos[0], y - self.pos[1]]
-                self.is_dragged = True
+                if self.kickbtn.getPos()[0] <= x <= self.kickbtn.getPos()[0] + self.kickbtn.getSize()[0] and \
+                        self.kickbtn.getPos()[1] <= y <= self.kickbtn.getPos()[1] + self.kickbtn.getSize()[1]:
+                    self.kickbtn.pressed = True
+                elif self.make_admin_btn.getPos()[0] <= x <= self.make_admin_btn.getPos()[0] + \
+                        self.make_admin_btn.getSize()[0] and \
+                        self.make_admin_btn.getPos()[1] <= y <= self.make_admin_btn.getPos()[1] + \
+                        self.make_admin_btn.getSize()[1]:
+                    self.make_admin_btn.pressed = True
+                else:
+                    self.mouse_offset = [x - self.pos[0], y - self.pos[1]]
+                    self.is_dragged = True
 
     def on_mouse_release(self, x, y, button, modifiers):
-        super().on_mouse_press(x, y, button, modifiers)
-        if self.is_dragged:
-            if button == LEFT:
-                self.mouse_offset.clear()
-                self.is_dragged = False
+        super().on_mouse_release(x, y, button, modifiers)
+        if button == LEFT:
+            if self.kickbtn.getPos()[0] <= x <= self.kickbtn.getPos()[0] + self.kickbtn.getSize()[0] and \
+                    self.kickbtn.getPos()[1] <= y <= self.kickbtn.getPos()[1] + self.kickbtn.getSize()[1] and \
+                    self.kickbtn.pressed:
+                self.submenu.c_kick.init_kick(self.player)
+                self.submenu.c_kick.visible = True
+                self.kickbtn.pressed = False
+                return
+            self.kickbtn.pressed = False
 
-                for i, btn in self.submenu.player_buttons.items():
-                    if btn == self:
-                        self.pos = (lambda sw, sh, bw, bh: (
-                        3, sh * (2 / 9 + ((3 - i) * 11 / 72))))  # TODO Fix potential memory leak
-                        self.redraw()
-                        break
-
-                player_order = []
-                for j in range(4):
-                    if self.submenu.player_buttons[j]._player is not None:
-                        player_order.append(self.submenu.player_buttons[j].player.uuid)
+            if self.make_admin_btn.getPos()[0] <= x <= self.make_admin_btn.getPos()[0] + \
+                    self.make_admin_btn.getSize()[0] and \
+                    self.make_admin_btn.getPos()[1] <= y <= self.make_admin_btn.getPos()[1] + \
+                    self.make_admin_btn.getSize()[1] and \
+                    self.make_admin_btn.pressed:
+                user_roles = self.peng.cg.client.lobby.user_roles
+                user_roles[self.player.uuid] = ROLE_ADMIN
                 self.peng.cg.client.send_message("cg:lobby.change", {
-                    "user_order": [p.hex for p in player_order]
+                    "user_roles": {k.hex: v for k, v in user_roles.items()}
                 })
+                self.make_admin_btn.pressed = False
+                return
+            self.make_admin_btn.pressed = False
+
+            if self.is_dragged:
+                if button == LEFT:
+                    self.mouse_offset.clear()
+                    self.is_dragged = False
+
+                    for i, btn in self.submenu.player_buttons.items():
+                        if btn == self:
+                            self.pos = (lambda sw, sh, bw, bh: (
+                                3, sh * (2 / 9 + ((3 - i) * 11 / 72))))  # TODO Fix potential memory leak
+                            self.redraw()
+                            break
+
+                    player_order = []
+                    for j in range(4):
+                        if self.submenu.player_buttons[j]._player is not None:
+                            player_order.append(self.submenu.player_buttons[j].player.uuid)
+                    self.peng.cg.client.send_message("cg:lobby.change", {
+                        "user_order": [p.hex for p in player_order]
+                    })
+
+    def register_event_handlers(self):
+        self.peng.cg.add_event_listener("cg:user.update", self.handler_userupdate)
+        self.peng.cg.add_event_listener("cg:lobby.admin.change", self.handle_admin_change)
+        self.peng.cg.add_event_listener("cg:lobby.player.ready", self.handle_ready)
+
+    def handler_userupdate(self, event: str, data: dict):
+        if data["uuid"] == self.peng.cg.client.user_id:
+            self.username_label_layer.label = self.player.username
+
+            profile_img = self.player.profile_img
+            if profile_img not in self.peng.cg.client.gui.discover_profile_images():
+                profile_img = "default"
+            self.icon_layer.addImage(profile_img, (f"cg:profile.{profile_img}", "profile"))
+            self.icon_layer.switchImage(profile_img)
+
+    def handle_admin_change(self, event: str, data: dict):
+        role = data.get(self.player.uuid, None)
+        if role is None:
+            return
+
+        print("hi")
+
+        # Kick button
+        if self.peng.cg.client.lobby.user_roles.get(self.peng.cg.client.user_id, 0) >= ROLE_ADMIN:
+            print("Im Admin!")
+            self.kickbtn.switchImage("default")
+
+            # Make Admin button
+            if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) < ROLE_ADMIN:
+                self.make_admin_btn.switchImage("default")
+            else:
+                self.make_admin_btn.switchImage("transparent")
+        else:
+            self.kickbtn.switchImage("transparent")
+            self.make_admin_btn.switchImage("transparent")
+
+        # Admin Icon
+        if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) >= ROLE_ADMIN:
+            self.admin_icon.switchImage("admin")
+        else:
+            self.admin_icon.switchImage("transparent")
+
+    def handle_ready(self, event: str, data: dict):
+        if data["player"] == self.player.uuid:
+            if data["ready"]:
+                self.readybtn.switchImage("default")
+            else:
+                self.readybtn.switchImage("transparent")
 
 
 class InviteDialog(peng3d.gui.Container):
@@ -1764,6 +1958,96 @@ class InviteDialog(peng3d.gui.Container):
         self.cancelbtn.addAction("click", f)
 
 
+class KickDialog(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng,
+                         pos, size)
+
+        self.visible = False
+        self.kick_player = None
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [2, 3], [30, 20])
+
+        self.bg_widget = peng3d.gui.Widget("kick_bg", self, self.window, self.peng,
+                                           pos=(0, 0),
+                                           size=(lambda sw, sh: (sw, sh)))
+        self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.bg_widget,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg_widget.bg.vlist_layer = 10
+        self.bg_widget.clickable = False
+        self.addWidget(self.bg_widget)
+
+        # Heading
+        self.kick_heading = peng3d.gui.Label(
+            "kick_heading", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 2], [2, 1]),
+            label="",
+            font_size=25,
+            label_layer=11,
+        )
+        self.kick_heading.clickable = False
+        self.addWidget(self.kick_heading)
+
+        # Input field for username
+        self.input_field = cgclient.gui.CGTextInput(
+            "kick_input", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 1], [2, 1]),
+            font_size=25
+        )
+        self.input_field.bg.parent.vlist_layer = 11
+        self.input_field.bg.vlist_cursor_layer = 12
+        self.addWidget(self.input_field)
+
+        # Ok Button
+        self.okbtn = cgclient.gui.CGButton(
+            "kick_okbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.lobby.kick_okbtn.label"),
+            label_layer=12,
+        )
+        self.okbtn.bg.vlist_layer = 11
+        self.addWidget(self.okbtn)
+
+        def f():
+            if self.kick_player is None:
+                return
+            self.peng.cg.client.send_message("cg:lobby.kick", {
+                "uuid": self.kick_player.uuid.hex,
+                "reason": self.input_field.text
+            })
+            self.visible = False
+            self.input_field.text = ""
+            self.kick_player = None
+
+        self.okbtn.addAction("click", f)
+
+        # Cancel Button
+        self.cancelbtn = cgclient.gui.CGButton(
+            "kick_cancelbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.lobby.kick_cancelbtn.label"),
+            label_layer=12,
+        )
+        self.cancelbtn.bg.vlist_layer = 11
+        self.addWidget(self.cancelbtn)
+
+        def f():
+            self.visible = False
+            self.input_field.text = ""
+            self.kick_player = None
+
+        self.cancelbtn.addAction("click", f)
+
+    def init_kick(self, player):
+        self.kick_player = player
+        self.kick_heading.label = self.peng.tl("cg:gui.menu.smain.lobby.kick_heading", {"username": player.username})
+
+
 class TemplateSaveDialog(peng3d.gui.Container):
     def __init__(self, name, submenu, window, peng, pos, size):
         super().__init__(name, submenu, window, peng,
@@ -1775,7 +2059,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [2, 3], [30, 20])
 
-        self.bg_widget = peng3d.gui.Widget("invite_bg", self, self.window, self.peng,
+        self.bg_widget = peng3d.gui.Widget("bg", self, self.window, self.peng,
                                            pos=(0, 0),
                                            size=(lambda sw, sh: (sw, sh)))
         self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
@@ -1827,7 +2111,8 @@ class TemplateSaveDialog(peng3d.gui.Container):
                     return
 
                 gamerule_copy = {
-                    key: value.copy() if type(value) == list else value for key, value in self.peng.cg.client.lobby.gamerules.items()
+                    key: value.copy() if type(value) == list else value for key, value in
+                    self.peng.cg.client.lobby.gamerules.items()
                 }
 
                 _saves = self.s_template.saves
@@ -1840,6 +2125,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
 
                 self.visible = False
                 self.input_field.text = ""
+
         self.okbtn.addAction("click", f)
 
         # Cancel Button
@@ -1855,6 +2141,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
         def f():
             self.visible = False
             self.input_field.text = ""
+
         self.cancelbtn.addAction("click", f)
 
 
@@ -1892,7 +2179,7 @@ class GameRuleContainer(peng3d.gui.Container):
 
             del grdat["type"]
             self.gamerule_btns[c] = cls(gamerule, self, window, peng,
-                                        self.grid.get_cell([0, 3 - 2*c], [12, 2], border=0), None,
+                                        self.grid.get_cell([0, 3 - 2 * c], [12, 2], border=0), None,
                                         gamerule, **grdat)
             self.addWidget(self.gamerule_btns[c])
             self.submenu.rule_buttons[gamerule] = self.gamerule_btns[c]
@@ -1999,11 +2286,13 @@ class BoolRuleButton(RuleButton):
             self.peng.cg.client.send_message("cg:lobby.change", {
                 "gamerules": {self.gamerule: True}
             })
+
         self.yesbtn.addAction("press_down", f)
 
         def f():
             self.nobtn.pressed = True
             self.nobtn.redraw()
+
         self.yesbtn.addAction("press_up", f)
 
         # Yes Label
@@ -2012,7 +2301,7 @@ class BoolRuleButton(RuleButton):
             pos=self.opt_grid.get_cell(
                 [0, 0], [1, 1], anchor_y="center"
             ),
-            size=(lambda sw, sh: (sw/2 - 120, 0)),
+            size=(lambda sw, sh: (sw / 2 - 120, 0)),
             label=self.peng.tl("cg:gamerule.opt.true"),
             multiline=True,
             font_size=16,
@@ -2045,11 +2334,13 @@ class BoolRuleButton(RuleButton):
             self.peng.cg.client.send_message("cg:lobby.change", {
                 "gamerules": {self.gamerule: False}
             })
+
         self.nobtn.addAction("press_down", f)
 
         def f():
             self.yesbtn.pressed = True
             self.yesbtn.redraw()
+
         self.nobtn.addAction("press_up", f)
 
         # No Label
@@ -2100,7 +2391,7 @@ class SelectRuleButton(RuleButton):
 
         if self.length in [2, 4]:
             self.opt_grid = peng3d.gui.GridLayout(
-                self.peng, self.grid.get_cell([0, 0], [2, 9]), [2, self.length/2], [100, 0]
+                self.peng, self.grid.get_cell([0, 0], [2, 9]), [2, self.length / 2], [100, 0]
             )
         else:
             self.opt_grid = peng3d.gui.GridLayout(
@@ -2125,7 +2416,8 @@ class SelectRuleButton(RuleButton):
             btn = peng3d.gui.ToggleButton(
                 option, self, self.window, self.peng,
                 pos=self.opt_grid.get_cell(
-                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [i % (2 if self.length in [2, 4] else 3),
+                     self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
                     [1, 1], border=0, anchor_y="center"
                 ),
                 size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
@@ -2146,7 +2438,8 @@ class SelectRuleButton(RuleButton):
             lbl = peng3d.gui.Label(
                 option + "lbl", self, self.window, self.peng,
                 pos=self.opt_grid.get_cell(
-                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [i % (2 if self.length in [2, 4] else 3),
+                     self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
                     [1, 1], anchor_y="center"
                 ),
                 size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
@@ -2194,7 +2487,8 @@ class ActivetRuleButton(RuleButton):
             btn = peng3d.gui.ToggleButton(
                 option, self, self.window, self.peng,
                 pos=self.opt_grid.get_cell(
-                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [i % (2 if self.length in [2, 4] else 3),
+                     self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
                     [1, 1], border=0, anchor_y="center"
                 ),
                 size=(lambda sw, sh: (sh * 0.06, sh * 0.06)),
@@ -2216,6 +2510,7 @@ class ActivetRuleButton(RuleButton):
                 self.peng.cg.client.send_message("cg:lobby.change", {
                     "gamerules": {self.gamerule: actives}
                 })
+
             btn.addAction("press_down", f)
             btn.addAction("press_up", f)
 
@@ -2224,7 +2519,8 @@ class ActivetRuleButton(RuleButton):
             lbl = peng3d.gui.Label(
                 option + "lbl", self, self.window, self.peng,
                 pos=self.opt_grid.get_cell(
-                    [i % (2 if self.length in [2, 4] else 3), self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
+                    [i % (2 if self.length in [2, 4] else 3),
+                     self.opt_grid.res[1] - 1 - (i // (2 if self.length in [2, 4] else 3))],
                     [1, 1], anchor_y="center"
                 ),
                 size=(lambda sw, sh: (sw / (2 if self.length in [2, 4] else 3) - 120, 0)),
