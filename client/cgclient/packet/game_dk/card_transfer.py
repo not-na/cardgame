@@ -88,10 +88,12 @@ class CardTransferPacket(CGPacket):
             self.cg.client.game.slots[msg["to_slot"]].append(card)
 
             # Redraw all cards in from and target slots to prevent visual holes
+            # Only redraw cards that are not already "flying"
             for c in self.cg.client.game.slots[from_slot]:
-                c.start_anim(from_slot, from_slot)
+                if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE:
+                    c.start_anim(from_slot, from_slot)
             for c in self.cg.client.game.slots[msg["to_slot"]]:
-                if c is not card:
+                if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE and c is not card:
                     c.start_anim(msg["to_slot"], msg["to_slot"])
 
             # Regardless of where the card was, whatever caused it to be selected is likely not valid anymore

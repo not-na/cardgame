@@ -493,8 +493,125 @@ class HUDLayer(peng3d.gui.GUILayer):
         self.changeSubMenu("main")
 
 
+class _BlendableDynImageGroup(pyglet.graphics.Group):
+    def __init__(self,layer,parent=None):
+        super().__init__(parent)
+        self.layer = layer
+    def set_state(self):
+        tex_info = self.layer.imgs[self.layer.cur_img]
+        glEnable(tex_info[0])
+        glBindTexture(tex_info[0],tex_info[1])
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+        glBlendColor(1.0, 1.0, 1.0, self.layer.widget.perc_visible)
+    def unset_state(self):
+        tex_info = self.layer.imgs[self.layer.cur_img]
+        glDisable(tex_info[0])
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+
+class BlendableFramedImageWidgetLayer(peng3d.gui.layered.FramedImageWidgetLayer):
+    def initialize(self):
+        self.cur_img = self.cur_img if self.cur_img is not None else (
+            self.default_img if self.default_img is not None else list(self.imgs.keys())[0])
+
+        if (self.frame_x[0] + self.frame_x[2]) * self.scale[0] > self.widget.size[0] or \
+                (self.frame_y[0] + self.frame_y[2]) * self.scale[1] > self.widget.size[1]:
+            raise ValueError(f"Scale {self.scale} is too large for this widget")
+
+        self.bg_group = _BlendableDynImageGroup(self, self.group)
+        self.vlist_corners = self.widget.submenu.batch2d.add(16, GL_QUADS, self.bg_group, "v2f", "t3f")
+        self.vlist_edges = self.widget.submenu.batch2d.add(16, GL_QUADS, self.bg_group, "v2f", "t3f")
+        self.vlist_center = self.widget.submenu.batch2d.add(4, GL_QUADS, self.bg_group, "v2f", "t3f")
+        self.regVList(self.vlist_corners)
+        self.regVList(self.vlist_edges)
+        self.regVList(self.vlist_center)
+
+
+class AnnounceWidget(peng3d.gui.LayeredWidget):
+    ANIM_BASE = 10
+    ANIM_EXP_SHIFT = -3.5
+
+    def __init__(self, name, submenu, window, peng,
+                 pos=None, size=None,
+                 ):
+        super().__init__(name, submenu, window, peng,
+                         pos=pos, size=size,
+                         )
+
+        self.l_bg = BlendableFramedImageWidgetLayer(
+            "bg", self, 1,
+            border=(0,0),
+            offset=(0,0),
+            imgs={
+                "idle": ("cg:img.btn.fld_idle", "gui"),
+            },
+            frame=[[1, 2, 1], [0, 1, 0]],
+            scale=(None, 0),
+            repeat_edge=True, repeat_center=True,
+            )
+        self.addLayer(self.l_bg)
+        self.l_bg.switchImage("idle")
+
+        self.l_label = peng3d.gui.LabelWidgetLayer("label", self, 2,
+                                                   border=(0,0),
+                                                   offset=(0,0),
+                                                   label=self.peng.tl("cg:announce.default"),
+                                                   )
+        self.addLayer(self.l_label)
+
+        # Invisible by default
+        self.visible = False
+
+        self.start_time: float = 0
+        self.perc_visible = 1.0
+
+        self.announce_queue = []
+
+    def draw(self):
+        super().draw()
+
+        if not self.visible:
+            return
+
+        dt = time.time()-self.start_time
+
+        self.perc_visible = min(-pow(self.ANIM_BASE, dt+self.ANIM_EXP_SHIFT)+1, 1.0)
+        self.redraw()
+
+        if self.perc_visible <= 0:
+            self.visible = False
+            self.perc_visible = 1.0
+
+            if len(self.announce_queue) > 0:
+                t, dat = self.announce_queue.pop(0)
+                self.set_announce(t, dat)
+
+    def set_announce(self, t: str, dat: Dict):
+        if self.visible:
+            # Announce already running, postpone it
+            self.announce_queue.append([t, dat])
+            return
+
+        self.l_label.label = self.peng.tl(t, dat)
+
+        self.start_time = time.time()
+        self.visible = True
+
+        self.redraw()
+
+    def on_redraw(self):
+        super().on_redraw()
+
+        # Update alpha of font
+        self.l_label._label.color[3] = int(self.perc_visible*255)
+
+
 class MainHUDSubMenu(peng3d.gui.SubMenu):
     labels: Dict[str, peng3d.gui.Label]
+    announces: Dict[str, AnnounceWidget]
 
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
@@ -549,6 +666,36 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
                                            )
         self.addWidget(self.ptop_label)
         self.labels["top"] = self.ptop_label
+
+        self.announces = {}
+
+        self.pself_announce = AnnounceWidget("pself_announce", self, self.window, self.peng,
+                                             pos=(lambda sw, sh, bw, bh: (sw/2-bw/2, sh/32)),
+                                             size=(lambda sw, sh: (sw/6, sh/16)),
+                                             )
+        self.addWidget(self.pself_announce)
+        self.announces["self"] = self.pself_announce
+
+        self.pleft_announce = AnnounceWidget("pleft_announce", self, self.window, self.peng,
+                                             pos=(lambda sw, sh, bw, bh: (sw/32, sh/2-bh/2)),
+                                             size=(lambda sw, sh: (sw/6, sh/16)),
+                                             )
+        self.addWidget(self.pleft_announce)
+        self.announces["left"] = self.pleft_announce
+
+        self.pright_announce = AnnounceWidget("pright_announce", self, self.window, self.peng,
+                                              pos=(lambda sw, sh, bw, bh: (sw-bw-sw / 32, sh / 2 - bh / 2)),
+                                              size=(lambda sw, sh: (sw / 6, sh / 16)),
+                                              )
+        self.addWidget(self.pright_announce)
+        self.announces["right"] = self.pright_announce
+
+        self.ptop_announce = AnnounceWidget("ptop_announce", self, self.window, self.peng,
+                                            pos=(lambda sw, sh, bw, bh: (sw / 2 - bw / 2, sh-bh-sh / 32)),
+                                            size=(lambda sw, sh: (sw / 6, sh / 16)),
+                                            )
+        self.addWidget(self.ptop_announce)
+        self.announces["top"] = self.ptop_announce
 
 
 class PopupLayer(peng3d.gui.GUILayer):

@@ -57,7 +57,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "continue_no":
             self.cg.client.game.player_decisions["continue"].discard(msg["announcer"])
 
@@ -70,7 +69,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.continuebtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "adjourn_yes":
             self.cg.client.game.player_decisions["adjourn"].add(msg["announcer"])
 
@@ -83,7 +81,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.adjournbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "adjourn_no":
             self.cg.client.game.player_decisions["adjourn"].discard(msg["announcer"])
 
@@ -96,7 +93,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.adjournbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "quit_yes":
             self.cg.client.game.player_decisions["quit"].add(msg["announcer"])
 
@@ -109,7 +105,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "quit_no":
             self.cg.client.game.player_decisions["quit"].discard(msg["announcer"])
 
@@ -122,7 +117,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "cancel_yes":
             self.cg.client.game.player_decisions["cancel"].add(msg["announcer"])
 
@@ -135,7 +129,6 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.cancelbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-
         elif msg["type"] == "cancel_no":
             self.cg.client.game.player_decisions["cancel"].discard(msg["announcer"])
 
@@ -153,7 +146,6 @@ class AnnouncePacket(CGPacket):
             if uuidify(msg["announcer"]) == self.cg.client.user_id:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.readybtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = False
-
         elif msg["type"] == "pigs":
             if self.cg.client.lobby.gamerules["dk.superpigs"] in ["on_pig", "on_play"]:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = True
@@ -163,7 +155,6 @@ class AnnouncePacket(CGPacket):
             else:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
-
         elif msg["type"] == "pigs_yes":
             if self.cg.client.lobby.gamerules["dk.superpigs"] in ["on_pig", "on_play"]:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.should_visible = True
@@ -173,7 +164,6 @@ class AnnouncePacket(CGPacket):
             else:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
-
         elif msg["type"] == "superpigs":
             self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
             self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
@@ -181,10 +171,53 @@ class AnnouncePacket(CGPacket):
         if msg["type"] in ["poverty_decline", "poverty_yes"]:
             # Set the poverty slot to be in front of the next player
 
-            cidx = self.cg.client.game.player_list.index(uuidify(msg["announcer"]))
-            nname = self.cg.client.gui.ingame.game_layer.hand_to_player[(cidx+1) % 4]
+            nname = self.cg.client.game.uuid_to_side(uuidify(msg["announcer"]), 1)
 
             self.cg.client.game.poverty_pos = nname
 
             for c in self.cg.client.game.slots["poverty"]:
                 c.start_anim("poverty", "poverty")
+
+        nname = self.cg.client.game.uuid_to_side(uuidify(msg["announcer"]))
+        if msg["type"] in [
+            "reservation_yes",
+            "reservation_no",
+            "solo_yes",
+            "solo_no",
+            "throw_yes",
+            "throw_no",
+            "pigs_yes",
+            "pigs_no",
+            "superpigs_yes",
+            "superpigs_no",
+            "poverty_yes",
+            "poverty_no",
+            "poverty_accept",
+            "poverty_decline",
+            "poverty_return",
+            "wedding_yes",
+            "wedding_no",
+            "wedding_clarification_trick",
+            "pigs",
+            "superpigs",
+            "re",
+            "kontra",
+            "no90",
+            "no60",
+            "no30",
+            "black",
+            "black_sow_solo",
+            "throw",
+            "ready",
+        ]:
+            # Display the announce on-screen
+            peng = self.cg.client.gui.peng
+            i18n = peng.i18n
+
+            # Check if the key exists and fall back otherwise
+            if f"announce.{msg['type']}.key" not in i18n.cache[i18n.lang]["cg"]:
+                key = f"cg:announce.{msg['type']}"
+            else:
+                key = str(peng.tl(f"cg:announce.{msg['type']}.key", data=msg.get("data", {})))
+
+            self.cg.client.gui.ingame.hud_layer.s_main.announces[nname].set_announce(key, msg.get("data", {}))

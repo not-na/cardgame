@@ -63,6 +63,10 @@ class CGame(object):
         self.cur_cardbatch: List[uuid.UUID] = []
         self.cur_intent: str = "play"
 
+    def uuid_to_side(self, u: uuid.UUID, offset=0):
+        cidx = self.player_list.index(u)
+        return self.cg.client.gui.ingame.game_layer.hand_to_player[(cidx+offset) % 4]
+
     def start(self):
         pass
 
@@ -110,6 +114,7 @@ class CGame(object):
         for card in self.cur_cardbatch:
             self.cards[card].selected = False
             self.cards[card].redraw()
+            self.cards[card].start_anim(self.cards[card].slot, self.cards[card].slot)
         self.cur_cardbatch = []
 
 

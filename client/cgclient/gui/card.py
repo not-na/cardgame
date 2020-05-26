@@ -148,6 +148,8 @@ class Card(object):
         self.anim_fromrot = [0, 0, 0]
         self.anim_duration: float = 1.0
 
+        #self.anim_last = 0.0
+
         self.color_id = self.layer.gen_color_id(self)
 
         self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
@@ -190,12 +192,17 @@ class Card(object):
         pass
 
     def start_anim(self, from_slot: str, to_slot: str, duration=DEFAULT_ANIM_DURATION):
+        # Uncomment this to debug erroneous calls to this method causing visual jerking
+        #if self.anim_state == ANIM_STATE_ACTIVE:
+        #    self.cg.error(f"START ACTIVE: {''.join(self.value)} {from_slot=} {to_slot=}")
+
         self.anim_state = ANIM_STATE_ACTIVE
         self.anim_stime = time.time()
         self.anim_fromslot = from_slot
         self.anim_frompos = self.pos
         self.anim_fromrot = self.rot
         self.anim_duration = duration
+        #self.anim_last = time.time()
         self.slot = to_slot
 
         self.redraw()
@@ -217,6 +224,13 @@ class Card(object):
 
         t = time.time()-self.anim_stime  # Time since start of animation
         p = t/self.anim_duration  # Percentage of animation completed
+
+        #dt = time.time()-self.anim_last
+        #dt *= 1000
+        #self.anim_last = time.time()
+        #pc = p*100
+        #T = t*1000
+        #self.cg.info(f"{''.join(self.value)} {pc=:.1f}% {T=:.3f}ms {dt=:.3f}ms")
 
         if p >= 1:
             # We are done with the animation, no need for further calculations
