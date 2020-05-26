@@ -39,6 +39,8 @@ class GameEndPacket(CGPacket):
 
     def receive(self, msg, cid=None):
         if msg["next_state"] == "lobby":
+            self.peer.remote_state = STATE_LOBBY
+
             self.cg.client.game = None
             self.cg.client.gui.window.changeMenu("servermain")
             self.cg.client.gui.servermain.changeSubMenu("lobby")

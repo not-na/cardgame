@@ -820,6 +820,89 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
+        self.register_event_handlers()
+
+        self.grid = peng3d.gui.GridLayout(self.peng, self, [12, 10], [30, 10])
+
+        self.readybtn = cgclient.gui.CGButton(
+            "readybtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 4], [4, 2]),
+            label=self.peng.tl("cg:gui.menu.ingame.ingamegui.readybtn.label")
+        )
+        self.readybtn.visible = False
+        self.addWidget(self.readybtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "ready"
+            })
+        self.readybtn.addAction("click", f)
+
+        self.throwbtn = cgclient.gui.CGButton(
+            "throwbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 3], [4, 1]),
+            label=self.peng.tl("cg:gui.menu.ingame.ingamegui.throwbtn.label")
+        )
+        self.throwbtn.should_visible = False
+        self.throwbtn.visible = False
+        self.addWidget(self.throwbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": "throw"
+            })
+        self.throwbtn.addAction("click", f)
+
+        self.rebtn = cgclient.gui.CGButton(
+            "rebtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 0], [2, 1]),
+            label=""
+        )
+        self.rebtn.visible = False
+        self.rebtn.purpose = "None"
+        self.addWidget(self.rebtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": self.rebtn.purpose
+            })
+        self.rebtn.addAction("click", f)
+
+        self.pigsbtn = cgclient.gui.CGButton(
+            "pigsbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([8, 0], [2, 1]),
+            label=""
+        )
+        self.pigsbtn.should_visible = False
+        self.pigsbtn.visible = False
+        self.pigsbtn.purpose = "None"
+        self.addWidget(self.pigsbtn)
+
+        def f():
+            self.peng.cg.client.send_message("cg:game.dk.announce", {
+                "type": self.pigsbtn.purpose
+            })
+        self.pigsbtn.addAction("click", f)
+
+    def register_event_handlers(self):
+        self.peng.cg.add_event_listener("cg:lobby.gamerules.change", self.handle_gamerule_change)
+
+    def handle_gamerule_change(self, event: str, data: dict):
+        data = data["gamerules"]
+        if "dk.throw" in data:
+            if data["dk.throw"] == "throw":
+                self.throwbtn.should_visible = True
+            else:
+                self.throwbtn.should_visible = False
+
+        if "dk.pigs" in data:
+            if data["dk.pigs"] in ["one_first", "one_on_play", "one_on_fox", "two_on_play"]:
+                self.pigsbtn.should_visible = True
+                self.pigsbtn.purpose = "pigs"
+                self.pigsbtn.label = self.peng.tl("cg:gui.menu.ingame.ingamegui.pigsbtn.pigs")
+            else:
+                self.pigsbtn.should_visible = False
+
 
 class PauseGUISubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):

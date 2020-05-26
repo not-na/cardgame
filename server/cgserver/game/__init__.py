@@ -85,7 +85,7 @@ class CGame(object, metaclass=abc.ABCMeta):
         self.lobby_id = lobby
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]
 
-        self.players: List[uuid.UUID] = self.lobby.users
+        self.players: List[uuid.UUID] = self.lobby.users.copy()
         self.fake_players = []
 
         self.register_event_handlers()
@@ -113,6 +113,7 @@ class CGame(object, metaclass=abc.ABCMeta):
             if self.DEV_MODE and p in self.fake_players:
                 continue
 
+            self.lobby.started = False
             self.cg.server.users_uuid[p].game = None
             self.cg.server.send_to_user(p, "cg:game.end", {
                 "next_state": "lobby"

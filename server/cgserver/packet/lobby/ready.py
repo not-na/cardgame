@@ -69,3 +69,6 @@ class ReadyPacket(CGPacket):
 
             l.started = True
             g.start()
+
+            for i in l.users:
+                l.user_ready[i] = False

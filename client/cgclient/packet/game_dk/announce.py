@@ -40,6 +40,9 @@ class AnnouncePacket(CGPacket):
         if self.cg.client.game is None:
             self.cg.error("Received announce packet although not being in a game!")
             return
+        if "announcer" not in msg:
+            self.cg.warn("Received AnnouncePacket on client without announcer!")
+            return
         self.cg.info(f"Announce: {msg}")
 
         if msg["type"] == "continue_yes":
@@ -145,6 +148,35 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.cancelbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
+
+        if msg["type"] == "ready":
+            if uuidify(msg["announcer"]) == self.cg.client.user_id:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.readybtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = False
+
+        elif msg["type"] == "pigs":
+            if self.cg.client.lobby.gamerules["dk.superpigs"] in ["on_pig", "on_play"]:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = True
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "superpigs"
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.label = self.cg.client.gui.peng.tl(
+                    "cg:gui.menu.ingame.ingamegui.pigsbtn.superpigs")
+            else:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
+
+        elif msg["type"] == "pigs_yes":
+            if self.cg.client.lobby.gamerules["dk.superpigs"] in ["on_pig", "on_play"]:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.should_visible = True
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "superpigs"
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.label = self.cg.client.gui.peng.tl(
+                    "cg:gui.menu.ingame.ingamegui.pigsbtn.superpigs")
+            else:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
+
+        elif msg["type"] == "superpigs":
+            self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+            self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = "None"
 
         if msg["type"] in ["poverty_decline", "poverty_yes"]:
             # Set the poverty slot to be in front of the next player

@@ -59,6 +59,15 @@ class GameStartPacket(CGPacket):
 
             # Switch the menu
             self.cg.client.gui.window.changeMenu("ingame")
+
+            self.cg.client.gui.servermain.s_lobby.readybtn.pressed = False
+            self.cg.client.gui.servermain.s_lobby.readybtn.redraw()
+            for p in self.cg.client.lobby.users:
+                self.cg.client.lobby.user_ready[p] = False
+                self.cg.send_event("cg:lobby.player.ready", {
+                    "player": p,
+                    "ready": False
+                })
         else:
             self.cg.crash(f"Unknown/Unsupported game type {msg['game_type']}")
 

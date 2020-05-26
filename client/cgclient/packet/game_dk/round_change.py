@@ -40,6 +40,7 @@ class RoundChangePacket(CGPacket):
         "eyes",
         "extras",
         "game_summary",
+        "rebtn_lbl",
     ]
     side = SIDE_CLIENT
 
@@ -112,13 +113,26 @@ class RoundChangePacket(CGPacket):
                     "end": set()
                 }
 
+                self.cg.client.gui.ingame.gui_layer.s_ingame.readybtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
             elif msg["phase"] == "dealing":
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("ingame")
+            elif msg["phase"] == "w_for_ready":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.readybtn.visible = True
+                if self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.should_visible:
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = True
             elif msg["phase"] == "reservations":
                 pass
             elif msg["phase"] == "tricks":
-                pass
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = True
+                if self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.should_visible:
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = True
+                self.cg.client.gui.ingame.popup_layer.changeSubMenu("empty")
+
             elif msg["phase"] == "counting":
                 pass
             elif msg["phase"] == "end":
@@ -136,3 +150,14 @@ class RoundChangePacket(CGPacket):
                 self.cg.client.game.round_num = msg["round"]
             else:
                 self.cg.crash(f"Invalid round phase {msg['phase']}")
+
+        if "rebtn_lbl" in msg:
+            if msg["rebtn_lbl"] == "invis":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = "None"
+            else:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = True
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = msg["rebtn_lbl"]
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.label = self.cg.client.gui.peng.tl(
+                    f"cg:gui.menu.ingame.ingamegui.rebtn.{msg['rebtn_lbl']}"
+                )

@@ -71,6 +71,8 @@ ANIM_STATE_ACTIVE = 1
 
 DEBUG_CARDS = False
 
+OPEN_CARDS = 0  # 0, if normal, 180 if all open
+
 
 def rotation_matrix(axis, theta):
     # From https://stackoverflow.com/a/6802723
@@ -311,32 +313,32 @@ class Card(object):
                 return pos, [0, 180, r]
             elif self.game.poverty_pos == "left":
                 pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 4)
-                return pos, [0, 180, r]
+                return pos, [0, OPEN_CARDS, r]
             elif self.game.poverty_pos == "right":
                 pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 4)
-                return pos, [0, 180, r]
+                return pos, [0, OPEN_CARDS, r]
             elif self.game.poverty_pos == "top":
                 pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 4)
-                return pos, [0, 180, r]
+                return pos, [0, OPEN_CARDS, r]
         elif slot == "player_self":
             pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_left":
             pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 3)
-            return pos, [0, 180, r]
+            return pos, [0, OPEN_CARDS, r]
         elif slot == "player_right":
             pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 3)
-            return pos, [0, 180, r]
+            return pos, [0, OPEN_CARDS, r]
         elif slot == "player_top":
             pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 3)
-            return pos, [0, 180, r]
+            return pos, [0, OPEN_CARDS, r]
         elif slot == "ptrick_self":
             if DEBUG_CARDS:
                 return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
             else:
                 return [
-                    [1.8, 0.01+0.001*index, 1.5],
-                    [0, 180, 0],
+                    [3.1, 0.01 + 0.001 * index, 1.5],
+                    [0, OPEN_CARDS, 0],
                 ]
         elif slot == "ptrick_left":
             if DEBUG_CARDS:
@@ -344,7 +346,7 @@ class Card(object):
             else:
                 return [
                     [-3.1, 0.01 + 0.001 * index, 1.5],
-                    [0, 180, 90],
+                    [0, OPEN_CARDS, 90],
                 ]
         elif slot == "ptrick_right":
             if DEBUG_CARDS:
@@ -352,15 +354,15 @@ class Card(object):
             else:
                 return [
                     [3.1, 0.01 + 0.001 * index, -1.5],
-                    [0, 180, 90],
+                    [0, OPEN_CARDS, 90],
                 ]
         elif slot == "ptrick_top":
             if DEBUG_CARDS:
                 return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
             else:
                 return [
-                    [-1.8, 0.01 + 0.001 * index, -1.5],
-                    [0, 180, 0],
+                    [-3.1, 0.01 + 0.001 * index, -1.5],
+                    [0, OPEN_CARDS, 0],
                 ]
         else:
             self.cg.crash(f"Unknown card slot {slot}")

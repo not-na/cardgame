@@ -730,6 +730,8 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.readybtn.setBackground(cgclient.gui.CGButtonBG(self.readybtn))
         self.addWidget(self.readybtn)
 
+        # TODO The game freezes after everybody is ready and the game is starting
+
         def f():
             self.menu.cg.client.send_message("cg:lobby.ready", {"ready": True})
 
@@ -1771,12 +1773,14 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         if self.clickable and self.is_hovering:
             if button == LEFT:
                 if self.kickbtn.getPos()[0] <= x <= self.kickbtn.getPos()[0] + self.kickbtn.getSize()[0] and \
-                        self.kickbtn.getPos()[1] <= y <= self.kickbtn.getPos()[1] + self.kickbtn.getSize()[1]:
+                        self.kickbtn.getPos()[1] <= y <= self.kickbtn.getPos()[1] + self.kickbtn.getSize()[1] and \
+                        self.kickbtn.cur_img == "default":
                     self.kickbtn.pressed = True
                 elif self.make_admin_btn.getPos()[0] <= x <= self.make_admin_btn.getPos()[0] + \
                         self.make_admin_btn.getSize()[0] and \
                         self.make_admin_btn.getPos()[1] <= y <= self.make_admin_btn.getPos()[1] + \
-                        self.make_admin_btn.getSize()[1]:
+                        self.make_admin_btn.getSize()[1] and \
+                        self.make_admin_btn.cur_img == "default":
                     self.make_admin_btn.pressed = True
                 else:
                     self.mouse_offset = [x - self.pos[0], y - self.pos[1]]

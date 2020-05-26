@@ -434,7 +434,7 @@ class DoppelkopfGame(CGame):
         self.start_round(0)
 
     def start_round(self, round_num: int):
-        players = self.players[round_num:] + self.players[:round_num]  # Each round, another player begins
+        players = self.players[round_num % 4:] + self.players[:round_num % 4]  # Each round, another player begins
 
         self.current_round = DoppelkopfRound(self, players)
         self.rounds.append(self.current_round)
@@ -487,9 +487,9 @@ class DoppelkopfGame(CGame):
             "game_summary": data["game_summary"]
         })
 
-        # Determine if the round should be played again
         m = -1 if data["game_type"] in ["ramsch", "ramsch_sw"] else 1  # In case of Ramsch, the points are swapped
 
+        # Determine if the round should be played again
         remake_round = data["game_type"] in ["throw", "poverty_cancel"]  # The round was cancelled due to reservations
         remake_round = remake_round or (  # The winner got 0 or less points (depending on the rules)
                 self.gamerules["dk.repeat_game"] and
@@ -1406,7 +1406,6 @@ class DoppelkopfRound(object):
 
         # Deal the cards
         self.game_state = "dealing"
-
         self.game.send_to_all("cg:game.dk.round.change", {
             "phase": "dealing",
         })
@@ -1428,6 +1427,11 @@ class DoppelkopfRound(object):
                     self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{j}")
                     self.transfer_card(self.cards[card_id], "stack", f"hand{j}")
 
+        self.game_state = "w_for_ready"
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "w_for_ready"
+        })
+
     def start_normal(self):
         self.reserv_state = "finished"
 
@@ -1441,8 +1445,14 @@ class DoppelkopfRound(object):
             # Put the players into their parties
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
                 self.parties["re"].add(player)
+                self.game.send_to_user(player, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "re"
+                })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
                 self.parties["kontra"].add(player)
+                self.game.send_to_user(player, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "kontra"
+                })
 
             self.obvious_parties["unknown"].add(player)
 
@@ -1471,9 +1481,15 @@ class DoppelkopfRound(object):
 
         # Put the players into their parties
         self.parties["re"].add(solist)
+        self.game.send_to_user(solist, "cg:game.dk.round.change", {
+            "rebtn_lbl": "re"
+        })
         for i in self.players:
             if i != solist:
                 self.parties["kontra"].add(i)
+                self.game.send_to_user(i, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "kontra"
+                })
 
         # Obvious parties
         if self.game_type != "silent_wedding":
@@ -1538,9 +1554,18 @@ class DoppelkopfRound(object):
 
         # Put the players into their parties
         self.parties["re"].update([self.poverty_player, accepter])
+        self.game.send_to_user(self.poverty_player, "cg:game.dk.round.change", {
+            "rebtn_lbl": "re"
+        })
+        self.game.send_to_user(accepter, "cg:game.dk.round.change", {
+            "rebtn_lbl": "re"
+        })
         for i in self.players:
             if i not in self.parties["re"]:
                 self.parties["kontra"].add(i)
+                self.game.send_to_user(i, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "kontra"
+                })
 
         # Obvious parties
         self.obvious_parties["re"].update(self.parties["re"])
@@ -1591,10 +1616,19 @@ class DoppelkopfRound(object):
             # Put the players into their parties
             if list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
                 self.parties["re"].add(player)
+                self.game.send_to_user(player, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "re"
+                })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
                 self.parties["kontra"].add(player)
+                self.game.send_to_user(player, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "kontra"
+                })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 2:
                 self.parties["re"].add(player)
+                self.game.send_to_user(player, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "re"
+                })
                 self.game_type = "ramsch_sw"
 
             self.obvious_parties["unknown"].add(player)
@@ -1847,38 +1881,46 @@ class DoppelkopfRound(object):
 
         # Denials that were overshot by 30 points
         if winner != "re":
+            goal = min(int(kontra_eyes / 30) * 30, 120)
             if "no90" in self.modifiers["re"] and kontra_eyes >= 120:
                 game_value -= 1
-                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no90")
+                game_summary.append(f"{goal}vs_no90")
             if "no60" in self.modifiers["re"] and kontra_eyes >= 90:
                 game_value -= 1
-                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no90")
-                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no60")
+                if f"{goal}vs_no90" in game_summary:
+                    game_summary.remove(f"{goal}vs_no90")
+                game_summary.append(f"{goal}vs_no60")
             if "no30" in self.modifiers["re"] and kontra_eyes >= 60:
                 game_value -= 1
-                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no60")
-                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_no30")
+                if f"{goal}vs_no60" in game_summary:
+                    game_summary.remove(f"{goal}vs_no60")
+                game_summary.append(f"{goal}vs_no30")
             if "black" in self.modifiers["re"] and kontra_eyes >= 30:
                 game_value -= 1
-                game_summary.remove(f"{int(kontra_eyes / 30) * 30}vs_no30")
-                game_summary.append(f"{int(kontra_eyes / 30) * 30}vs_black")
+                if f"{goal}vs_no30" in game_summary:
+                    game_summary.remove(f"{goal}vs_no30")
+                game_summary.append(f"{goal}vs_black")
 
         if winner != "kontra":
+            goal = min(int(re_eyes / 30) * 30, 120)
             if "no90" in self.modifiers["kontra"] and re_eyes >= 120:
                 game_value += 1
-                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no90")
+                game_summary.append(f"{goal}vs_no90")
             if "no60" in self.modifiers["kontra"] and re_eyes >= 90:
                 game_value += 1
-                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no90")
-                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no60")
+                if f"{goal}vs_no90" in game_summary:
+                    game_summary.remove(f"{goal}vs_no90")
+                game_summary.append(f"{goal}vs_no60")
             if "no30" in self.modifiers["kontra"] and re_eyes >= 60:
                 game_value += 1
-                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no60")
-                game_summary.append(f"{int(re_eyes / 30) * 30}vs_no30")
+                if f"{goal}vs_no60" in game_summary:
+                    game_summary.remove(f"{goal}vs_no60")
+                game_summary.append(f"{goal}vs_no30")
             if "black" in self.modifiers["kontra"] and re_eyes >= 30:
                 game_value += 1
-                game_summary.remove(f"{int(re_eyes / 30) * 30}vs_no30")
-                game_summary.append(f"{int(re_eyes / 30) * 30}vs_black")
+                if f"{goal}vs_no30" in game_summary:
+                    game_summary.remove(f"{goal}vs_no30")
+                game_summary.append(f"{goal}vs_black")
 
         # Re and Kontra as adding multipliers
         if self.game.gamerules["dk.re_kontra"] == "+2":
@@ -2032,8 +2074,8 @@ class DoppelkopfRound(object):
         if uuidify(data["player"]) not in self.game.fake_players and \
                 self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
-        if self.game_state != "dealing":
-            raise GameStateError(f"Game state for ready handling must be 'dealing', not {self.game_state}!")
+        if self.game_state != "w_for_ready":
+            raise GameStateError(f"Game state for ready handling must be 'w_for_ready', not {self.game_state}!")
 
         player = uuidify(data["player"])
         if player not in self.rdy_players:
@@ -3171,7 +3213,7 @@ class DoppelkopfRound(object):
 
         # Trick is full
         elif len(self.current_trick) == 4:
-            #time.sleep(2)
+            time.sleep(1)
             self.game.cg.info(f"Game Type: {self.game_type}")
             self.game.cg.info(f"Obvious Parties {self.obvious_parties}")
 
@@ -3213,6 +3255,13 @@ class DoppelkopfRound(object):
                                 for p in self.players:
                                     if p not in self.parties["re"]:
                                         self.parties["kontra"].add(p)
+                                        self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                            "rebtn_lbl": "kontra"
+                                        })
+                                for p in self.parties["re"]:
+                                    self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                        "rebtn_lbl": "re"
+                                    })
                                 self.parties["none"].clear()
 
                                 self.update_obvious_party(trick_winner, "re")
@@ -3227,6 +3276,15 @@ class DoppelkopfRound(object):
                             # Start diamonds solo
                             self.parties["kontra"] = self.parties["none"]
                             self.parties["none"].clear()
+
+                            for p in self.parties["re"]:
+                                self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                    "rebtn_lbl": "re"
+                                })
+                            for p in self.parties["kontra"]:
+                                self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                    "rebtn_lbl": "kontra"
+                                })
 
                             self.update_obvious_party(trick_winner, "re")
 
@@ -3469,7 +3527,7 @@ class DoppelkopfRound(object):
         # Announce the pig call
         self.game.send_to_all("cg:game.dk.announce", {
             "announcer": self.current_player.hex,
-            "type": "pig"
+            "type": "pigs"
         })
 
         # Register the move
@@ -3530,7 +3588,7 @@ class DoppelkopfRound(object):
         # Announce the superpig call
         self.game.send_to_all("cg:game.dk.announce", {
             "announcer": player.hex,
-            "type": "superpig"
+            "type": "superpigs"
         })
 
         # Register the move
@@ -3584,6 +3642,10 @@ class DoppelkopfRound(object):
                 raise InvalidMoveError("Re was called too late!")
 
             self.modifiers["re"].append("re")
+            for p in self.parties["re"]:
+                self.game.send_to_user(p, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "no90"
+                })
 
             self.update_obvious_party(self.current_player, "re")
 
@@ -3614,6 +3676,10 @@ class DoppelkopfRound(object):
                 raise InvalidMoveError("Kontra was called too late!")
 
             self.modifiers["kontra"].append("kontra")
+            for p in self.parties["kontra"]:
+                self.game.send_to_user(p, "cg:game.dk.round.change", {
+                    "rebtn_lbl": "no90"
+                })
 
             self.update_obvious_party(self.current_player, "kontra")
 
@@ -3681,15 +3747,24 @@ class DoppelkopfRound(object):
 
         # Add the denial
         self.modifiers[party].append(rtype)
+        for p in self.parties[party]:
+            new = "invis"
+            if rtype == "no90":
+                new = "no60"
+            elif rtype == "no60":
+                new = "no30"
+            elif rtype == "no30":
+                new = "black"
+            self.game.send_to_user(p, "cg:game.dk.round.change", {
+                "rebtn_lbl": new
+            })
 
         # Handle the obvious parties
         obv_party = self.current_player in self.obvious_parties[party]
         self.update_obvious_party(self.current_player, party)
 
         # Announce decision
-        dt = {"announcer": self.current_player.hex, "type": rtype}
-        if not obv_party:
-            dt["data"] = {"party": party}
+        dt = {"announcer": self.current_player.hex, "type": rtype, "party": party}
         self.game.send_to_all("cg:game.dk.announce", dt)
 
         # Register move
@@ -3885,14 +3960,14 @@ class DoppelkopfRound(object):
             players = self.players[self.players.index(self.current_player):] + \
                       self.players[:self.players.index(self.current_player)]
             for j in players:
-                p = 'p'+ str(self.players.index(j))
+                time.sleep(.5)
+                p = 'p' + str(self.players.index(j))
                 self.game.cg.send_event("cg:game.dk.command", {
                     "packet": "play_card",
                     "player": p,
                     "type": "play",
                     "card": "-1"
                 })
-                #time.sleep(1.5)
 
                 if self.game_state == "counting":
                     return
