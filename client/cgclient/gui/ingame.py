@@ -70,7 +70,6 @@ class IngameMenu(peng3d.gui.Menu):
         self.cg.add_event_listener("cg:status.message.close", self.handler_status_message_close)
 
     def handler_status_message_open(self, event: str, data: dict):
-        print("hi")
         self.status_layer.changeSubMenu("status_msg")
         self.d_status_message.label_main = self.peng.tl(data["message"], data["data"])
 
@@ -91,7 +90,6 @@ class GameLayer(peng3d.layer.Layer):
     batch: pyglet.graphics.Batch
     batch_pick: pyglet.graphics.Batch
 
-    CARD_KEYS = "0123456789abcdef"
     NUM_SYNCS = 2
     MIN_COLORID = 1 / 30.
 
@@ -166,8 +164,6 @@ class GameLayer(peng3d.layer.Layer):
             self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
             self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
             self.peng.registerEventHandler("on_mouse_release", self.on_mouse_release)
-
-        self.peng.registerEventHandler("on_key_release", self.on_key_release)
 
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1 / 60.)
@@ -449,18 +445,6 @@ class GameLayer(peng3d.layer.Layer):
 
         co.start_anim(co.slot, co.slot)
         self.clicked_card = None
-
-    def on_key_release(self, symbol, modifiers):
-        if not self.menu == self.window.menu:
-            # Only active when the parent menu is active
-            return
-
-        if symbol < 0x7A and chr(symbol) in self.CARD_KEYS:
-            # "Play" the card
-            idx = self.CARD_KEYS.index(chr(symbol))
-            self.menu.cg.info(f"Playing card #{idx}")
-            if idx < len(self.game.slots[self.game.own_hand]):
-                self.game.select_card(self.game.slots[self.game.own_hand][idx].cardid)
 
     def on_redraw(self):
         pass

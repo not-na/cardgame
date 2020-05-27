@@ -27,7 +27,9 @@ import sys
 import time
 import threading
 import uuid
-from typing import Dict, Union, Type, Optional
+import heapq
+from typing import Dict, Union, Type, Optional, Callable, List, Any, Tuple
+from dataclasses import dataclass, field
 
 import peng3dnet
 
@@ -37,6 +39,16 @@ import cgserver
 from cg.constants import STATE_AUTH, MODE_CG
 from cg.util import uuidify
 from cg.util.serializer import msgpack
+
+
+@dataclass(order=True)
+class _ScheduledFunction:
+    time: float
+    func: Callable = field(compare=False)
+    flags: int = field(compare=False)
+    start_time: float = field(compare=False)
+    args: Tuple[Any] = field(compare=False)
+    kwargs: Dict[str, Any] = field(compare=False)
 
 
 class CGServer(peng3dnet.ext.ping.PingableServerMixin, peng3dnet.net.Server):
@@ -117,6 +129,8 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
 
 
 class DedicatedServer(object):
+    PROCESS_TIMEOUT = 0.01
+
     command_manager = cgserver.command.CommandManager
 
     def __init__(self, c: cg.CardGame, addr=None, port=None):
@@ -168,6 +182,11 @@ class DedicatedServer(object):
         self.run_console = False
         self.interactive_thread = None
 
+        self.process_thread: Optional[threading.Thread] = None
+
+        self.scheduled_events: List[_ScheduledFunction] = []
+        self.process_lock = threading.Lock()
+
     def start(self):
         self.start_listening()
 
@@ -175,7 +194,11 @@ class DedicatedServer(object):
 
     def start_listening(self):
         self.server.runAsync()
-        self.server.process_async()
+        #self.server.process_async()
+
+        self.process_thread = threading.Thread(name="Network Processing Thread", target=self.run_process)
+        self.process_thread.daemon = True
+        self.process_thread.start()
 
     def start_interactive_console(self):
         self.interactive_thread = threading.Thread(name="Server Management Console Thread", target=self.run_interactive_console)
@@ -199,6 +222,27 @@ class DedicatedServer(object):
             self.cg.send_event("cg:console.stdin.recvline", {"data": user_in, "pipename": sys.stdin, "pipe": sys.stdin})
 
             sys.stdout.flush()
+
+    def run_process(self):
+        while self.server.run:
+            self.server.process(wait=True, timeout=self.PROCESS_TIMEOUT)
+
+            sched_func = None
+            with self.process_lock:
+                if len(self.scheduled_events) > 0 and self.scheduled_events[0].time <= time.time():
+                    sched_func = heapq.heappop(self.scheduled_events)
+
+            if sched_func is not None:
+                try:
+                    sched_func.func(time.time() - sched_func.start_time, *sched_func.args, **sched_func.kwargs)
+                except Exception:
+                    self.cg.error(f"Error while calling scheduled function:")
+                    self.cg.exception("Exception within scheduled function")
+
+    def schedule_function(self, func: Callable, delay: float, flags=0, *args, **kwargs):
+        with self.process_lock:
+            sched_func = _ScheduledFunction(time.time()+delay, func, flags, time.time(), args, kwargs)
+            heapq.heappush(self.scheduled_events, sched_func)
 
     def load_server_data(self):
         fname = os.path.join(self.cg.get_instance_path(), "serverdat.csd")

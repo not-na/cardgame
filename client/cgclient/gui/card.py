@@ -214,14 +214,6 @@ class Card(object):
         idx = self.game.slots[self.slot].index(self)
         tpos, trot = self.get_card_pos_rot(self.slot, idx, len(self.game.slots[self.slot]))
 
-        if self.anim_fromslot == "stack":
-            self.anim_state = ANIM_STATE_DONE
-            self.pos = tpos
-            self.rot = trot
-
-            self.redraw()
-            return
-
         t = time.time()-self.anim_stime  # Time since start of animation
         p = t/self.anim_duration  # Percentage of animation completed
 
@@ -290,7 +282,11 @@ class Card(object):
 
         if slot == "stack":
             # TODO: Implement properly
-            return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
+            #return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
+            return [
+                [0, 0.01*index, 0],
+                [0, 0, 0],
+            ]
         elif slot == "table":
             # Apply the table shift
             # Causes cards to be aligned with whomever played it

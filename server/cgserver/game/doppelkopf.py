@@ -661,7 +661,7 @@ class DoppelkopfGame(CGame):
             "type": "end_no"
         })
 
-    def serialise(self):
+    def serialize(self):
         return {
             "id": self.game_id.hex,
             "type": "dk",
@@ -675,7 +675,7 @@ class DoppelkopfGame(CGame):
         }
 
     @classmethod
-    def deserialise(cls, cg, lobby, data):
+    def deserialize(cls, cg, lobby, data):
         game = cls(cg, lobby)
         game.game_id = uuidify(data["id"])
         game.creation_time = data["creation_time"]
@@ -698,6 +698,8 @@ class DoppelkopfGame(CGame):
 
 class DoppelkopfRound(object):
     DEV_MODE_PREP_CARDS = False
+
+    CARD_DEAL_DELAY = 1.0
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game
@@ -775,6 +777,8 @@ class DoppelkopfRound(object):
         self.wedding_find_trick: int = 1
 
         self.start_hands: Dict[uuid.UUID, List[uuid.UUID]] = {}
+
+        self.deal_counter = 0
 
     @property
     def hands(self) -> Dict[uuid.UUID, List[uuid.UUID]]:
@@ -1477,6 +1481,36 @@ class DoppelkopfRound(object):
         elif card.value == "a":
             return 11
 
+    def deal_card(self, dt):
+        stack = self.slots["stack"]
+        kr = 3
+        if self.deal_counter >= 12:
+            if self.game.gamerules["dk.without9"] == "with_four":
+                kr = 2
+            elif self.game.gamerules["dk.without9"] == "without":
+                kr = 1
+
+        for k in range(kr):  # 3 cards (or less in the last round, if 9s are disabled)
+            if self.DEV_MODE_PREP_CARDS:
+                card_id = stack.pop(0)
+            else:
+                card_id = stack.pop(random.randint(0, len(stack) - 1))
+            self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{self.deal_counter % 4}")
+            self.transfer_card(self.cards[card_id], "stack", f"hand{self.deal_counter % 4}")
+
+        self.deal_counter += 1
+
+        if self.deal_counter >= 16:
+            self.game.cg.server.schedule_function(self.deal_ready, self.CARD_DEAL_DELAY)
+        else:
+            self.game.cg.server.schedule_function(self.deal_card, self.CARD_DEAL_DELAY)
+
+    def deal_ready(self, dt):
+        self.game_state = "w_for_ready"
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "phase": "w_for_ready"
+        })
+
     def start(self):
         self.game.cg.info(f"START")
 
@@ -1500,27 +1534,7 @@ class DoppelkopfRound(object):
             "phase": "dealing",
         })
 
-        stack = self.slots["stack"]
-        for i in range(4):  # Four times
-            kr = 3
-            if i == 3:
-                if self.game.gamerules["dk.without9"] == "with_four":
-                    kr = 2
-                elif self.game.gamerules["dk.without9"] == "without":
-                    kr = 1
-            for j in range(4):  # To each player
-                for k in range(kr):  # 3 cards (or less in the last round, if 9s are disabled)
-                    if self.DEV_MODE_PREP_CARDS:
-                        card_id = stack.pop(0)
-                    else:
-                        card_id = stack.pop(random.randint(0, len(stack) - 1))
-                    self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{j}")
-                    self.transfer_card(self.cards[card_id], "stack", f"hand{j}")
-
-        self.game_state = "w_for_ready"
-        self.game.send_to_all("cg:game.dk.round.change", {
-            "phase": "w_for_ready"
-        })
+        self.deal_card(0)
 
     def start_normal(self):
         self.reserv_state = "finished"
@@ -3237,7 +3251,7 @@ class DoppelkopfRound(object):
         if uuidify(data["player"]) != self.current_player:
             self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.pc_wrong_turn")
             return
-        if len(self.current_trick) > 4:
+        if len(self.current_trick) >= 4:
             raise InvalidMoveError(f"The trick may only contain a maximum of 4 cards, not {len(self.current_trick)}!")
 
         # Check if card is in the players hand
@@ -3341,241 +3355,243 @@ class DoppelkopfRound(object):
 
         # Trick is full
         elif len(self.current_trick) == 4:
-            time.sleep(1)
-            self.game.cg.info(f"Game Type: {self.game_type}")
-            self.game.cg.info(f"Obvious Parties {self.obvious_parties}")
+            self.game.cg.server.schedule_function(self.end_trick, 1, fox_card=fox_card)
 
-            # Determine the winner of the trick
-            trick_winner, sorted_trick = self.get_trick_winner()
-            gain = sum(map(lambda x: self.get_eyes(self.cards[x[1]]), self.current_trick))
-            self.player_eyes[trick_winner] += gain
+    def end_trick(self, dt=None, fox_card=""):
+        self.game.cg.info(f"Game Type: {self.game_type}")
+        self.game.cg.info(f"Obvious Parties {self.obvious_parties}")
 
-            # Check for the wedding trick
-            if self.game_type == "wedding":
-                if len(self.parties["kontra"]) == 0:  # Parties not decided yet
-                    if self.trick_num <= 3:
-                        if trick_winner not in self.parties["re"]:
-                            if self.wedding_clarification_trick in [None, "foreign"]:
-                                wedding = True
+        # Determine the winner of the trick
+        trick_winner, sorted_trick = self.get_trick_winner()
+        gain = sum(map(lambda x: self.get_eyes(self.cards[x[1]]), self.current_trick))
+        self.player_eyes[trick_winner] += gain
 
-                            elif self.wedding_clarification_trick == "trump":
-                                wedding = self.get_card_color(self.cards[self.current_trick[0][1]]) == "trump"
-                            elif self.wedding_clarification_trick == "miss":
-                                wedding = self.get_card_color(self.cards[sorted_trick[0]]) != "trump"
-                            elif self.wedding_clarification_trick in ["hearts", "spades", "clubs"]:
-                                # The color must not be trumped
-                                wedding = self.get_card_color(
-                                    self.cards[sorted_trick[0]]) == self.wedding_clarification_trick
-                            elif self.wedding_clarification_trick == "diamonds":
-                                # There may be no diamonds jacks or queens
-                                wedding = True
-                                for i in self.current_trick:
-                                    wedding = wedding and (self.cards[i[1]].card_value in ["d9", "d10", "dk", "da"])
-                            else:
-                                raise InvalidMoveError(
-                                    f"Invalid wedding clarification trick: {self.wedding_clarification_trick}")
+        # Check for the wedding trick
+        if self.game_type == "wedding":
+            if len(self.parties["kontra"]) == 0:  # Parties not decided yet
+                if self.trick_num <= 3:
+                    if trick_winner not in self.parties["re"]:
+                        if self.wedding_clarification_trick in [None, "foreign"]:
+                            wedding = True
 
-                            self.game.cg.info(
-                                f"wedding: {wedding}, wct: {self.wedding_clarification_trick}, card: {self.cards[sorted_trick[0]].card_value}")
+                        elif self.wedding_clarification_trick == "trump":
+                            wedding = self.get_card_color(self.cards[self.current_trick[0][1]]) == "trump"
+                        elif self.wedding_clarification_trick == "miss":
+                            wedding = self.get_card_color(self.cards[sorted_trick[0]]) != "trump"
+                        elif self.wedding_clarification_trick in ["hearts", "spades", "clubs"]:
+                            # The color must not be trumped
+                            wedding = self.get_card_color(
+                                self.cards[sorted_trick[0]]) == self.wedding_clarification_trick
+                        elif self.wedding_clarification_trick == "diamonds":
+                            # There may be no diamonds jacks or queens
+                            wedding = True
+                            for i in self.current_trick:
+                                wedding = wedding and (self.cards[i[1]].card_value in ["d9", "d10", "dk", "da"])
+                        else:
+                            raise InvalidMoveError(
+                                f"Invalid wedding clarification trick: {self.wedding_clarification_trick}")
 
-                            if wedding:
-                                self.parties["re"].add(trick_winner)
-                                for p in self.players:
-                                    if p not in self.parties["re"]:
-                                        self.parties["kontra"].add(p)
-                                        self.game.send_to_user(p, "cg:game.dk.round.change", {
-                                            "rebtn_lbl": "kontra"
-                                        })
-                                for p in self.parties["re"]:
+                        self.game.cg.info(
+                            f"wedding: {wedding}, wct: {self.wedding_clarification_trick}, card: {self.cards[sorted_trick[0]].card_value}")
+
+                        if wedding:
+                            self.parties["re"].add(trick_winner)
+                            for p in self.players:
+                                if p not in self.parties["re"]:
+                                    self.parties["kontra"].add(p)
                                     self.game.send_to_user(p, "cg:game.dk.round.change", {
-                                        "rebtn_lbl": "re"
+                                        "rebtn_lbl": "kontra"
                                     })
-                                self.parties["none"].clear()
-
-                                self.update_obvious_party(trick_winner, "re")
-
-                                self.wedding_find_trick = self.trick_num
-
-                                # TODO Inform the players on the found wedding
-
-                            self.game.cg.info(f"obvious parties: {self.obvious_parties}")
-
-                        elif self.trick_num == 3:  # 3rd trick was made by re party
-                            # Start diamonds solo
-                            self.parties["kontra"] = self.parties["none"]
-                            self.parties["none"].clear()
-
                             for p in self.parties["re"]:
                                 self.game.send_to_user(p, "cg:game.dk.round.change", {
                                     "rebtn_lbl": "re"
                                 })
-                            for p in self.parties["kontra"]:
-                                self.game.send_to_user(p, "cg:game.dk.round.change", {
-                                    "rebtn_lbl": "kontra"
-                                })
+                            self.parties["none"].clear()
 
                             self.update_obvious_party(trick_winner, "re")
 
-                            self.game_type = "solo_diamonds"
-
-                            for expts in self.extra_points.values():
-                                expts.clear()
-
-                            self.game.send_to_all("cg:game.dk.round.change", {
-                                "phase": "tricks",
-                                "game_type": self.game_type,
-                                "solist": trick_winner.hex
-                            })
-
                             self.wedding_find_trick = self.trick_num
 
-            # Check for extra tricks
-            if self.game_type in ["normal", "wedding", "ramsch", "poverty"]:
-                # Doppelkopf
-                if self.game.gamerules["dk.doppelkopf"]:
-                    if gain >= 40:
-                        self.extra_points[trick_winner].append("doppelkopf")
+                            # TODO Inform the players on the found wedding
 
-                # Fox
-                if self.game.gamerules["dk.fox"]:
+                        self.game.cg.info(f"obvious parties: {self.obvious_parties}")
+
+                    elif self.trick_num == 3:  # 3rd trick was made by re party
+                        # Start diamonds solo
+                        self.parties["kontra"] = self.parties["none"]
+                        self.parties["none"].clear()
+
+                        for p in self.parties["re"]:
+                            self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                "rebtn_lbl": "re"
+                            })
+                        for p in self.parties["kontra"]:
+                            self.game.send_to_user(p, "cg:game.dk.round.change", {
+                                "rebtn_lbl": "kontra"
+                            })
+
+                        self.update_obvious_party(trick_winner, "re")
+
+                        self.game_type = "solo_diamonds"
+
+                        for expts in self.extra_points.values():
+                            expts.clear()
+
+                        self.game.send_to_all("cg:game.dk.round.change", {
+                            "phase": "tricks",
+                            "game_type": self.game_type,
+                            "solist": trick_winner.hex
+                        })
+
+                        self.wedding_find_trick = self.trick_num
+
+        # Check for extra tricks
+        if self.game_type in ["normal", "wedding", "ramsch", "poverty"]:
+            # Doppelkopf
+            if self.game.gamerules["dk.doppelkopf"]:
+                if gain >= 40:
+                    self.extra_points[trick_winner].append("doppelkopf")
+
+            # Fox
+            if self.game.gamerules["dk.fox"]:
+                for i in self.current_trick:
+                    if self.cards[i[1]].card_value == fox_card:
+                        # If the player won the trick himself
+                        if i[0] == trick_winner:
+                            continue
+
+                        # If a trick winner and the fox player are in the same party
+                        for party, members in self.obvious_parties.items():
+                            if party != "unknown":
+                                if i[0] in self.obvious_parties[party] and trick_winner in self.obvious_parties[
+                                    party]:
+                                    continue
+
+                        # If the players are in different parties
+                        if (i[0] in self.obvious_parties["re"] and trick_winner in self.obvious_parties[
+                            "kontra"]) or (
+                                i[0] in self.obvious_parties["kontra"] and trick_winner in self.obvious_parties[
+                            "re"]):
+                            self.extra_points[trick_winner].append("fox")
+
+                        # If not both player's parties are sure, remember the fox and check it later
+                        else:
+                            self.foxes.append([i[0], trick_winner])
+
+            # Charlie
+            if self.game.gamerules["dk.charlie"]:
+                if self.trick_num == self.max_tricks:
+                    if self.cards[sorted_trick[0]].card_value == "cj":
+                        self.extra_points[trick_winner].append("charlie")
+
+            # Fox got the last trick
+            if self.game.gamerules["dk.fox_lasttrick"]:
+                if self.trick_num == self.max_tricks:
+                    if self.cards[sorted_trick[0]].card_value == fox_card:
+                        self.extra_points[trick_winner].append("fox_lasttrick")
+
+            # Charlie broken and jane
+            if self.game.gamerules["dk.charlie_broken"]:
+                if self.trick_num == self.max_tricks:
                     for i in self.current_trick:
-                        if self.cards[i[1]].card_value == fox_card:
-                            # If the player won the trick himself
-                            if i[0] == trick_winner:
-                                continue
+                        if self.cards[i[1]].card_value == "cj" and i[1] != sorted_trick[0]:
+                            if trick_winner in self.parties["re"] and i[0] in self.parties["kontra"] or \
+                                    trick_winner in self.parties["kontra"] and i[0] in self.parties["re"]:
+                                if self.game.gamerules["dk.jane"]:
+                                    if self.cards[sorted_trick[0]].card_value == "dq":
+                                        self.extra_points[trick_winner].append("jane")
+                                else:
+                                    self.extra_points[trick_winner].append("charlie_broken")
 
-                            # If a trick winner and the fox player are in the same party
-                            for party, members in self.obvious_parties.items():
-                                if party != "unknown":
-                                    if i[0] in self.obvious_parties[party] and trick_winner in self.obvious_parties[
-                                        party]:
-                                        continue
+            # Heartrick
+            if self.game.gamerules["dk.heart_trick"]:
+                heart_trick = True
+                for i in self.current_trick:
+                    heart_trick = heart_trick and self.get_card_color(self.cards[i[1]]) == "hearts"
+                if heart_trick:
+                    self.extra_points[trick_winner].append("heart_trick")
 
-                            # If the players are in different parties
-                            if (i[0] in self.obvious_parties["re"] and trick_winner in self.obvious_parties[
-                                "kontra"]) or (
-                                    i[0] in self.obvious_parties["kontra"] and trick_winner in self.obvious_parties[
-                                "re"]):
-                                self.extra_points[trick_winner].append("fox")
+            # Second black trick
+            if self.game.gamerules["dk.sec_black_trick"]:
+                spade_trick = True
+                for i in self.current_trick:
+                    spade_trick = spade_trick and self.get_card_color(self.cards[i[1]]) == "spades"
+                if spade_trick:
+                    self.spade_tricks += 1
+                    if self.spade_tricks == 2:
+                        self.extra_points[trick_winner].append("sec_black_trick")
 
-                            # If not both player's parties are sure, remember the fox and check it later
-                            else:
-                                self.foxes.append([i[0], trick_winner])
+                clubs_trick = True
+                for i in self.current_trick:
+                    clubs_trick = clubs_trick and self.get_card_color(self.cards[i[1]]) == "clubs"
+                if clubs_trick:
+                    self.club_tricks += 1
+                    if self.club_tricks == 2:
+                        self.extra_points[trick_winner].append("sec_black_trick")
 
-                # Charlie
-                if self.game.gamerules["dk.charlie"]:
-                    if self.trick_num == self.max_tricks:
-                        if self.cards[sorted_trick[0]].card_value == "cj":
-                            self.extra_points[trick_winner].append("charlie")
-
-                # Fox got the last trick
-                if self.game.gamerules["dk.fox_lasttrick"]:
-                    if self.trick_num == self.max_tricks:
-                        if self.cards[sorted_trick[0]].card_value == fox_card:
-                            self.extra_points[trick_winner].append("fox_lasttrick")
-
-                # Charlie broken and jane
-                if self.game.gamerules["dk.charlie_broken"]:
-                    if self.trick_num == self.max_tricks:
-                        for i in self.current_trick:
-                            if self.cards[i[1]].card_value == "cj" and i[1] != sorted_trick[0]:
-                                if trick_winner in self.parties["re"] and i[0] in self.parties["kontra"] or \
-                                        trick_winner in self.parties["kontra"] and i[0] in self.parties["re"]:
-                                    if self.game.gamerules["dk.jane"]:
-                                        if self.cards[sorted_trick[0]].card_value == "dq":
-                                            self.extra_points[trick_winner].append("jane")
-                                    else:
-                                        self.extra_points[trick_winner].append("charlie_broken")
-
-                # Heartrick
-                if self.game.gamerules["dk.heart_trick"]:
-                    heart_trick = True
+            # Hobgoblin
+            if self.game.gamerules["dk.hobgoblin"]:
+                if self.cards[sorted_trick[0]].card_value == "sq":
                     for i in self.current_trick:
-                        heart_trick = heart_trick and self.get_card_color(self.cards[i[1]]) == "hearts"
-                    if heart_trick:
-                        self.extra_points[trick_winner].append("heart_trick")
+                        if self.cards[i[1]].card_value == "sk":
+                            self.extra_points[trick_winner].append("hobgoblin")
 
-                # Second black trick
-                if self.game.gamerules["dk.sec_black_trick"]:
-                    spade_trick = True
-                    for i in self.current_trick:
-                        spade_trick = spade_trick and self.get_card_color(self.cards[i[1]]) == "spades"
-                    if spade_trick:
-                        self.spade_tricks += 1
-                        if self.spade_tricks == 2:
-                            self.extra_points[trick_winner].append("sec_black_trick")
+        # Check for buckround events
+        if self.game_type in ["normal", "wedding", "wedding_silent", "ramsch", "poverty",
+                              "ramsch_sw", "black_sow", "solo_diamonds"]:
+            if "4hearts" in self.game.gamerules["dk.buck_cause"]:
+                heart_trick = True
+                for i in self.current_trick:
+                    heart_trick = heart_trick and self.get_card_color(self.cards[i[1]]) == "hearts"
+                if heart_trick:
+                    self.buckround_events += 1
 
-                    clubs_trick = True
-                    for i in self.current_trick:
-                        clubs_trick = clubs_trick and self.get_card_color(self.cards[i[1]]) == "clubs"
-                    if clubs_trick:
-                        self.club_tricks += 1
-                        if self.club_tricks == 2:
-                            self.extra_points[trick_winner].append("sec_black_trick")
+        # Transfer the trick to the winners trick stack
+        for i in self.current_trick:
+            self.transfer_card(self.cards[i[1]],
+                               "table",
+                               f"tricks{self.players.index(trick_winner)}")
 
-                # Hobgoblin
-                if self.game.gamerules["dk.hobgoblin"]:
-                    if self.cards[sorted_trick[0]].card_value == "sq":
-                        for i in self.current_trick:
-                            if self.cards[i[1]].card_value == "sk":
-                                self.extra_points[trick_winner].append("hobgoblin")
+        # Inform the players on the new scores
+        self.game.send_to_all("cg:game.dk.scoreboard", {
+            "player": trick_winner.hex,
+            "pips": self.player_eyes[trick_winner],
+            "pip_change": gain
+        })
 
-            # Check for buckround events
-            if self.game_type in ["normal", "wedding", "wedding_silent", "ramsch", "poverty",
-                                  "ramsch_sw", "black_sow", "solo_diamonds"]:
-                if "4hearts" in self.game.gamerules["dk.buck_cause"]:
-                    heart_trick = True
-                    for i in self.current_trick:
-                        heart_trick = heart_trick and self.get_card_color(self.cards[i[1]]) == "hearts"
-                    if heart_trick:
-                        self.buckround_events += 1
+        # Not the last round
+        if self.trick_num < self.max_tricks:
+            # Deinitialise the trick
+            self.current_player = trick_winner
+            self.current_trick.clear()
 
-            # Transfer the trick to the winners trick stack
-            for i in self.current_trick:
-                self.transfer_card(self.cards[i[1]],
-                                   "table",
-                                   f"tricks{self.players.index(trick_winner)}")
+            if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "one_on_fox"]:
+                self.pigs[0] = False
 
-            # Inform the players on the new scores
-            self.game.send_to_all("cg:game.dk.scoreboard", {
-                "player": trick_winner.hex,
-                "pips": self.player_eyes[trick_winner],
-                "pip_change": gain
+            self.trick_num += 1
+
+            # Check for black sow
+            if self.game_type == "black_sow":
+                for i in sorted_trick:
+                    if self.cards[i].card_value == "sq":  # Queen of spades played
+                        self.spade_queens += 1
+                if self.spade_queens == 2:
+                    self.game_state = "black_sow_solo"
+                    self.game.send_to_user(self.current_player, "cg:game.dk.question", {
+                        "target": trick_winner.hex,
+                        "type": "black_sow_solo"
+                    })
+                    return
+
+            self.game.send_to_all("cg:game.dk.turn", {
+                "current_trick": self.trick_num,
+                "total_tricks": self.max_tricks,
+                "current_player": self.current_player.hex
             })
 
-            # Not the last round
-            if self.trick_num < self.max_tricks:
-                # Deinitialise the trick
-                self.current_player = trick_winner
-                self.current_trick.clear()
-
-                if self.game.gamerules["dk.pigs"] in ["one_first", "one_on_play", "one_on_fox"]:
-                    self.pigs[0] = False
-
-                self.trick_num += 1
-
-                # Check for black sow
-                if self.game_type == "black_sow":
-                    for i in sorted_trick:
-                        if self.cards[i].card_value == "sq":  # Queen of spades played
-                            self.spade_queens += 1
-                    if self.spade_queens == 2:
-                        self.game_state = "black_sow_solo"
-                        self.game.send_to_user(self.current_player, "cg:game.dk.question", {
-                            "target": trick_winner.hex,
-                            "type": "black_sow_solo"
-                        })
-                        return
-
-                self.game.send_to_all("cg:game.dk.turn", {
-                    "current_trick": self.trick_num,
-                    "total_tricks": self.max_tricks,
-                    "current_player": self.current_player.hex
-                })
-
-            # Last Round
-            elif self.trick_num == self.max_tricks:
-                self.end_round()
+        # Last Round
+        elif self.trick_num == self.max_tricks:
+            self.game.cg.server.schedule_function(self.end_round, 1)
 
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
@@ -4110,6 +4126,7 @@ class DoppelkopfRound(object):
         for i in range(12):
             players = self.players[self.players.index(self.current_player):] + \
                       self.players[:self.players.index(self.current_player)]
+            time.sleep(1.5)
             for j in players:
                 time.sleep(.5)
                 p = 'p' + str(self.players.index(j))
