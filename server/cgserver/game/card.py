@@ -73,8 +73,8 @@ def create_dk_prepped_deck():
         hands = {
             3: ["h10", "h10", "cq", "cq", "sq", "sq", "hq", "hq", "ca", "c10", "h9", "c9"],
             1: ["dq", "dq", "cj", "cj", "sj", "sj", "hj", "hj", "ca", "c10", "ck", "hk"],
-            0: ["dj", "dj", "da", "da", "d10", "d10", "dk", "sa", "s10", "sk", "s9", "ha"],
-            2: ["d9", "d9", "dk", "sa", "s10", "sk", "s9", "ha", "hk", "c9", "ck", "h9"]
+            2: ["dj", "dj", "da", "da", "d10", "d10", "dk", "sa", "s10", "sk", "s9", "ha"],
+            0: ["d9", "d9", "dk", "sa", "s10", "sk", "s9", "ha", "hk", "c9", "ck", "h9"]
         }
 
     card_values = []

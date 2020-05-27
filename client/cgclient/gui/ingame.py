@@ -33,7 +33,6 @@ from pyglet.gl import *
 import cgclient.gui
 import pyglet
 
-
 FLIGHT_MODE = True
 
 
@@ -62,7 +61,7 @@ class IngameMenu(peng3d.gui.Menu):
         self.addLayer(self.gui_layer)
 
         self.status_layer: StatusLayer = StatusLayer("status_msg", self, self.window, self.peng)
-        self.addLayer(self.gui_layer)
+        self.addLayer(self.status_layer)
 
         self.d_status_message = self.status_layer.d_status_message
 
@@ -71,11 +70,12 @@ class IngameMenu(peng3d.gui.Menu):
         self.cg.add_event_listener("cg:status.message.close", self.handler_status_message_close)
 
     def handler_status_message_open(self, event: str, data: dict):
-        self.status_layer.enabled = True
+        print("hi")
+        self.status_layer.changeSubMenu("status_msg")
         self.d_status_message.label_main = self.peng.tl(data["message"], data["data"])
 
     def handler_status_message_close(self, event: str, data: dict):
-        self.status_layer.enabled = False
+        self.status_layer.changeSubMenu("empty")
 
 
 class BackgroundLayer(peng3d.layer.Layer):
@@ -93,7 +93,7 @@ class GameLayer(peng3d.layer.Layer):
 
     CARD_KEYS = "0123456789abcdef"
     NUM_SYNCS = 2
-    MIN_COLORID = 1/30.
+    MIN_COLORID = 1 / 30.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -134,7 +134,7 @@ class GameLayer(peng3d.layer.Layer):
                                           )
 
         # Initialize the PBO for colorID
-        pbo_ids = (GLuint*self.NUM_SYNCS)()
+        pbo_ids = (GLuint * self.NUM_SYNCS)()
         glGenBuffers(self.NUM_SYNCS, pbo_ids)
         self.pbos = list(pbo_ids)
         self.cur_pbo = 0
@@ -170,7 +170,7 @@ class GameLayer(peng3d.layer.Layer):
         self.peng.registerEventHandler("on_key_release", self.on_key_release)
 
         # TODO: possibly increase the animation frequency for high refreshrate monitors
-        pyglet.clock.schedule_interval(self.update, 1/60.)
+        pyglet.clock.schedule_interval(self.update, 1 / 60.)
 
     def norm_card_slot(self, slot: str):
         # Normalize handN and tricksN slots to physical slots
@@ -208,7 +208,8 @@ class GameLayer(peng3d.layer.Layer):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(self.window.cfg["graphics.fieldofview"], width / float(height), self.window.cfg["graphics.nearclip"],
+        gluPerspective(self.window.cfg["graphics.fieldofview"], width / float(height),
+                       self.window.cfg["graphics.nearclip"],
                        self.window.cfg["graphics.farclip"])  # default 60
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -218,7 +219,7 @@ class GameLayer(peng3d.layer.Layer):
         x, y, z = self.pos
         glTranslatef(-x, -y, -z)
 
-        if self.mouse_moved and time.time()-self.last_colorid > self.MIN_COLORID:
+        if self.mouse_moved and time.time() - self.last_colorid > self.MIN_COLORID:
             self.last_colorid = time.time()
 
             t = time.time()
@@ -236,8 +237,8 @@ class GameLayer(peng3d.layer.Layer):
 
             glBindBuffer(GL_PIXEL_PACK_BUFFER, self.pbos[self.cur_pbo])
             # Read the pixel at the mouse
-            #buf = (GLubyte*4)()
-            #buf_ptr = ctypes.cast(buf, ctypes.POINTER(GLubyte))
+            # buf = (GLubyte*4)()
+            # buf_ptr = ctypes.cast(buf, ctypes.POINTER(GLubyte))
 
             glReadPixels(*self.mouse_pos, 1, 1, GL_BGRA, GL_UNSIGNED_BYTE, 0)
 
@@ -247,17 +248,17 @@ class GameLayer(peng3d.layer.Layer):
                 glDeleteSync(self.pbo_syncs[self.cur_pbo])
             self.pbo_syncs[self.cur_pbo] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0)
 
-            self.cur_pbo = (self.cur_pbo+1) % self.NUM_SYNCS
+            self.cur_pbo = (self.cur_pbo + 1) % self.NUM_SYNCS
             self.pbo_wait = True
 
             # Reset state
             glDisable(GL_SCISSOR_TEST)
-            #self.window.clear()
+            # self.window.clear()
 
-            #et = time.time()
+            # et = time.time()
 
-            #tdiff = et-t
-            #self.menu.cg.info(f"T_total: {tdiff*1000:.4f}ms Tr: {(t2-t)*1000:.4f}ms Tg: {(et-t2)*1000:.4f}ms")
+            # tdiff = et-t
+            # self.menu.cg.info(f"T_total: {tdiff*1000:.4f}ms Tr: {(t2-t)*1000:.4f}ms Tg: {(et-t2)*1000:.4f}ms")
 
             self.mouse_moved = False
 
@@ -267,7 +268,7 @@ class GameLayer(peng3d.layer.Layer):
         self.batch.draw()
 
         et = time.time()
-        #self.menu.cg.info(f"T_r: {(et-t)*1000:.4f}ms")
+        # self.menu.cg.info(f"T_r: {(et-t)*1000:.4f}ms")
 
     def get_card_at_mouse(self) -> Optional[uuid.UUID]:
         if self.mouse_color == (255, 0, 255):
@@ -285,21 +286,21 @@ class GameLayer(peng3d.layer.Layer):
             dx, dy, dz = self.get_motion_vector()
             # New position in space, before accounting for gravity.
             dx, dy, dz = dx * d, dy * d, dz * d
-            dy += self.jump*0.2
+            dy += self.jump * 0.2
             x, y, z = self.pos
             self.pos = dx + x, dy + y, dz + z
 
         if self.pbo_wait:
             # a PBO with colorID data may be ready
-            result = (GLint*1)()
-            #r_pointer = ctypes.cast(result, ctypes.POINTER(GLint))
-            length = (GLsizei*1)()
-            #l_pointer = ctypes.cast(length, ctypes.POINTER(GLsizei))
+            result = (GLint * 1)()
+            # r_pointer = ctypes.cast(result, ctypes.POINTER(GLint))
+            length = (GLsizei * 1)()
+            # l_pointer = ctypes.cast(length, ctypes.POINTER(GLsizei))
             for n in range(self.NUM_SYNCS):
                 if self.pbo_syncs[n] is None:
                     # PBO sync is not active, skip check
                     continue
-                #t = time.time()
+                # t = time.time()
                 # Check sync status
                 glGetSynciv(self.pbo_syncs[n], GL_SYNC_STATUS, 1, length, result)
                 if result[0] == GL_SIGNALED:
@@ -340,8 +341,8 @@ class GameLayer(peng3d.layer.Layer):
 
                     self.mouse_color = o
 
-                    #et = time.time()
-                    #self.menu.cg.info(f"T: {(et-t)*1000:.4f}ms for color {o}")
+                    # et = time.time()
+                    # self.menu.cg.info(f"T: {(et-t)*1000:.4f}ms for color {o}")
 
             if not any(map(lambda s: s is not None, self.pbo_syncs)):
                 self.pbo_wait = False
@@ -400,7 +401,7 @@ class GameLayer(peng3d.layer.Layer):
         if FLIGHT_MODE and self.window.menu is self.menu and self.flight_enabled:
             m = 0.15
             x, y = self.rot
-            x, y = x + dx*m, y + dy*m
+            x, y = x + dx * m, y + dy * m
             y = max(-90, min(90, y))
             x %= 360
             self.rot = x, y
@@ -631,7 +632,7 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
         self.labels["self"] = self.pself_label
 
         self.pleft_label = peng3d.gui.Label("pleft_label", self, self.window, self.peng,
-                                            pos=(lambda sw, sh, bw, bh: (0, sh/2)),
+                                            pos=(lambda sw, sh, bw, bh: (0, sh / 2)),
                                             size=(lambda sw, sh: (0, 0)),
                                             label="PLEFT",
                                             anchor_x="left",
@@ -643,12 +644,13 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
         self.labels["left"] = self.pleft_label
 
         self.pright_label = peng3d.gui.Label("pright_label", self, self.window, self.peng,
-                                             pos=(lambda sw, sh, bw, bh: (sw-self.pright_label._label.content_width-20, sh/2)),
+                                             pos=(lambda sw, sh, bw, bh: (
+                                                 sw - self.pright_label._label.content_width - 20, sh / 2)),
                                              size=(lambda sw, sh: (0, 0)),
                                              label="PRIGHT",
                                              anchor_x="left",
                                              anchor_y="baseline",
-                                             #align="right",
+                                             # align="right",
                                              multiline=False,
                                              font_size=35,
                                              )
@@ -656,7 +658,7 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
         self.labels["right"] = self.pright_label
 
         self.ptop_label = peng3d.gui.Label("ptop_label", self, self.window, self.peng,
-                                           pos=(lambda sw, sh, bw, bh: (0, sh-60)),
+                                           pos=(lambda sw, sh, bw, bh: (0, sh - 60)),
                                            size=(lambda sw, sh: (sw, 0)),
                                            label="PTOP",
                                            anchor_x="center",
@@ -737,30 +739,42 @@ class QuestionPopupSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240, 200])
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [8, 12], [60, 60])
 
-        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
+        self.bg_widget = peng3d.gui.FramedImageButton(
+            "bg_widget", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 4], [4, 4], border=0),
+            label="",
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        self.addWidget(self.bg_widget, -1)
 
-        self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.grid.get_cell([2, 4], [2, 1]),
-                                         label=self.peng.tl("cg:question.unknown.text"),
-                                         font_color=[0, 0, 0, 255],
-                                         multiline=False,
-                                         )
+        self.question = peng3d.gui.Label(
+            "question", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 6], [4, 2]),
+            label=self.peng.tl("cg:question.unknown.text"),
+            font_color=[255, 255, 255, 100],
+            multiline=False,
+            anchor_y="baseline"
+        )
         self.addWidget(self.question)
 
-        self.choice1btn = cgclient.gui.CGButton("choice1btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([2, 2], [1, 1]),
-                                                label=self.peng.tl("cg:question.unknown.choice1"),
-                                                )
+        self.choice1btn = cgclient.gui.CGButton(
+            "choice1btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 4], [2, 2]),
+            label=self.peng.tl("cg:question.unknown.choice1"),
+        )
         self.addWidget(self.choice1btn)
 
         self.choice1btn.addAction("click", self.on_click_choice1)
 
-        self.choice2btn = cgclient.gui.CGButton("choice2btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([3, 2], [1, 1]),
-                                                label=self.peng.tl("cg:question.unknown.choice2"),
-                                                )
+        self.choice2btn = cgclient.gui.CGButton(
+            "choice2btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 4], [2, 2]),
+            label=self.peng.tl("cg:question.unknown.choice2"),
+        )
         self.addWidget(self.choice2btn)
 
         self.choice2btn.addAction("click", self.on_click_choice2)
@@ -816,46 +830,60 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240, 200])
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [8, 12], [60, 60])
 
-        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [6, 6], [20, 20])
+        self.bg_widget = peng3d.gui.FramedImageButton(
+            "bg_widget", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 4], [4, 4], border=0),
+            label="",
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        self.addWidget(self.bg_widget, -1)
 
-        self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.grid.get_cell([2, 4], [2, 1]),
-                                         label=self.peng.tl("cg:question.poverty_return_trumps.text"),
-                                         font_color=[0, 0, 0, 255],
-                                         multiline=True,
-                                         )
+        self.question = peng3d.gui.Label(
+            "question", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 6], [4, 2]),
+            label=self.peng.tl("cg:question.poverty_return_trumps.text"),
+            font_color=[255, 255, 255, 100],
+            multiline=True,
+            anchor_y="baseline"
+        )
         self.addWidget(self.question)
 
-        self.choice1btn = cgclient.gui.CGButton("choice1btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([2, 2], [1, 1]),
-                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice1"),
-                                                )
+        self.choice1btn = cgclient.gui.CGButton(
+            "choice1btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 4], [2, 1]),
+            label=self.peng.tl("cg:question.poverty_return_trumps.choice1"),
+        )
         self.addWidget(self.choice1btn)
 
         self.choice1btn.addAction("click", self.on_click, 0)
 
-        self.choice2btn = cgclient.gui.CGButton("choice2btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([3, 2], [1, 1]),
-                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice2"),
-                                                )
+        self.choice2btn = cgclient.gui.CGButton(
+            "choice2btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 4], [2, 1]),
+            label=self.peng.tl("cg:question.poverty_return_trumps.choice2"),
+        )
         self.addWidget(self.choice2btn)
 
         self.choice2btn.addAction("click", self.on_click, 1)
 
-        self.choice3btn = cgclient.gui.CGButton("choice3btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([2, 1], [1, 1]),
-                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice3"),
-                                                )
+        self.choice3btn = cgclient.gui.CGButton(
+            "choice3btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 6], [2, 1]),
+            label=self.peng.tl("cg:question.poverty_return_trumps.choice3"),
+        )
         self.addWidget(self.choice3btn)
 
         self.choice3btn.addAction("click", self.on_click, 2)
 
-        self.choice4btn = cgclient.gui.CGButton("choice4btn", self, self.window, self.peng,
-                                                pos=self.grid.get_cell([3, 1], [1, 1]),
-                                                label=self.peng.tl("cg:question.poverty_return_trumps.choice4"),
-                                                )
+        self.choice4btn = cgclient.gui.CGButton(
+            "choice4btn", self, self.window, self.peng,
+            pos=self.grid.get_cell([4, 6], [2, 1]),
+            label=self.peng.tl("cg:question.poverty_return_trumps.choice4"),
+        )
         self.addWidget(self.choice4btn)
 
         self.choice4btn.addAction("click", self.on_click, 3)
@@ -900,14 +928,22 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240, 200])
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [22, 10], [20, 20])
 
-        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [7, 7], [20, 20])
+        self.bg_widget = peng3d.gui.FramedImageButton(
+            "bg_widget", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 2], [20, 6], border=0),
+            label="",
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        self.addWidget(self.bg_widget, -1)
 
         self.question = peng3d.gui.Label("question", self, self.window, self.peng,
-                                         pos=self.grid.get_cell([1, 6], [5, 1]),
+                                         pos=self.grid.get_cell([0, 7], [22, 1]),
                                          label=self.peng.tl("cg:question.solo.heading"),
-                                         font_color=[0, 0, 0, 255],
+                                         font_color=[255, 255, 255, 100],
                                          multiline=False,
                                          )
         self.addWidget(self.question)
@@ -916,8 +952,9 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
 
         for i, solo in enumerate(self.SOLOS):
             sbtn = cgclient.gui.CGButton(f"solo_{solo}btn", self, self.window, self.peng,
-                                         pos=self.grid.get_cell([1+(i % 5), 5-(i//5)], [1, 1]),
-                                         label=self.peng.tl(f"cg:question.solo.{solo}")
+                                         pos=self.grid.get_cell([1 + (i % 5) * 4, 6 - (i // 5)], [4, 1]),
+                                         label=self.peng.tl(f"cg:question.solo.{solo}"),
+                                         font_size=20
                                          )
             self.addWidget(sbtn)
 
@@ -980,9 +1017,11 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.readybtn)
 
         def f():
-            self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": "ready"
-            })
+            if self.menu.menu.status_layer.activeSubMenu != "status_msg":
+                self.peng.cg.client.send_message("cg:game.dk.announce", {
+                    "type": "ready"
+                })
+
         self.readybtn.addAction("click", f)
 
         self.throwbtn = cgclient.gui.CGButton(
@@ -995,9 +1034,11 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.throwbtn)
 
         def f():
-            self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": "throw"
-            })
+            if self.menu.menu.status_layer.activeSubMenu != "status_msg":
+                self.peng.cg.client.send_message("cg:game.dk.announce", {
+                    "type": "throw"
+                })
+
         self.throwbtn.addAction("click", f)
 
         self.rebtn = cgclient.gui.CGButton(
@@ -1010,9 +1051,11 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.rebtn)
 
         def f():
-            self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": self.rebtn.purpose
-            })
+            if self.menu.menu.status_layer.activeSubMenu != "status_msg":
+                self.peng.cg.client.send_message("cg:game.dk.announce", {
+                    "type": self.rebtn.purpose
+                })
+
         self.rebtn.addAction("click", f)
 
         self.pigsbtn = cgclient.gui.CGButton(
@@ -1026,9 +1069,11 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.pigsbtn)
 
         def f():
-            self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": self.pigsbtn.purpose
-            })
+            if self.menu.menu.status_layer.activeSubMenu != "status_msg":
+                self.peng.cg.client.send_message("cg:game.dk.announce", {
+                    "type": self.pigsbtn.purpose
+                })
+
         self.pigsbtn.addAction("click", f)
 
     def register_event_handlers(self):
@@ -1104,8 +1149,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         for i in range(4):
             line = peng3d.gui.ImageButton(
                 f"line{i}", self, self.window, self.peng,
-                pos=self.grid.get_cell([4 * (i+1), 1], [1, 6], border=0),
-                size=(lambda sw, sh: (3, sh * 3/4)),
+                pos=self.grid.get_cell([4 * (i + 1), 1], [1, 6], border=0),
+                size=(lambda sw, sh: (3, sh * 3 / 4)),
                 bg_idle=("cg:img.bg.horizontal", "gui"),
                 label="",
             )
@@ -1155,6 +1200,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "continue_yes",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.continuebtn.addAction("press_down", f)
         self.continuebtn.addAction("press_down", f1, self.continuebtn)
 
@@ -1164,6 +1210,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "announcer": self.peng.cg.client.user_id.hex
             })
             print("SEND CONTINUE NO!")
+
         self.continuebtn.addAction("press_up", f)
 
         # Continue Later Button
@@ -1176,6 +1223,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.adjournbtn)
 
         self.adjournbtn.enabled = False
+
         # TODO Implement adjourning games
 
         def f():
@@ -1183,6 +1231,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "adjourn_yes",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.adjournbtn.addAction("press_down", f)
         self.adjournbtn.addAction("press_down", f1, self.adjournbtn)
 
@@ -1191,6 +1240,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "adjourn_no",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.adjournbtn.addAction("press_up", f)
 
         # Quit Button
@@ -1208,6 +1258,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "quit_yes",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.quitbtn.addAction("press_down", f)
         self.quitbtn.addAction("press_down", f1, self.quitbtn)
 
@@ -1216,6 +1267,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "quit_no",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.quitbtn.addAction("press_up", f)
 
         # Cancel Button
@@ -1232,6 +1284,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "cancel_yes",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.cancelbtn.addAction("press_down", f)
         self.cancelbtn.addAction("press_down", f1, self.cancelbtn)
 
@@ -1240,6 +1293,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "cancel_no",
                 "announcer": self.peng.cg.client.user_id.hex
             })
+
         self.cancelbtn.addAction("press_up", f)
 
         self.togglebuttons = [self.continuebtn, self.adjournbtn, self.quitbtn, self.cancelbtn]
@@ -1257,7 +1311,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         for i in range(4):
             label = peng3d.gui.Label(
                 f"p_label{i}", self, self.window, self.peng,
-                pos=self.grid.get_cell([i*4, 6], [4, 1]),
+                pos=self.grid.get_cell([i * 4, 6], [4, 1]),
                 label="player label",
             )
             label.clickable = False
@@ -1269,7 +1323,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         for i in range(4):
             label = peng3d.gui.Label(
                 f"s_label{i}", self, self.window, self.peng,
-                pos=self.grid.get_cell([i*4, 1], [4, 1]),
+                pos=self.grid.get_cell([i * 4, 1], [4, 1]),
                 label="score_label",
             )
             label.clickable = False
@@ -1327,9 +1381,9 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
 
         # Adjust height of the container
         old_container_height = self.container.size[1]
-        if old_container_height + h > self.window.height * 1/2 - 3:
-            self.container.size = (lambda sw, sh: (sw, sh * 1/2 - 3))
-            self.container.content_height = old_container_height + h - (self.window.height * 1/2 - 3)
+        if old_container_height + h > self.window.height * 1 / 2 - 3:
+            self.container.size = (lambda sw, sh: (sw, sh * 1 / 2 - 3))
+            self.container.content_height = old_container_height + h - (self.window.height * 1 / 2 - 3)
         else:
             self.container.size = (lambda sw, sh: (sw, old_container_height + h))
 
@@ -1412,7 +1466,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             j.label = points[i]
 
     def _lambda_score_pos(self, i, y):
-        return lambda sw, sh, ww, wh: (sw / 5 * i, y-3)
+        return lambda sw, sh, ww, wh: (sw / 5 * i, y - 3)
 
     def _lambda_bar_pos(self, i, y):
         return lambda sw, sh, ww, wh: (sw / 5 * i + 30, y)
@@ -1431,8 +1485,19 @@ class StatusLayer(peng3d.gui.GUILayer):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
+        # Status Message Menu
         self.d_status_message = peng3d.gui.menus.DialogSubMenu(
-            "status_msg", self, self.window, self.peng
+            "status_msg", self, self.window, self.peng,
+            font="Times New Roman",
+            font_size=25,
+            font_color=[255, 255, 255, 100],
+        )
+        self.d_status_message.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self.d_status_message),
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
         )
         self.d_status_message.label_ok = self.peng.tl("cg:gui.menu.status_msg.okbtn.label")
         self.d_status_message.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
@@ -1449,4 +1514,11 @@ class StatusLayer(peng3d.gui.GUILayer):
 
         def f():
             self.peng.cg.send_event("cg:status.message.close")
+
         self.d_status_message.wbtn_ok.addAction("click", f)
+
+        # Empty menu
+        self.s_empty = peng3d.gui.SubMenu("empty", self, self.window, self.peng)
+        self.addSubMenu(self.s_empty)
+
+        self.changeSubMenu("empty")

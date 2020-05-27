@@ -22,6 +22,7 @@
 #
 
 import abc
+import time
 import uuid
 from typing import Any, Union, Tuple, Dict, Callable, List
 
@@ -81,6 +82,8 @@ class CGame(object, metaclass=abc.ABCMeta):
         self.cg: cg.CardGame = c
 
         self.game_id = uuid.uuid4()
+
+        self.creation_time = time.time()
 
         self.lobby_id = lobby
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]

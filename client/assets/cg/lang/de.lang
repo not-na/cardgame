@@ -113,6 +113,26 @@ msg.lobby.kick.success=Der Benutzer {username} wurde erfolgreich aus der Lobby g
 
 msg.game.cancel=Das Spiel wurde abgebrochen!
 
+msg.game.dk.invalid_throw=Schmeißen ist mit diesem Blatt nicht möglich!
+msg.game.dk.invalid_pigs=Du besitzt keine gültigen Schweinchen!
+msg.game.dk.invalid_pigs_game=Der Spieltyp unterstützt keine Schweinchen!
+msg.game.dk.invalid_superpigs=Dein Blatt enthält keine Superschweine!
+msg.game.dk.invalid_superpigs_game=Der Spieltyp unterstützt keine Superschweine!
+msg.game.dk.invalid_superpigs_call=Superschweine hätten direkt nach den Schweinchen angesagt werden müssen!
+msg.game.dk.invalid_poverty=Du hast zu viele Trümpfe für eine Armut!
+msg.game.dk.invalid_poverty_cards=Bei einer Armut musst du alle deine Trümpfe weggeben!
+msg.game.dk.invalid_return_amount=Die angegebene Anzahl an Trümpfen ({ca}) stimmt nicht mit der Anzahl an Trümpfen ({ta}) überein!
+msg.game.dk.invalid_wedding=Für eine Hochzeit brauchst du zwei Kreuz-Damen!
+
+msg.game.dk.pc_wrong_phase=In der derzeitigen Phase des Spiels kannst du keine Karten spielen!
+msg.game.dk.pc_wrong_turn=Du bist gerade nicht an der Reihe!
+msg.game.dk.pc_wrong_card=Du musst bedienen!
+msg.game.dk.pc_called_pigs=Nachdem du Schweinchen angesagt hast, musst du auch eins spielen!
+msg.game.dk.pc_called_superpigs=Nachdem du Superschweine angesagt hast, musst du auch eins spielen!
+msg.game.dk.re_no_party=Ansagen können erst gemacht werden, wenn die Parteien feststehen!
+msg.game.dk.re_too_late=Diese Ansage hätte früher getätigt werden müssen!
+
+
 gui.menu.status_msg.okbtn.label=Ok
 
 gui.menu.load.progress.loading=Laden...
