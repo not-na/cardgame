@@ -69,7 +69,7 @@ class DoppelkopfGame(CGame):
             "continue": set(),
             "adjourn": set(),
             "cancel": set(),
-            "quit": set()
+            "end": set()
         }
 
     def start(self):

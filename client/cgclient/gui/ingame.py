@@ -560,6 +560,7 @@ class AnnounceWidget(peng3d.gui.LayeredWidget):
                                                    border=(0,0),
                                                    offset=(0,0),
                                                    label=self.peng.tl("cg:announce.default"),
+                                                   font_color=[255, 255, 255, 100]
                                                    )
         self.addLayer(self.l_label)
 
@@ -607,7 +608,7 @@ class AnnounceWidget(peng3d.gui.LayeredWidget):
         super().on_redraw()
 
         # Update alpha of font
-        self.l_label._label.color[3] = int(self.perc_visible*255)
+        self.l_label._label.color[3] = int(self.perc_visible*100)
 
 
 class MainHUDSubMenu(peng3d.gui.SubMenu):
@@ -928,6 +929,8 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
+        self.register_event_handlers()
+
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [22, 10], [20, 20])
 
         self.bg_widget = peng3d.gui.FramedImageButton(
@@ -957,6 +960,7 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
                                          font_size=20
                                          )
             self.addWidget(sbtn)
+            self.solobtns[f"solo_{solo}"] = sbtn
 
             sbtn.addAction("click", self.on_click_solo, solo)
 
@@ -967,6 +971,15 @@ class SoloPopupSubMenu(peng3d.gui.SubMenu):
         })
 
         self.menu.changeSubMenu("empty")
+
+    def register_event_handlers(self):
+        self.peng.cg.add_event_listener("cg:lobby.gamerules.change", self.handle_gamerule_change)
+
+    def handle_gamerule_change(self, event: str, data: dict):
+        data = data["gamerules"]
+        if "dk.solos" in data:
+            for solo, btn in self.solobtns.items():
+                btn.enabled = (solo in self.peng.cg.client.lobby.gamerules["dk.solos"])
 
 
 class GUILayer(peng3d.gui.GUILayer):

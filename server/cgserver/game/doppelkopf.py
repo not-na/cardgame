@@ -467,6 +467,31 @@ class DoppelkopfGame(CGame):
         if packet != "cg:game.dk.card.transfer":
             self.cg.info(f"sent packet {packet} with content {data} to user {user}")
 
+    def collect_statistics(self):
+        data = {
+            "game_id": self.game_id,
+            "game_data": {
+                "cretion_time": self.creation_time,
+                "rounds": {},
+                "botgame": len(self.fake_players) == 0
+            },
+            "players": []
+        }
+        for r in self.rounds:
+            data["game_data"]["rounds"][r.round_id.hex] = {
+                "moves": [
+                    (
+                        self.players.index(v["player"]),
+                        f"{v['type']}:{v['data']}"
+                    ) for v in r.moves.values()
+                ]
+            }
+        for p in self.players:
+            if p not in self.fake_players:
+                data["players"].append(p.hex)
+
+        self.cg.send_event("cg:stats.game.new", data)
+
     def register_event_handlers(self):
         super().register_event_handlers()
 
@@ -476,6 +501,8 @@ class DoppelkopfGame(CGame):
         self.cg.add_event_listener("cg:game.dk.play.continue_no", self.handle_not_continue_play, group=self.game_id)
         self.cg.add_event_listener("cg:game.dk.play.cancel_yes", self.handle_cancel_play, group=self.game_id)
         self.cg.add_event_listener("cg:game.dk.play.cancel_no", self.handle_not_cancel_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.end_yes", self.handle_end_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.end_no", self.handle_not_end_play, group=self.game_id)
 
     def handle_end_round(self, event: str, data: Dict):
         # Send the information on the round
@@ -606,6 +633,32 @@ class DoppelkopfGame(CGame):
         self.send_to_all("cg:game.dk.announce", {
             "announcer": data["player"],
             "type": "cancel_no"
+        })
+
+    def handle_end_play(self, event: str, data: Dict):
+        self.player_decisions["end"].add(data["player"])
+        if self.DEV_MODE:
+            for p in self.fake_players:
+                self.player_decisions["end"].add(p)
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "end_yes"
+        })
+        if len(self.player_decisions["end"]) == 4:
+            self.player_decisions: Dict[str, Set[uuid.UUID]] = {
+                "continue": set(),
+                "adjourn": set(),
+                "cancel": set(),
+                "end": set()
+            }
+            self.collect_statistics()
+            self.cancel_game()
+
+    def handle_not_end_play(self, event: str, data: Dict):
+        self.player_decisions["end"].discard(data["player"])
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "end_no"
         })
 
     def serialise(self):
@@ -2649,7 +2702,8 @@ class DoppelkopfRound(object):
 
             player_hand = [self.cards[i] for i in self.hands[self.current_player]]
             if not list(map(lambda x: x.card_value, player_hand)).count(superpig_card) == 2:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_superpigs")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_superpigs")
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "superpigs",
                     "target": self.current_player.hex
@@ -2726,7 +2780,8 @@ class DoppelkopfRound(object):
             legal_poverty = len(trumps) <= 3
 
             if not legal_poverty:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_poverty")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_poverty")
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty",
                     "target": self.current_player.hex
@@ -2835,7 +2890,8 @@ class DoppelkopfRound(object):
                 for c in player_hand:
                     if (c.color == "d" or c.value in ["j",
                                                       "q"] or c.card_value == "h10") and c.card_id not in self.poverty_cards:
-                        self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_poverty_cards")
+                        self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                                "cg:msg.game.dk.invalid_poverty_cards")
                         self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                             "type": "poverty_trump_choice",
                             "target": self.current_player.hex
@@ -2936,7 +2992,8 @@ class DoppelkopfRound(object):
                     trumps.append(c)
 
             if len(trumps) != data["data"]["amount"]:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_return_amount",
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_return_amount",
                                                         {"ta": len(trumps), "ca": data['data']['amount']})
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "poverty_return_trumps",
@@ -3088,7 +3145,8 @@ class DoppelkopfRound(object):
             # Check if the wedding is legal
             player_hand = [self.cards[i] for i in self.hands[self.current_player]]
             if not list(map(lambda x: x.card_value, player_hand)).count("cq") == 2:  # Hand contains two queens of clubs
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_wedding")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_wedding")
                 self.game.send_to_user(self.current_player, "cg:game.dk.question", {
                     "type": "wedding",
                     "target": self.current_player.hex
@@ -3160,12 +3218,8 @@ class DoppelkopfRound(object):
             raise WrongPlayerError(f"The player that sent the wedding clarification trick handling packet is not the"
                                    f"current player!")
 
-        # Announce decision
-        self.game.send_to_all("cg:game.dk.announce", {
-            "announcer": self.current_player.hex,
-            "type": data["type"],
-            "data": data["data"]
-        })
+        if data["data"]["trick"] not in ["foreign", "trump", "miss", "hearts", "spades", "clubs", "diamonds"]:
+            raise InvalidMoveError(f"Invalid Wedding clarification trick: {data['data']['trick']}")
 
         # Register move
         self.add_move(self.current_player, "announcement", "wedding_clarification_trick_" + data["data"]["trick"])
@@ -3225,7 +3279,8 @@ class DoppelkopfRound(object):
         if list(map(lambda x: x["data"], self.moves.values()))[-1] == "pigs":
             # Find out, which cards are the pigs in this round
             if self.cards[card].card_value != fox_card:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.pc_called_pigs")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.pc_called_pigs")
                 return
 
         # For called superpig, check if a superpig is played:
@@ -3249,7 +3304,8 @@ class DoppelkopfRound(object):
                 superpig_card = color + value
 
                 if self.cards[card].card_value != superpig_card:
-                    self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.pc_called_superpigs")
+                    self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                            "cg:msg.game.dk.pc_called_superpigs")
                     return
 
         # Check if the card tells something about the parties
@@ -3620,7 +3676,8 @@ class DoppelkopfRound(object):
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
                                   "solo_null"]:
-            self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_superpigs_game")
+            self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                    "cg:msg.game.dk.invalid_superpigs_game")
             return
         if self.game_state != "tricks":
             raise GameStateError(f"Game state for superpigs call handling must be 'tricks', not {self.game_state}!")
@@ -3653,17 +3710,20 @@ class DoppelkopfRound(object):
                 self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.pc_wrong_turn")
                 return
             if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_superpigs")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_superpigs")
                 return
             self.superpigs = [True, player]
 
         elif self.game.gamerules["dk.superpigs"] == "on_pig":
             if not list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_superpigs")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_superpigs")
                 return
 
             if "pigs" not in list(map(lambda x: x["data"], self.moves.values()))[-2:]:
-                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.invalid_superpigs_call")
+                self.game.cg.server.send_status_message(uuidify(data["player"]), "warn",
+                                                        "cg:msg.game.dk.invalid_superpigs_call")
                 return
             self.superpigs = [True, player]
 

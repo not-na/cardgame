@@ -93,26 +93,26 @@ class AnnouncePacket(CGPacket):
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.adjournbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-        elif msg["type"] == "quit_yes":
-            self.cg.client.game.player_decisions["quit"].add(msg["announcer"])
+        elif msg["type"] == "end_yes":
+            self.cg.client.game.player_decisions["end"].add(msg["announcer"])
 
             label = "cg:gui.menu.ingame.scoreboard.quitbtn.label"
             data = {}
-            if len(self.cg.client.game.player_decisions["quit"]) > 0:
+            if len(self.cg.client.game.player_decisions["end"]) > 0:
                 label = "cg:gui.menu.ingame.scoreboard.quitbtn.label2"
-                data = {"amount": len(self.cg.client.game.player_decisions["quit"])}
+                data = {"amount": len(self.cg.client.game.player_decisions["end"])}
 
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
                 label, data
             )
-        elif msg["type"] == "quit_no":
-            self.cg.client.game.player_decisions["quit"].discard(msg["announcer"])
+        elif msg["type"] == "end_no":
+            self.cg.client.game.player_decisions["end"].discard(msg["announcer"])
 
             label = "cg:gui.menu.ingame.scoreboard.quitbtn.label"
             data = {}
-            if len(self.cg.client.game.player_decisions["quit"]) > 0:
+            if len(self.cg.client.game.player_decisions["end"]) > 0:
                 label = "cg:gui.menu.ingame.scoreboard.quitbtn.label2"
-                data = {"amount": len(self.cg.client.game.player_decisions["quit"])}
+                data = {"amount": len(self.cg.client.game.player_decisions["end"])}
 
             self.cg.client.gui.ingame.gui_layer.s_scoreboard.quitbtn.label = self.cg.client.gui.peng.tl(
                 label, data

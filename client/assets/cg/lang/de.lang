@@ -132,6 +132,80 @@ msg.game.dk.pc_called_superpigs=Nachdem du Superschweine angesagt hast, musst du
 msg.game.dk.re_no_party=Ansagen können erst gemacht werden, wenn die Parteien feststehen!
 msg.game.dk.re_too_late=Diese Ansage hätte früher getätigt werden müssen!
 
+announce.reservation_yes=Vorbehalt
+announce.reservation_no=Kein Vorbehalt
+announce.solo_yes.key=cg:announce.solo.{type}
+announce.solo_no=Kein Solo
+announce.throw_yes=Schmeißen
+announce.throw_no=Nicht schmeißen
+announce.pigs_yes=Schweinchen
+announce.pigs_no=Keine Schweinchen
+announce.superpigs_yes=Superschweine
+announce.superpigs_no=Keine Superschweine
+announce.poverty_yes=Armut
+announce.poverty_no=Keine Armut
+announce.poverty_accept=Armut angenommen
+announce.poverty_decline=Armut abgelehnt
+announce.poverty_return.key=cg:announce.poverty_return.{amount}
+announce.wedding_yes=Hochzeit
+announce.wedding_no=Keine Hochzeit
+announce.wedding_clarification_trick.key=cg:announce.wedding_clarification_trick.{type}
+announce.pigs=Schweinchen
+announce.superpigs=Superschweine
+announce.re=Re
+announce.kontra=Kontra
+announce.no90.key=cg:announce.no90.{party}
+announce.no60.key=cg:announce.no60.{party}
+announce.no30.key=cg:announce.no30.{party}
+announce.black.key=cg:announce.black.{party}
+announce.black_sow_solo=cg:announce.solo.{type}
+announce.throw=Schmeißen
+announce.ready=Bereit
+
+announce.solo.solo_queen=Damensolo
+announce.solo.solo_jack=Bubensolo
+announce.solo.solo_clubs=Kreuzsolo
+announce.solo.solo_spades=Piksolo
+announce.solo.solo_hearts=Herzsolo
+announce.solo.solo_diamonds=Karosolo
+announce.solo.solo_fleshless=Fleischloses Solo
+announce.solo.solo_null=Nullsolo
+announce.solo.solo_boneless=Knochenloses Solo
+announce.solo.solo_pure_clubs=Reines Kreuzsolo
+announce.solo.solo_pure_spades=Reines Piksolo
+announce.solo.solo_pure_hearts=Reines Herzsolo
+announce.solo.solo_pure_diamonds=Reines Karosolo
+announce.solo.solo_king=Königssolo
+announce.solo.solo_brothel=Buben-Damen-Solo
+announce.solo.solo_noble_brothel=Damen-Königs-Solo
+announce.solo.solo_picture=Bildersolo
+announce.solo.solo_monastery=Buben-Königs-Solo
+announce.solo.solo_aces=Assesolo
+announce.solo.solo_10s=Zehnensolo
+announce.solo.solo_9s=Neunensolo
+
+announce.wedding_clarification_trick.foreign=Erster Fremder
+announce.wedding_clarification_trick.trump=Erster Trumpfstich
+announce.wedding_clarification_trick.miss=Erster Fehlstich
+announce.wedding_clarification_trick.hearts=Erster Herzstich
+announce.wedding_clarification_trick.spades=Erster Pikstich
+announce.wedding_clarification_trick.clubs=Erster Kreuzstich
+announce.wedding_clarification_trick.diamonds=Erster Karostich
+
+announce.poverty_return.0=Ohne Trümpfe
+announce.poverty_return.1=Mit 1 Trumpf
+announce.poverty_return.2=Mit 2 Trümpfen
+announce.poverty_return.3=Mit 3 Trümpfen
+
+announce.no90.re=Keine 90 (Re)
+announce.no60.re=Keine 60 (Re)
+announce.no30.re=Keine 30 (Re)
+announce.black.re=Schwarz (Re)
+
+announce.no90.kontra=Keine 90 (Kontra)
+announce.no60.kontra=Keine 60 (Kontra)
+announce.no30.kontra=Keine 30 (Kontra)
+announce.black.kontra=Schwarz (Kontra)
 
 gui.menu.status_msg.okbtn.label=Ok
 
