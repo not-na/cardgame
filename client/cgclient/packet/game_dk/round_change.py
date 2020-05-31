@@ -96,9 +96,12 @@ class RoundChangePacket(CGPacket):
             for uidx, uraw in enumerate(msg["player_list"]):
                 uid = uuidify(uraw)
                 n = out[uidx]
-                l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]
+                w = self.cg.client.gui.ingame.hud_layer.s_main.getWidget(f"{n}img")
                 name = self.cg.client.get_user_name(uid)
-                l.label = f"{name}"
+                w._label = f"{name}"
+                profile_img = self.cg.client.get_profile_img(uid)
+                w.img.addImage(profile_img, (f"cg:profile.{profile_img}", "profile"))
+                w.img.switchImage(profile_img)
 
         if "phase" in msg:
             self.cg.info(f"Now in round phase {msg['phase']}")
@@ -117,6 +120,10 @@ class RoundChangePacket(CGPacket):
                 self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+
+                for i in ["self", "left", "top", "right"]:
+                    self.cg.client.gui.ingame.hud_layer.s_main.getWidget(f"{i}img").halo.switchImage("transparent")
+                self.cg.client.gui.ingame.hud_layer.s_main.getWidget(f"selfimg").redraw()
 
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
             elif msg["phase"] == "dealing":
@@ -152,6 +159,7 @@ class RoundChangePacket(CGPacket):
                 self.cg.crash(f"Invalid round phase {msg['phase']}")
 
         if "rebtn_lbl" in msg:
+            self.cg.client.gui.ingame.hud_layer.s_main.self_img.redraw()
             if msg["rebtn_lbl"] == "invis":
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = "None"

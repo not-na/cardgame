@@ -131,7 +131,7 @@ dmypy.json
 # PyCharm project files
 .idea/
 
-cardgame-py/
+cardgame-py-3.7/
 
 client/crash_reports/
 client/logs/
@@ -144,3 +144,5 @@ server/serverdat.csd
 cardgame_apitrace.trace
 client/assets/test_table.xcf
 /client/servers.rol
+/cardgame-py-3.7/
+/cardgame-py/

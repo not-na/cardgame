@@ -45,7 +45,7 @@ class IngameMenu(peng3d.gui.Menu):
 
         self.register_event_handlers()
 
-        self.bg_layer: BackgroundLayer = BackgroundLayer(self, self.window, self.peng)
+        self.bg_layer: BackgroundLayer = BackgroundLayer("background", self, self.window, self.peng)
         self.addLayer(self.bg_layer)
 
         self.game_layer: GameLayer = GameLayer(self, self.window, self.peng)
@@ -77,11 +77,22 @@ class IngameMenu(peng3d.gui.Menu):
         self.status_layer.changeSubMenu("empty")
 
 
-class BackgroundLayer(peng3d.layer.Layer):
+class BackgroundLayer(peng3d.gui.GUILayer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # TODO: add skybox here
+        self.setBackground(peng3d.gui.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=(self.peng.cg.get_config_option("cg:graphics.background"), "bg"),
+            frame=[[0, 1, 0], [0, 1, 0]],
+            scale=(0, 0),
+            repeat_center=True
+        ))
+
+        # Empty submenu
+        self.sm = peng3d.gui.SubMenu("sm", self, self.window, self.peng)
+        self.addSubMenu(self.sm)
+        self.changeSubMenu("sm")
 
 
 class GameLayer(peng3d.layer.Layer):
@@ -116,20 +127,6 @@ class GameLayer(peng3d.layer.Layer):
 
         self.batch = pyglet.graphics.Batch()
         self.batch_pick = pyglet.graphics.Batch()
-
-        texinfo = self.peng.resourceMgr.getTex("cg:img.bg.test_table", "bg")
-        self.vlist_table = self.batch.add(4, GL_QUADS, pyglet.graphics.TextureGroup(
-            peng3d.gui.button._FakeTexture(*texinfo),
-            parent=pyglet.graphics.OrderedGroup(0)),
-                                          ("v3f",
-                                           [
-                                               -2, 0, 2,
-                                               2, 0, 2,
-                                               2, 0, -2,
-                                               -2, 0, -2,
-                                           ]),
-                                          ("t3f", texinfo[2]),
-                                          )
 
         # Initialize the PBO for colorID
         pbo_ids = (GLuint * self.NUM_SYNCS)()
@@ -602,58 +599,52 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.labels = {}
+        # Player Icons
+        def f(sw, sh, bw, bh):
+            y_diff = x_diff = 0
+            if "gui_layer" in self.menu.menu.__dict__:
+                y_diff = self.menu.menu.gui_layer.s_ingame.pigsbtn.visible * (self.menu.menu.gui_layer.s_ingame.pigsbtn.size[1] + 5)
+                x_diff = self.menu.menu.gui_layer.s_ingame.pigsbtn.visible * 0.01
+            return (sw * (0.663 + x_diff) - (bw / 2)), (55 - (bh / 2) + y_diff)
 
-        self.pself_label = peng3d.gui.Label("pself_label", self, self.window, self.peng,
-                                            pos=(lambda sw, sh, bw, bh: (0, 20)),
-                                            size=(lambda sw, sh: (sw, 0)),
-                                            label="PSELF",
-                                            anchor_x="center",
-                                            anchor_y="baseline",
-                                            multiline=False,
-                                            font_size=35,
-                                            )
-        self.addWidget(self.pself_label)
-        self.labels["self"] = self.pself_label
+        # Profile Image
+        self.self_img = PlayerIcon(
+            "selfimg", self, self.window, self.peng,
+            pos=f,
+            size=(lambda sw, sh: (min(100, sw/10),)*2)
+        )
+        self.self_img.lbl._label.anchor_x = "left"
+        self.self_img.lbl.offset = (lambda sx, sy, sw, sh: (sw/2 + 5, 0))
+        self.addWidget(self.self_img)
 
-        self.pleft_label = peng3d.gui.Label("pleft_label", self, self.window, self.peng,
-                                            pos=(lambda sw, sh, bw, bh: (0, sh / 2)),
-                                            size=(lambda sw, sh: (0, 0)),
-                                            label="PLEFT",
-                                            anchor_x="left",
-                                            anchor_y="baseline",
-                                            multiline=False,
-                                            font_size=35,
-                                            )
-        self.addWidget(self.pleft_label)
-        self.labels["left"] = self.pleft_label
+        self.left_img = PlayerIcon(
+            "leftimg", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (55 - (bw / 2), sh * 1/5 - (bh / 2))),
+            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+        )
+        self.left_img.lbl._label.anchor_x = "left"
+        self.left_img.lbl.offset = (lambda sx, sy, sw, sh: (sw / 2 + 5, 0))
+        self.addWidget(self.left_img)
 
-        self.pright_label = peng3d.gui.Label("pright_label", self, self.window, self.peng,
-                                             pos=(lambda sw, sh, bw, bh: (
-                                                 sw - self.pright_label._label.content_width - 20, sh / 2)),
-                                             size=(lambda sw, sh: (0, 0)),
-                                             label="PRIGHT",
-                                             anchor_x="left",
-                                             anchor_y="baseline",
-                                             # align="right",
-                                             multiline=False,
-                                             font_size=35,
-                                             )
-        self.addWidget(self.pright_label)
-        self.labels["right"] = self.pright_label
+        self.top_img = PlayerIcon(
+            "topimg", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw * 0.337 - (bw / 2), sh - 55 - (bh / 2))),
+            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+        )
+        self.top_img.lbl._label.anchor_x = "right"
+        self.top_img.lbl.offset = (lambda sx, sy, sw, sh: (-sw / 2 - 5, 0))
+        self.addWidget(self.top_img)
 
-        self.ptop_label = peng3d.gui.Label("ptop_label", self, self.window, self.peng,
-                                           pos=(lambda sw, sh, bw, bh: (0, sh - 60)),
-                                           size=(lambda sw, sh: (sw, 0)),
-                                           label="PTOP",
-                                           anchor_x="center",
-                                           anchor_y="baseline",
-                                           multiline=False,
-                                           font_size=35,
-                                           )
-        self.addWidget(self.ptop_label)
-        self.labels["top"] = self.ptop_label
+        self.right_img = PlayerIcon(
+            "rightimg", self, self.window, self.peng,
+            pos=(lambda sw, sh, bw, bh: (sw - 55 - (bw / 2), sh * 4/5 - (bh / 2))),
+            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+        )
+        self.right_img.lbl._label.anchor_x = "right"
+        self.right_img.lbl.offset = (lambda sx, sy, sw, sh: (-sw / 2 - 5, 0))
+        self.addWidget(self.right_img)
 
+        # Announces
         self.announces = {}
 
         self.pself_announce = AnnounceWidget("pself_announce", self, self.window, self.peng,
@@ -683,6 +674,63 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
                                             )
         self.addWidget(self.ptop_announce)
         self.announces["top"] = self.ptop_announce
+
+
+class PlayerIcon(peng3d.gui.LayeredWidget):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng, pos, size)
+
+        self._label = ""
+        self._profile = "default"
+
+        self.halo = peng3d.gui.DynImageWidgetLayer(
+            "halo", self, 0,
+            imgs={
+                "default": ("cg:img.btn.halo", "gui"),
+                "transparent": ("cg:img.bg.transparent", "gui")
+            }
+        )
+        self.halo.switchImage("transparent")
+        self.addLayer(self.halo)
+
+        self.img = peng3d.gui.DynImageWidgetLayer(
+            "img", self, 1,
+            border=[5, 5],
+            imgs={
+                "default": ("cg:profile.default", "profile"),
+            }
+        )
+        self.img.switchImage("default")
+        self.addLayer(self.img)
+
+        self.hover = peng3d.gui.DynImageWidgetLayer(
+            "hover", self, 2,
+            border=[5, 5],
+            imgs={
+                "default": ("cg:img.btn.profile_hover", "gui"),
+                "transparent": ("cg:img.bg.transparent", "gui")
+            }
+        )
+        self.hover.switchImage("transparent")
+        self.addLayer(self.hover)
+
+        self.lbl = peng3d.gui.LabelWidgetLayer(
+            "lbl", self, 3,
+            label="",
+            font_size=35,
+            font_color=[255, 255, 255, 150],
+        )
+        self.addLayer(self.lbl)
+
+        def f():
+            self.hover.switchImage("default")
+            self.lbl.label = self._label
+        self.addAction("hover_start", f)
+
+        def f():
+            self.hover.switchImage("transparent")
+            self.lbl.label = ""
+        self.addAction("hover_end", f)
 
 
 class PopupLayer(peng3d.gui.GUILayer):
@@ -1206,7 +1254,6 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 "type": "continue_no",
                 "announcer": self.peng.cg.client.user_id.hex
             })
-            print("SEND CONTINUE NO!")
 
         self.continuebtn.addAction("press_up", f)
 
@@ -1428,7 +1475,6 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                 for extra in extras:
                     # TODO This kind of undermines the whole point of peng.tl...
                     summary_label += str(self.peng.tl(f"cg:game.doppelkopf.extra.{extra}")) + "\n"
-                print(summary_label)
                 summary = peng3d.gui.Label(
                     f"summary{round_num}", self.container, self.window, self.peng,
                     pos=self._lambda_bar_pos(i, 0),

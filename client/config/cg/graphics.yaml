@@ -5,3 +5,4 @@ caption: CardGame
 vsync: true
 fullscreen: false
 fps: 60
+background: cg:img.bg.table_bg

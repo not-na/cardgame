@@ -626,3 +626,6 @@ gamerule.dk.solos.opt.solo_monastery=Buben-Königs-Solo
 gamerule.dk.solos.opt.solo_aces=Assesolo
 gamerule.dk.solos.opt.solo_10s=Zehnensolo
 gamerule.dk.solos.opt.solo_9s=Neunensolo
+
+gamerule.dk.open_cards.name=Offene Karten
+gamerule.dk.open_cards.description=Trainingsmodus: Mit offenen Karten spielen

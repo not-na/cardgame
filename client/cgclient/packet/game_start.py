@@ -52,6 +52,7 @@ class GameStartPacket(CGPacket):
                 self.cg,
                 uuidify(msg["game_id"]),
                 [uuidify(p) for p in msg["player_list"]],
+                self.cg.client.lobby
             )
             self.cg.client.game.start()
 

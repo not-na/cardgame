@@ -51,8 +51,8 @@ class DoppelkopfGame(CGame):
     table_index_shift = 0
     poverty_pos = "self"
 
-    def __init__(self, c: CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID]):
-        super().__init__(c, game_id, player_list)
+    def __init__(self, c: CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID], lobby: cgclient.lobby.Lobby):
+        super().__init__(c, game_id, player_list, lobby)
         self.round_num = 0
 
         self.scoreboard_data = {

@@ -1852,11 +1852,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         if role is None:
             return
 
-        print("hi")
-
         # Kick button
         if self.peng.cg.client.lobby.user_roles.get(self.peng.cg.client.user_id, 0) >= ROLE_ADMIN:
-            print("Im Admin!")
             self.kickbtn.switchImage("default")
 
             # Make Admin button

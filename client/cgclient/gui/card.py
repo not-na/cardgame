@@ -277,6 +277,8 @@ class Card(object):
         self.vlist_back.vertices = vb
 
     def get_card_pos_rot(self, slot: str, index: int, count: int = 1):
+        open_card = self.game.lobby.gamerules.get("dk.open_cards", False)*180 or OPEN_CARDS
+
         # First, map virtual slots to physical slots
         slot = self.layer.norm_card_slot(slot)
 
@@ -323,15 +325,15 @@ class Card(object):
                 return pos, [0, 180, r]
             elif self.game.poverty_pos == "left":
                 pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 4)
-                return pos, [0, OPEN_CARDS, r]
+                return pos, [0, open_card, r]
             elif self.game.poverty_pos == "right":
                 pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 4)
-                return pos, [0, OPEN_CARDS, r]
+                return pos, [0, open_card, r]
             elif self.game.poverty_pos == "top":
                 pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 4)
-                return pos, [0, OPEN_CARDS, r]
+                return pos, [0, open_card, r]
         elif slot == "player_self":
-            pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 3)
+            pos, r = self.get_radial_pos_rot([0, 0.1, 4.3], index, count, 2, 180, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_left":
             pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 3)
@@ -340,7 +342,7 @@ class Card(object):
             pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "player_top":
-            pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 3)
+            pos, r = self.get_radial_pos_rot([0, 0.1, -4.3], index, count, 2, 0, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "ptrick_self":
             if DEBUG_CARDS:
@@ -400,7 +402,7 @@ class Card(object):
 
         # Calculate the effective angle of the card
         # Cards are arranged symmetrically around the base angle
-        angle = base_angle + (index-count/2.)*angle_per_card
+        angle = base_angle + (index-count/2. + 0.5)*angle_per_card
         rangle = math.radians(angle)
 
         #self.cg.info(f"Count: {count} Index: {index} Angle: {angle}")

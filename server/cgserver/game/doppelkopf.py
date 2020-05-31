@@ -38,16 +38,16 @@ from cg.constants import STATE_GAME_DK
 
 class DoppelkopfGame(CGame):
     GAMERULES = {
-        "general.wrongmove": {
-            "type": "select",
-            "default": "prohibit",
-            "options": [
-                "prohibit",
-                "allow_points",
-                "allow_stopgame",
-            ],
-            "requirements": {},
-        },
+        # "general.wrongmove": {
+        #     "type": "select",
+        #     "default": "prohibit",
+        #     "options": [
+        #         "prohibit",
+        #         "allow_points",
+        #         "allow_stopgame",
+        #     ],
+        #     "requirements": {},
+        # },
         "dk.heart10": {
             "type": "bool",
             "default": True,
@@ -370,6 +370,11 @@ class DoppelkopfGame(CGame):
             ],
             "requirements": {}
         },
+        "dk.open_cards": {
+            "type": "bool",
+            "default": False,
+            "requirements": {}
+        }
     }
     SOLO_ORDER = [
         "solo_aces",

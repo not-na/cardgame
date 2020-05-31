@@ -48,14 +48,12 @@ class TurnPacket(CGPacket):
         idx = self.cg.client.gui.ingame.game_layer.player_list.index(cur_player)
 
         for i, n in self.cg.client.gui.ingame.game_layer.hand_to_player.items():
-            l = self.cg.client.gui.ingame.hud_layer.s_main.labels[n]
+            l = self.cg.client.gui.ingame.hud_layer.s_main.getWidget(f"{n}img")
             if i == idx:
-                c = [0, 255, 0, 255]
+                l.halo.switchImage("default")
             else:
-                c = [100, 100, 100, 255]
+                l.halo.switchImage("transparent")
 
-            l.font_color = c
-            l._label.color = c
             l.redraw()
 
         if msg["current_trick"] != self.last_trick:

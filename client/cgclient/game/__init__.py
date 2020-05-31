@@ -38,11 +38,13 @@ class CGame(object):
     default_intent: str
     card_intent_packet: str
 
-    def __init__(self, c: cg.CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID]):
+    def __init__(self, c: cg.CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID], lobby: cgclient.lobby.Lobby):
         self.cg: cg.CardGame = c
 
         self.game_id = game_id
         self.player_list = player_list
+
+        self.lobby = lobby
 
         # Ensure all players exist in the local database
         for p in player_list:

@@ -160,7 +160,6 @@ class ChangePacket(CGPacket):
                 else:
                     self.cg.warn("Tried to set user role of user that is not in the conderned lobby (on the client)!")
                     return
-            print(self.cg.client.lobby.user_roles)
             self.cg.send_event("cg:lobby.admin.change", {
                 uuidify(k): v for k, v in msg["user_roles"].items()
             })

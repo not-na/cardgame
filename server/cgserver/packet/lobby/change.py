@@ -102,7 +102,6 @@ class ChangePacket(CGPacket):
                     "gamerules": {gamerule: lobby.gamerules[gamerule] for gamerule in lobby.gamerules}
                 })
                 return
-            print(msg["gamerules"])
             lobby.update_gamerules(msg["gamerules"])
 
         if "user_roles" in msg:

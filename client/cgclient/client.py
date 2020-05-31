@@ -157,6 +157,12 @@ class Client(object):
         else:
             return self.users_uuid[user_id].username
 
+    def get_profile_img(self, user_id: uuid.UUID):
+        if user_id not in self.users_uuid:
+            return "default"
+        else:
+            return self.users_uuid[user_id].profile_img
+
     def register_game(self, name: str, cls: Type[cgclient.game.CGame]):
         self.game_reg[name] = cls
 

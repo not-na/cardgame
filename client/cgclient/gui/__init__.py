@@ -122,6 +122,9 @@ class PengGUI(object):
         self.peng.resourceMgr.categoriesSettings["profile"]["minfilter"] = GL_NEAREST
         self.peng.resourceMgr.categoriesSettings["profile"]["magfilter"] = GL_LINEAR
 
+        self.peng.resourceMgr.categoriesSettings["card"]["minfilter"] = GL_LINEAR_MIPMAP_NEAREST
+        self.peng.resourceMgr.categoriesSettings["card"]["magfilter"] = GL_LINEAR
+
         self.peng.resourceMgr.categoriesSettings["gui"]["minfilter"] = GL_NEAREST
 
         self.peng.resourceMgr.loadTex("cg:img.cursor.cursor20p", "gui")
