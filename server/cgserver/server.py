@@ -22,6 +22,7 @@
 #
 
 import os
+import secrets
 import socket
 import sys
 import time
@@ -170,6 +171,8 @@ class DedicatedServer(object):
             "registrar": self.register_game,
         })
 
+        self.secret: Optional[str] = None
+
         self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
 
         self.serverid: Union[None, uuid.UUID] = None
@@ -272,6 +275,11 @@ class DedicatedServer(object):
 
         self.serverid = uuidify(data["serverid"])
 
+        if "secret" not in data:
+            self.secret = secrets.token_bytes(self.cg.get_config_option("cg:server.secret_length"))
+        else:
+            self.secret = data["secret"]
+
         for user, udat in data["users"].items():
             u = cgserver.user.User(self, self.cg, user, udat)
             self.users[user] = u
@@ -281,6 +289,7 @@ class DedicatedServer(object):
 
     def gen_server_data(self):
         self.serverid = uuid.uuid4()
+        self.secret = secrets.token_bytes(self.cg.get_config_option("cg:server.secret_length"))
 
         self.save_server_data()
 
@@ -294,6 +303,7 @@ class DedicatedServer(object):
         fname = os.path.join(self.cg.get_instance_path(), "serverdat.csd")
         data = {
             "serverid": self.serverid.hex,
+            "secret": self.secret,
             "users": users,
         }
 

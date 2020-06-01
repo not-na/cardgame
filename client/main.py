@@ -61,7 +61,7 @@ class CardgameApp(cli.Application):
         print("Client starting...")
         sys.stdout.flush()
 
-        print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
+        #print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
         c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
 
         c.info("Successfully created CG")

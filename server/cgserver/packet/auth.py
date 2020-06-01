@@ -29,7 +29,11 @@ from cg.packet import CGPacket
 import cgserver.user
 
 
-USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]+")
+USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]{2,15}")
+
+# Required to prevent excessive collisions when hashing
+# Should be long enough, even for password managers
+MAX_PWD_LENGTH = 128
 
 
 class AuthPacket(CGPacket):
@@ -55,16 +59,23 @@ class AuthPacket(CGPacket):
                 }, cid)
                 return
             else:
-                if not USER_PATTERN.fullmatch(username):
+                if not USER_PATTERN.fullmatch(username) or username.lower().startswith("bot"):
+                    # Invalid username
                     self.peer.send_message("cg:auth", {
                        "status": "wrong_credentials",
+                    })
+                    return
+                if "pwd" not in msg or len(msg["pwd"]) >= MAX_PWD_LENGTH:
+                    # Invalid password
+                    self.peer.send_message("cg:auth", {
+                        "status": "wrong_credentials",
                     })
                     return
 
                 # User does not exist, create it
                 self.cg.info(f"Creating new account with name '{username}'")
                 u = cgserver.user.User(self.cg.server, self.cg, username, {
-                    "pwd": msg.get("pwd", None),
+                    "pwd": msg["pwd"],
                     # No uuid necessary, will be created automatically
                 })
                 self.cg.server.users[username.lower()] = u
@@ -95,7 +106,7 @@ class AuthPacket(CGPacket):
                     "status": "wrong_credentials",
                 }, cid)
                 return
-            elif msg.get("pwd", None) == self.cg.server.users[username.lower()].pwd:
+            elif self.cg.server.users[username.lower()].check_password(msg.get("pwd", "")):
                 # Correct password, log in
                 self.cg.info(f"User {username} logged in")
 

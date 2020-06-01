@@ -63,16 +63,23 @@ class StatusUserPacket(CGPacket):
                                 self.cg.server.send_user_data(u.uuid, user.uuid)
 
                 if "pwd" in msg:
-                    if msg["pwd"][0] != u.pwd:
+                    oldpwd = msg["pwd"][0]
+                    newpwd = msg["pwd"][0]
+
+                    if not u.check_password(oldpwd, update=False):
                         self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.wrong_pwd")
                         return
-                    else:
-                        u.pwd = msg["pwd"][1]
-                        self.cg.server.save_server_data()
-                        self.peer.send_message("cg:status.user", {
-                            "uuid": u.uuid.hex,
-                            "pwd": u.pwd
-                        }, u.cid)
+                    u.set_pwd(newpwd.encode())
+                    # if msg["pwd"][0] != u.pwd:
+                    #     self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.wrong_pwd")
+                    #     return
+                    # else:
+                    #     u.pwd = msg["pwd"][1]
+                    #     self.cg.server.save_server_data()
+                    #     self.peer.send_message("cg:status.user", {
+                    #         "uuid": u.uuid.hex,
+                    #         "pwd": u.pwd
+                    #     }, u.cid)
 
                 if "profile_img" in msg:
                     if msg["profile_img"].strip() == "":

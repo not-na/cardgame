@@ -1,4 +1,4 @@
-git+https://github.com/not-na/peng3d.git@bb2bf2b079a2748671d9a92b6ad3f75d5f452ae2
+git+https://github.com/not-na/peng3d.git@e097b51968bc729a3ba158a4db48df56b9ffee4c
 peng3dnet==0.1.3a0
 psutil==5.7.0
 sphinx_rtd_theme==0.2.4
@@ -9,5 +9,6 @@ PyYAML==5.3.1
 msgpack==1.0.0
 cachetools==4.1.0
 vectormath==0.2.2
-pyglet==1.5.4
+pyglet==1.5.5
 numpy==1.18.4
+PyJWT==1.7.1

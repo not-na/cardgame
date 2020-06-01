@@ -415,6 +415,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.profile_label)
         self.profile_label._pressed = False
+        self.profile_label.enabled = True
 
         def f():
             if self.profile_label._pressed:

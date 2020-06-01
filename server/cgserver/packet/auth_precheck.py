@@ -26,7 +26,7 @@ from cg.constants import STATE_AUTH
 from cg.packet import CGPacket
 
 
-USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]+")
+USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]{2,15}")
 
 
 class AuthPrecheckPacket(CGPacket):
@@ -44,7 +44,7 @@ class AuthPrecheckPacket(CGPacket):
     def receive(self, msg, cid=None):
         user = msg["username"]
 
-        valid = USER_PATTERN.fullmatch(user) is not None
+        valid = USER_PATTERN.fullmatch(user) is not None and not user.lower().startswith("bot")
         exists = user.lower() in self.cg.server.users
 
         self.peer.send_message("cg:auth.precheck", {
