@@ -82,6 +82,8 @@ class ChangePacket(CGPacket):
                 self.cg.warn(f"User {u.username} tried to change a lobby game with insufficient rights")
                 return
 
+            lobby.game_data = None
+
             oldgame = lobby.game
             lobby.game = msg["game"]
 
@@ -102,6 +104,8 @@ class ChangePacket(CGPacket):
                     "gamerules": {gamerule: lobby.gamerules[gamerule] for gamerule in lobby.gamerules}
                 })
                 return
+
+            lobby.game_data = None
             lobby.update_gamerules(msg["gamerules"])
 
         if "user_roles" in msg:

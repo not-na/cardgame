@@ -24,7 +24,9 @@ import glob
 import math
 import re
 import time
-from typing import Tuple, Union, Dict
+import datetime
+import uuid
+from typing import Tuple, Union, Dict, List
 
 import peng3d
 
@@ -33,6 +35,7 @@ import pyglet
 from pyglet.window.mouse import LEFT
 
 from cg.constants import ROLE_ADMIN
+from cg.util import uuidify
 
 GAMES = [
     "sk",  # Skat
@@ -246,6 +249,10 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         # Gamerule Menu
         self.s_gamerule = GameruleSubMenu("gamerules", self, self.window, self.peng)
         self.addSubMenu(self.s_gamerule)
+
+        # Adjourn Menu
+        self.s_adjourn = AdjournSubMenu("adjourn", self, self.window, self.peng)
+        self.addSubMenu(self.s_adjourn)
 
         self.changeSubMenu("load")
 
@@ -749,10 +756,14 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             pos=self.grid.get_cell([3, 0], [3, 2]),
             label=self.peng.tl("cg:gui.menu.smain.lobby.loadgamebtn.label")
         )
-        self.loadgamebtn.enabled = False
         self.addWidget(self.loadgamebtn)
 
-        # TODO implement adjourning games
+        def f():
+            self.loadgamebtn.pressed = False
+            self.loadgamebtn.redraw()
+            self.menu.changeSubMenu("adjourn")
+
+        self.loadgamebtn.addAction("click", f)
 
         # Player list
         self.player_buttons = {}
@@ -939,6 +950,242 @@ class GameruleSubMenu(peng3d.gui.SubMenu):
         self.gamerule_containers[self.current_page].visible = False
 
 
+class AdjournSubMenu(peng3d.gui.SubMenu):
+    def __init__(self, name, menu, window, peng):
+        super().__init__(name, menu, window, peng)
+
+        self.chosen_game = None
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [12, 6], [60, 30])
+
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+
+        # Upper Bar
+        self.w_upper_bar = peng3d.gui.Widget(
+            "upper_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [12, 1], border=0),
+        )
+        self.w_upper_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_upper_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.w_upper_bar.clickable = False
+        self.addWidget(self.w_upper_bar)
+
+        # Lower Bar
+        self.w_lower_bar = peng3d.gui.Widget(
+            "lower_bar", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [12, 1], border=0),
+        )
+        self.w_lower_bar.setBackground(peng3d.gui.FramedImageBackground(
+            self.w_lower_bar,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3)
+        ))
+        self.w_lower_bar.clickable = False
+        self.addWidget(self.w_lower_bar)
+
+        # Heading
+        self.heading = peng3d.gui.Label("adjourn_heading", self, self.window, self.peng,
+                                        pos=(lambda sw, sh, bw, bh: (sw / 2, sh * 19 / 24)),
+                                        # TODO Make this adjusting to the font size
+                                        size=(lambda sw, sh: (0, sh / 6)),
+                                        label=self.peng.tl("cg:gui.menu.smain.adjourn.heading"),
+                                        font_size=40,
+                                        )
+        self.heading.clickable = False
+        self.addWidget(self.heading)
+
+        # Back Button
+        self.backbtn = cgclient.gui.CGButton(
+            "backbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 0], [6, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.backbtn.label"),
+        )
+        self.addWidget(self.backbtn)
+
+        def f():
+            self.menu.changeSubMenu("lobby")
+
+        self.backbtn.addAction("click", f)
+
+        # Load Button
+        self.loadbtn = cgclient.gui.CGButton(
+            "loadbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([6, 0], [6, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.loadbtn.label")
+        )
+        self.addWidget(self.loadbtn)
+
+        def f():
+            if self.chosen_game is None:
+                return
+            self.peng.cg.client.send_message("cg:lobby.change", {
+                "gamerules": self.save_games[self.chosen_game]["gamerules"]
+            })
+            self.peng.cg.client.send_message("cg:game.load", {
+                "game_id": self.chosen_game,
+                "data": self.save_games[self.chosen_game]
+            })
+            self.menu.changeSubMenu("lobby")
+
+        self.loadbtn.addAction("click", f)
+
+        self.save_btns = []
+        for i in range(3):
+            for j in range(2):
+                btn = AdjournGameButton(
+                    f"button{j}:{i}", self, self.window, self.peng,
+                    pos=self.grid.get_cell([j * 4, 3 - j * 2], [4, 2]),
+                )
+                self.addWidget(btn)
+                self.save_btns.append(btn)
+                btn.visible = False
+
+                def f(button):
+                    for b in self.save_btns:
+                        if b != button:
+                            b.pressed = False
+                            b.redraw()
+                    self.chosen_game = button.game_id
+                    self.loadbtn.enabled = True
+
+                btn.addAction("press_down", f, btn)
+
+                def f():
+                    self.chosen_game = None
+                    self.loadbtn.enabled = False
+
+                btn.addAction("press_up", f)
+
+    @property
+    def save_games(self):
+        return {  # TODO Implement adjourning games: Load all the saved games
+            '1810f102574e466aa7aa127e4a49445f': {
+                'id': '1810f102574e466aa7aa127e4a49445f',
+                'type': 'dk',
+                'creation_time': 1591027932.0652864,
+                'players': [
+                    '688ff40f28fb43a49a48befa15a76abf',
+                    '123f135645b049e691328d5e50a7d639',
+                    '51a2834bc17d4b2787a7ca70b61f0aeb',
+                    '40b26c88bc204df4924de4d5661a257d'
+                ],
+                'gamerules': {'dk.heart10': True, 'dk.heart10_prio': 'first', 'dk.heart10_lasttrick': 'first',
+                              'dk.doppelkopf': True, 'dk.fox': True, 'dk.fox_lasttrick': False,
+                              'dk.pigs': 'two_reservation', 'dk.superpigs': 'reservation', 'dk.charlie': True,
+                              'dk.charlie_broken': False, 'dk.jane': False, 'dk.charlie_prio': 'first',
+                              'dk.without9': 'with_all', 'dk.heart_trick': False, 'dk.sec_black_trick': False,
+                              'dk.joker': 'None', 'dk.hobgoblin': False, 'dk.poverty': 'sell',
+                              'dk.poverty_consequence': 'black_sow', 'dk.throw': 'None', 'dk.throw_cases': [],
+                              'dk.coward': 'None', 'dk.wedding': 'None', 'dk.repeat_game': False, 'dk.re_kontra': '+2',
+                              'dk.buck_round': 'None', 'dk.buck_cause': [], 'dk.buck_amount': '4',
+                              'dk.solo_shift_h10': False, 'dk.solist_begins': False, 'dk.solo_prio': 'first',
+                              'dk.solos': ['solo_queen', 'solo_jack', 'solo_clubs', 'solo_spades', 'solo_hearts',
+                                           'solo_diamonds', 'solo_fleshless'], 'dk.open_cards': False},
+                'round_num': 3,
+                'buckrounds': [],
+                'scores': [[1, 1, -3, 1], [-5, 5, 5, -5], [3, 3, -3, -3]],
+                'current_points': [-1, 9, -1, -7],
+                'game_summaries': [
+                    {'round_num': 0, 'winner': 'kontra', 'game_type': 'silent_wedding', 'eyes': (111, 129),
+                     'extras': ['kontra_win'], 'point_change': [1, 1, -3, 1], 'points': [-1, 9, -1, -7]},
+                    {'round_num': 1, 'winner': 'kontra', 'game_type': 'normal', 'eyes': (73, 167),
+                     'extras': ['kontra_win', 'no90', 'p_against_cqs', 'p_fox', 'p_fox'],
+                     'point_change': [-5, 5, 5, -5],
+                     'points': [-1, 9, -1, -7]},
+                    {'round_num': 2, 'winner': 're', 'game_type': 'normal', 'eyes': (149, 91),
+                     'extras': ['re_win', 'p_fox', 'p_fox'], 'point_change': [3, 3, -3, -3],
+                     'points': [-1, 9, -1, -7]}
+                ],
+                'rounds': {
+                    'e4f50ad6f06646c180c6ffc8125e797a': {
+                        'moves': [
+                            (0, 'announcement:reservation_no'), (1, 'announcement:reservation_no'),
+                            (2, 'announcement:reservation_no'), (3, 'announcement:reservation_no'), (0, 'card:cj'),
+                            (1, 'card:hj'), (2, 'card:dk'), (3, 'card:hq'), (3, 'card:ha'), (0, 'card:hk'),
+                            (1, 'card:h9'), (2, 'card:ha'), (3, 'card:s9'), (0, 'card:sa'), (1, 'card:s9'),
+                            (2, 'card:s10'), (0, 'card:da'), (1, 'card:dj'), (2, 'card:cq'), (3, 'card:d10'),
+                            (2, 'card:cq'), (3, 'card:sj'), (0, 'card:dq'), (1, 'card:dq'), (2, 'card:c9'),
+                            (3, 'card:ca'), (0, 'card:ca'), (1, 'card:h10'), (1, 'card:h10'), (2, 'card:d10'),
+                            (3, 'card:sj'), (0, 'card:dj'), (1, 'card:da'), (2, 'card:sq'), (3, 'card:d9'),
+                            (0, 'card:sq'), (2, 'card:sk'), (3, 'card:h9'), (0, 'card:c10'), (1, 'card:sk'),
+                            (2, 'card:cj'), (3, 'card:ck'), (0, 'card:hj'), (1, 'card:hk'), (2, 'card:d9'),
+                            (3, 'card:c9'), (0, 'card:dk'), (1, 'card:sa'), (0, 'card:c10'), (1, 'card:s10'),
+                            (2, 'card:hq'), (3, 'card:ck')
+                        ]
+                    },
+                    '35671662840042549360142fde2191ce': {
+                        'moves': [
+                            (1, 'announcement:reservation_no'), (2, 'announcement:reservation_no'),
+                            (3, 'announcement:reservation_no'), (0, 'announcement:reservation_no'), (1, 'card:dq'),
+                            (2, 'card:cj'), (3, 'card:hq'), (0, 'card:cj'), (3, 'card:ca'), (0, 'card:c10'),
+                            (1, 'card:c9'), (2, 'card:ck'), (3, 'card:s9'), (0, 'card:sa'), (1, 'card:sk'),
+                            (2, 'card:s10'), (0, 'card:ha'), (1, 'card:h9'), (2, 'card:d9'), (3, 'card:hk'),
+                            (2, 'card:sj'), (3, 'card:da'), (0, 'card:hj'), (1, 'card:dj'), (2, 'card:sq'),
+                            (3, 'card:d10'), (0, 'card:dj'), (1, 'card:hj'), (2, 'card:ck'), (3, 'card:c9'),
+                            (0, 'card:c10'), (1, 'card:sj'), (1, 'card:hk'), (2, 'card:hq'), (3, 'card:sa'),
+                            (0, 'card:h9'), (2, 'card:dq'), (3, 'card:cq'), (0, 'card:cq'), (1, 'card:dk'),
+                            (3, 'card:s9'), (0, 'card:s10'), (1, 'card:sk'), (2, 'card:d9'), (2, 'card:h10'),
+                            (3, 'card:h10'), (0, 'card:da'), (1, 'card:dk'), (2, 'card:ca'), (3, 'card:d10'),
+                            (0, 'card:ha'), (1, 'card:sq')
+                        ]
+                    },
+                    '56b57670fe50491f860e838e0bb05c56': {
+                        'moves': [
+                            (2, 'announcement:reservation_no'), (3, 'announcement:reservation_no'),
+                            (0, 'announcement:reservation_no'), (1, 'announcement:reservation_no'), (2, 'card:da'),
+                            (3, 'card:sq'), (0, 'card:cq'), (1, 'card:cq'), (0, 'card:ck'), (1, 'card:ca'),
+                            (2, 'card:c10'), (3, 'card:c9'), (1, 'card:dq'), (2, 'card:hj'), (3, 'card:sj'),
+                            (0, 'card:cj'), (1, 'card:hk'), (2, 'card:h9'), (3, 'card:s10'), (0, 'card:hk'),
+                            (1, 'card:d10'), (2, 'card:d10'), (3, 'card:dk'), (0, 'card:cj'), (0, 'card:sk'),
+                            (1, 'card:sk'), (2, 'card:sa'), (3, 'card:s10'), (2, 'card:sa'), (3, 'card:s9'),
+                            (0, 'card:ck'), (1, 'card:c10'), (2, 'card:dj'), (3, 'card:da'), (0, 'card:hq'),
+                            (1, 'card:sj'), (0, 'card:ha'), (1, 'card:ha'), (2, 'card:h9'), (3, 'card:d9'),
+                            (3, 'card:dk'), (0, 'card:sq'), (1, 'card:h10'), (2, 'card:dq'), (1, 'card:c9'),
+                            (2, 'card:hj'), (3, 'card:dj'), (0, 'card:ca'), (2, 'card:s9'), (3, 'card:hq'),
+                            (0, 'card:d9'), (1, 'card:h10')
+                        ]
+                    }
+                }
+            }
+        }
+
+    def on_enter(self, old):
+        self.chosen_game = None
+        save_games = list(self.save_games.values())
+        for i, btn in enumerate(self.save_btns):
+            if i < len(save_games):
+                btn.visible = True
+                btn.game_id = save_games[i]["id"]
+                btn.date_layer.label = time.strftime(
+                    "%d.%m.%Y, %X", time.localtime(save_games[i]["creation_time"]))
+                players = ""
+                for p in save_games[i]["players"]:
+                    players += self.peng.cg.client.get_user_name(uuidify(p)) + "\n"
+                players = players.strip("\n")
+                btn.player_layer.label = players
+                btn.pressed = False
+
+                if sorted(save_games[i]["players"]) != sorted(self.peng.cg.client.lobby.users):
+                    self.save_btns[i].enabled = False
+                    self.save_btns[i].bg_layer.switchImage("disabled")
+                    self.save_btns[i].redraw()
+            else:
+                btn.visible = False
+                btn.pressed = False
+        self.loadbtn.enabled = False
+
+
 class TemplateSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
@@ -984,7 +1231,7 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
         self.w_lower_bar.clickable = False
         self.addWidget(self.w_lower_bar)
 
-        # Gamerules Heading
+        # Template Heading
         self.heading = peng3d.gui.Label("template_load_heading", self, self.window, self.peng,
                                         pos=(lambda sw, sh, bw, bh: (sw / 2, sh * 19 / 24)),
                                         # TODO Make this adjusting to the font size
@@ -1550,6 +1797,92 @@ class GameSelectButton(peng3d.gui.LayeredWidget):
         self.addAction("click", f)
 
 
+class AdjournGameButton(peng3d.gui.LayeredWidget):
+    def __init__(self, name, submenu, window, peng, pos):
+        super().__init__(name, submenu, window, peng, pos)
+
+        self.game_id = None
+
+        self.bg_layer = peng3d.gui.FramedImageWidgetLayer(
+            "bg_layer", self, 1,
+            imgs={
+                "idle": ("cg:img.bg.rbg_idle", "gui"),
+                "hover": ("cg:img.bg.rbg_hov", "gui"),
+                "pressed": ("cg:img.bg.rbg_press", "gui"),
+                "disabled": ("cg:img.bg.rbg_disab", "gui"),
+            },
+            default="idle",
+            frame=[[21, 2, 21], [21, 2, 21]],
+            scale=(.3, .3),
+        )
+        self.addLayer(self.bg_layer)
+
+        def f():
+            if not self.pressed and self.enabled:
+                self.bg_layer.switchImage("hover")
+
+        self.addAction("hover_start", f)
+
+        def f():
+            if not self.pressed and self.enabled:
+                self.bg_layer.switchImage("idle")
+
+        self.addAction("hover_end", f)
+
+        def f():
+            if self.enabled:
+                self.bg_layer.switchImage("pressed")
+
+        self.addAction("press_down", f)
+
+        def f():
+            if self.enabled:
+                if not self.is_hovering:
+                    self.bg_layer.switchImage("idle")
+                else:
+                    self.bg_layer.switchImage("hover")
+
+        self.addAction("press_up", f)
+
+        h = pyglet.font.load("Times New Roman", 30).ascent / 2
+        self.date_layer = peng3d.gui.LabelWidgetLayer(
+            "date", self, 2,
+            offset=(lambda sx, sy, sw, sh: (0, sh/2 - h - 5)),
+            multiline=False,
+            font_size=30
+        )
+        self.addLayer(self.date_layer)
+
+        self.player_layer = peng3d.gui.LabelWidgetLayer(
+            "players", self, 2,
+            offset=(50, 0),
+            multiline=True,
+            font_size=20
+        )
+        self.addLayer(self.player_layer)
+
+    def _mouse_aabb(self, mpos, size, pos):
+        return pos[0] <= mpos[0] <= pos[0] + size[0] and pos[1] <= mpos[1] <= pos[1] + size[1]
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        if not self.clickable:
+            return
+        elif self._mouse_aabb([x, y], self.size, self.pos):
+            if button == pyglet.window.mouse.LEFT:
+                self.doAction("click")
+                self.pressed = not self.pressed
+                if self.pressed:
+                    self.doAction("press_down")
+                else:
+                    self.doAction("press_up")
+            elif button == pyglet.window.mouse.RIGHT:
+                self.doAction("context")
+            self.redraw()
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        pass
+
+
 class _FakeUser:
     username = ""
     profile_img = "transparent"
@@ -1624,7 +1957,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             "img", self,
             z_index=3,
             border=(lambda bx, by, bw, bh: (bw / 2 - bh / 3, bh / 6)),
-            offset=(lambda bx, by, bw, bh: (-bw/2 + bh * 7/12 + 40, 0)),
+            offset=(lambda bx, by, bw, bh: (-bw / 2 + bh * 7 / 12 + 40, 0)),
             imgs={
                 "transparent": ("cg:img.bg.transparent", "gui"),
                 profile_img: (f"cg:profile.{profile_img}", "profile")
@@ -1639,7 +1972,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             z_index=3,
             label=self.player.username,
             font_size=30,
-            offset=(lambda bx, by, bw, bh: (-bw/2 + bh * 11/12 + 60, 0))
+            offset=(lambda bx, by, bw, bh: (-bw / 2 + bh * 11 / 12 + 60, 0))
         )
         self.username_label_layer._label.anchor_x = "left"
         self.addLayer(self.username_label_layer)
@@ -1650,7 +1983,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             z_index=3,
             border=(lambda bx, by, bw, bh: (bw / 2 - bh / 8, bh * 3 / 8)),
             offset=(
-                lambda bx, by, bw, bh: (-bw/2 + bh * 25/24 + 80 + self.username_label_layer._label.content_width, 0)
+                lambda bx, by, bw, bh: (-bw / 2 + bh * 25 / 24 + 80 + self.username_label_layer._label.content_width, 0)
             ),
             imgs={
                 "transparent": ("cg:img.bg.transparent", "gui"),

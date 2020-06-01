@@ -303,7 +303,7 @@ class Card(object):
             elif index == 1:
                 # Top
                 return [
-                    [0.15, 0.01*oidx, -0.5],
+                    [0.15, 0.01*oidx, -0.35],
                     [0, 180, 0],
                 ]
             elif index == 2:
@@ -315,7 +315,7 @@ class Card(object):
             elif index == 3:
                 # Bottom
                 return [
-                    [-0.05, 0.01*oidx, 0.3],
+                    [-0.05, 0.01*oidx, 0.2],
                     [0, 180, 0],
                 ]
         elif slot == "poverty":

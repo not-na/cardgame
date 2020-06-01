@@ -53,6 +53,8 @@ Packets
 
    packets/packet_game_start
    packets/packet_game_end
+   packets/packet_game_load
+   packets/packet_game_save
 
    packets/game_dk/packet_game_dk_question
    packets/game_dk/packet_game_dk_announce

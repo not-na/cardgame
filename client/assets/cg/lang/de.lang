@@ -331,6 +331,10 @@ gui.menu.smain.template.backbtn.label=Zurück
 gui.menu.smain.template.loadtmplbtn.label=Vorlage laden
 gui.menu.smain.template.deletebtn.label=Vorlage löschen
 
+gui.menu.smain.adjourn.heading=Vertagtes Spiel Laden
+gui.menu.smain.adjourn.backbtn.label=Zurück
+gui.menu.smain.adjourn.loadbtn.label=Spiel laden
+
 gui.menu.ingame.ingamegui.readybtn.label=Fertig!
 gui.menu.ingame.ingamegui.throwbtn.label=Schmeißen!
 gui.menu.ingame.ingamegui.pigsbtn.pigs=Schweinchen!

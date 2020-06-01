@@ -429,17 +429,21 @@ class DoppelkopfGame(CGame):
 
         self.buckrounds: List[int] = []
 
+        self.move_history: Dict[str, Dict[str, List[Tuple[int, str]]]] = {}
+
     def start(self):
-        for p in self.players:
-            self.points[p] = 0
+        if self.points == {}:
+            for p in self.players:
+                self.points[p] = 0
 
         self.send_to_all("cg:game.start", {
             "game_type": "doppelkopf",
             "game_id": self.game_id.hex,
-            "player_list": [p.hex for p in self.players]
+            "player_list": [p.hex for p in self.players],
+            "game_summaries": self.game_summaries
         })
 
-        self.start_round(0)
+        self.start_round(self.round_num)
 
     def start_round(self, round_num: int):
         players = self.players[round_num % 4:] + self.players[:round_num % 4]  # Each round, another player begins
@@ -476,21 +480,24 @@ class DoppelkopfGame(CGame):
         data = {
             "game_id": self.game_id,
             "game_data": {
-                "cretion_time": self.creation_time,
+                "creation_time": self.creation_time,
                 "rounds": {},
                 "botgame": len(self.fake_players) == 0
             },
             "players": []
         }
-        for r in self.rounds:
-            data["game_data"]["rounds"][r.round_id.hex] = {
-                "moves": [
-                    (
-                        self.players.index(v["player"]),
-                        f"{v['type']}:{v['data']}"
-                    ) for v in r.moves.values()
-                ]
-            }
+        if self.move_history == {}:
+            for r in self.rounds:
+                data["game_data"]["rounds"][r.round_id.hex] = {
+                    "moves": [
+                        (
+                            self.players.index(v["player"]),
+                            f"{v['type']}:{v['data']}"
+                        ) for v in r.moves.values()
+                    ]
+                }
+        else:
+            data["game_data"]["rounds"] = self.move_history
         for p in self.players:
             if p not in self.fake_players:
                 data["players"].append(p.hex)
@@ -508,6 +515,8 @@ class DoppelkopfGame(CGame):
         self.cg.add_event_listener("cg:game.dk.play.cancel_no", self.handle_not_cancel_play, group=self.game_id)
         self.cg.add_event_listener("cg:game.dk.play.end_yes", self.handle_end_play, group=self.game_id)
         self.cg.add_event_listener("cg:game.dk.play.end_no", self.handle_not_end_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.adjourn_yes", self.handle_adjourn_play, group=self.game_id)
+        self.cg.add_event_listener("cg:game.dk.play.adjourn_no", self.handle_not_adjourn_play, group=self.game_id)
 
     def handle_end_round(self, event: str, data: Dict):
         # Send the information on the round
@@ -522,8 +531,6 @@ class DoppelkopfGame(CGame):
             "game_summary": data["game_summary"]
         })
 
-        self.game_summaries.append(data["game_summary"])
-
         m = -1 if data["game_type"] in ["ramsch", "ramsch_sw"] else 1  # In case of Ramsch, the points are swapped
 
         # Determine if the round should be played again
@@ -534,6 +541,13 @@ class DoppelkopfGame(CGame):
                  (data["winner"] == "re" and data["game_value"] <= 0)))
 
         self.scores.append([])
+        self.game_summaries.append({
+            "round_num": self.round_num,
+            "winner": data["winner"],
+            "game_type": data["game_type"],
+            "eyes": data["eyes"],
+            "extras": data["game_summary"]
+        })
         if not remake_round:
             # Handle buckround modifier for points
             if self.gamerules["dk.buck_round"] == "succession":
@@ -587,9 +601,15 @@ class DoppelkopfGame(CGame):
                 self.buckrounds.extend(data["buckround_events"] * [int(self.gamerules["dk.buck_amount"])])
 
             self.round_num += 1  # Only increase round_num if the game wasn't cancelled
+        else:
+            self.scores.append([0, 0, 0, 0])
+
+        self.game_summaries[-1]["point_change"] = self.scores[-1].copy()
+        self.game_summaries[-1]["points"] = list(self.points.values())
 
         self.cg.event_manager.del_group(self.current_round.round_id)  # Deinitialise the round's event handlers
 
+    # Button Handling
     def handle_continue_play(self, event: str, data: Dict):
         self.player_decisions["continue"].add(data["player"])
         if self.DEV_MODE:
@@ -666,8 +686,36 @@ class DoppelkopfGame(CGame):
             "type": "end_no"
         })
 
+    def handle_adjourn_play(self, event: str, data: Dict):
+        self.player_decisions["adjourn"].add(data["player"])
+        if self.DEV_MODE:
+            for p in self.fake_players:
+                self.player_decisions["adjourn"].add(p)
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "adjourn_yes"
+        })
+        if len(self.player_decisions["adjourn"]) == 4:
+            self.player_decisions: Dict[str, Set[uuid.UUID]] = {
+                "continue": set(),
+                "adjourn": set(),
+                "cancel": set(),
+                "end": set()
+            }
+            self.collect_statistics()
+            self.cg.info(f"game_data: {self.serialize()}")
+            # TODO Implement adjourning games: Save Game to file, beware of game_id key and data for the packet
+            self.cancel_game()
+
+    def handle_not_adjourn_play(self, event: str, data: Dict):
+        self.player_decisions["adjourn"].discard(data["player"])
+        self.send_to_all("cg:game.dk.announce", {
+            "announcer": data["player"],
+            "type": "adjourn_no"
+        })
+
     def serialize(self):
-        return {
+        data = {
             "id": self.game_id.hex,
             "type": "dk",
             "creation_time": self.creation_time,
@@ -676,8 +724,21 @@ class DoppelkopfGame(CGame):
             "round_num": self.round_num,
             "buckrounds": self.buckrounds,
             "scores": self.scores,
-            "current_points": list(self.points.values())
+            "current_points": list(self.points.values()),
+            "game_summaries": self.game_summaries,
+            "rounds": {
+                r.round_id.hex: {
+                    "moves": [
+                        (
+                            self.players.index(v["player"]),
+                            f"{v['type']}:{v['data']}"
+                        ) for v in r.moves.values()
+                    ]
+                } for r in self.rounds
+            }
         }
+
+        return data
 
     @classmethod
     def deserialize(cls, cg, lobby, data):
@@ -688,9 +749,11 @@ class DoppelkopfGame(CGame):
         game.gamerules = data["gamerules"]
         game.round_num = data["round_num"]
         game.buckrounds = data["buckrounds"]
-        game.scores = data["points"]
+        game.scores = data["scores"]
         for i, p in enumerate(game.players):
             game.points[p] = data["current_points"][i]
+        game.game_summaries = data["game_summaries"]
+        game.move_history = data["rounds"]
 
         return game
 
@@ -1789,7 +1852,7 @@ class DoppelkopfRound(object):
             "current_player": self.current_player.hex
         })
 
-    def end_round(self):
+    def end_round(self, dt):
         self.game_state = "counting"
 
         # Put the poor players who stayed in the None Party into the kontra party
@@ -4002,9 +4065,6 @@ class DoppelkopfRound(object):
 
         try:
             player = self.game.fake_players[int(data["player"])]
-        except IndexError:
-            self.game.cg.info(f"Invalid fake player index: {data['player']}")
-            return
         except ValueError:
             if data['player'] == 'p':
                 player = self.game.players[0]  # Real player
@@ -4035,6 +4095,9 @@ class DoppelkopfRound(object):
             else:
                 self.game.cg.info(f"The first argument (fake player) must be an integer, not {data['player']}")
                 return
+        except IndexError:
+            self.game.cg.info(f"Invalid fake player index: {data['player']}")
+            return
 
         if packet == "cg:game.dk.reservation_solo":
             self.game.cg.send_event(packet, {
@@ -4131,9 +4194,7 @@ class DoppelkopfRound(object):
         for i in range(12):
             players = self.players[self.players.index(self.current_player):] + \
                       self.players[:self.players.index(self.current_player)]
-            time.sleep(1.5)
             for j in players:
-                time.sleep(.5)
                 p = 'p' + str(self.players.index(j))
                 self.game.cg.send_event("cg:game.dk.command", {
                     "packet": "play_card",
@@ -4141,6 +4202,9 @@ class DoppelkopfRound(object):
                     "type": "play",
                     "card": "-1"
                 })
+                time.sleep(.5)
 
                 if self.game_state == "counting":
                     return
+
+            time.sleep(1.5)

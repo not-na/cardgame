@@ -1266,10 +1266,6 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         self.adjournbtn.setBackground(cgclient.gui.CGButtonBG(self.adjournbtn))
         self.addWidget(self.adjournbtn)
 
-        self.adjournbtn.enabled = False
-
-        # TODO Implement adjourning games
-
         def f():
             self.peng.cg.client.send_message("cg:game.dk.announce", {
                 "type": "adjourn_yes",

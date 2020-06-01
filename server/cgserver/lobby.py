@@ -20,7 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import Union, Dict, List, Any, Set
+from typing import Union, Dict, List, Any, Set, Optional
 
 import uuid
 
@@ -36,6 +36,8 @@ class Lobby(object):
 
         self.uuid: uuid.UUID = u if u is not None else uuid.uuid4()
         self.game: Union[str, None] = None
+
+        self.game_data: Optional[Dict] = None
 
         self.users: List[uuid.UUID] = []
         self.user_roles: Dict[uuid.UUID, int] = {}
@@ -62,6 +64,8 @@ class Lobby(object):
             return
 
         self.cg.debug(f"Removing user {user} from lobby {self.uuid}")
+
+        self.game_data = None
 
         creator_left = self.user_roles[user] == ROLE_CREATOR
 
@@ -93,6 +97,8 @@ class Lobby(object):
     def add_user(self, user: cgserver.user.User, role: int):
         if user.uuid in self.users:
             self.cg.error(f"Tried to add user {user.username} to lobby {self.uuid}, but they are already a member")
+
+        self.game_data = None
 
         # Make sure all users know each other
         for u in self.users:

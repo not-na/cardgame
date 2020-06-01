@@ -34,11 +34,13 @@ class GameStartPacket(CGPacket):
         "game_type",
         "game_id",
         "player_list",
+        "game_summaries",
     ]
     allowed_keys = [
         "game_type",
         "game_id",
         "player_list",
+        "game_summaries",
     ]
     side = SIDE_CLIENT
 
@@ -57,6 +59,10 @@ class GameStartPacket(CGPacket):
             self.cg.client.game.start()
 
             self.cg.info(f"Joined game {self.cg.client.game.game_id} of type doppelkopf")
+
+            # Init Scoreboard screen
+            for summary in msg["game_summaries"]:
+                self.cg.client.gui.ingame.gui_layer.s_scoreboard.add_round(**summary)
 
             # Switch the menu
             self.cg.client.gui.window.changeMenu("ingame")

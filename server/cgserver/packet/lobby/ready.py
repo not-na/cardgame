@@ -64,7 +64,10 @@ class ReadyPacket(CGPacket):
             self.cg.send_event("cg:lobby.ready", {"lobby": user.lobby})
             self.cg.send_event(f"cg:lobby.ready.{l.game}", {"lobby": user.lobby})
 
-            g = self.cg.server.game_reg[l.game](self.cg, user.lobby)
+            if l.game_data is None:
+                g = self.cg.server.game_reg[l.game](self.cg, user.lobby)
+            else:
+                g = self.cg.server.game_reg[l.game].deserialize(self.cg, user.lobby, l.game_data)
             self.cg.server.games[g.game_id] = g
 
             l.started = True

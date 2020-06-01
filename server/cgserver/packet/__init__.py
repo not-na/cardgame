@@ -87,6 +87,16 @@ def register_default_packets(reg, peer, cg, add):
     # Game Ending Packet
     r("cg:game.end", game_end.GameEndPacket)
 
+    from . import game_load
+
+    # Game Loading Packet
+    r("cg:game.load", game_load.GameLoadPacket)
+
+    from . import game_save
+
+    # Game Save Packet
+    r("cg:game.save", game_save.GameSavePacket)
+
     # GAME DK PACKETS
 
     from . import game_dk

@@ -12,6 +12,8 @@ Packets
 
    packet_game_start
    packet_game_end
+   packet_game_load
+   packet_game_save
 
    game_dk/packet_game_dk_question
    game_dk/packet_game_dk_announce
