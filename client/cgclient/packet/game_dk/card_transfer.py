@@ -64,6 +64,13 @@ class CardTransferPacket(CGPacket):
 
             # Uncomment if needed, causes a lot of log-spam
             self.cg.info(f"Created card {c.cardid} in slot {c.slot} with value '{c.value}'")
+
+            # After creating all the cards, signalise ready for dealing
+            card_amount = 40 if self.cg.client.lobby.gamerules.get("dk.without9", "with_all") == "without" else \
+                44 if self.cg.client.lobby.gamerules.get("dk.without9", "with_all") == "with_four" else \
+                48
+            if len(self.cg.client.game.cards) == card_amount:
+                self.cg.client.send_message("cg:game.start", {})
         else:
             # Transfer existing card
             card_id = uuidify(msg["card_id"])

@@ -847,6 +847,7 @@ class DoppelkopfRound(object):
         self.start_hands: Dict[uuid.UUID, List[uuid.UUID]] = {}
 
         self.deal_counter = 0
+        self.players_loaded = set()
 
     @property
     def hands(self) -> Dict[uuid.UUID, List[uuid.UUID]]:
@@ -1596,14 +1597,6 @@ class DoppelkopfRound(object):
         for card in self.cards.values():
             self.transfer_card(card, None, "stack")
 
-        # Deal the cards
-        self.game_state = "dealing"
-        self.game.send_to_all("cg:game.dk.round.change", {
-            "phase": "dealing",
-        })
-
-        self.deal_card(0)
-
     def start_normal(self):
         self.reserv_state = "finished"
 
@@ -2197,6 +2190,9 @@ class DoppelkopfRound(object):
         })
 
     def register_event_handlers(self):
+        self.game.cg.add_event_listener("cg:game.dk.ready_to_deal", self.handle_deal, cg.event.F_RAISE_ERRORS,
+                                        group=self.round_id)
+
         self.game.cg.add_event_listener("cg:game.dk.reservation", self.handle_reservation, cg.event.F_RAISE_ERRORS,
                                         group=self.round_id)
         self.game.cg.add_event_listener("cg:game.dk.reservation_solo", self.handle_reservation_solo,
@@ -2240,6 +2236,27 @@ class DoppelkopfRound(object):
 
         self.game.cg.add_event_listener("cg:game.dk.command", self.handle_command, cg.event.F_RAISE_ERRORS,
                                         group=self.round_id)
+
+    def handle_deal(self, event: str, data: Dict):
+        # Check for valid states
+        if uuidify(data["player"]) not in self.game.fake_players and \
+                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            return
+        if self.game_state != "":
+            raise GameStateError(f"Game state for ready handling must be '', not {self.game_state}!")
+
+        self.players_loaded.add(data["player"])
+        if self.game.DEV_MODE:
+            for p in self.game.fake_players:
+                self.players_loaded.add(p)
+        if len(self.players_loaded) == 4:
+            # Deal the cards
+            self.game_state = "dealing"
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "phase": "dealing",
+            })
+
+            self.deal_card(0)
 
     def handle_ready(self, event: str, data: Dict):
         # Check for valid states

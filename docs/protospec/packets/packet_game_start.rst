@@ -9,7 +9,7 @@ This packet is used to start the game.
 +-----------------------+--------------------------------------------+
 |Internal Name          |:cg:packet:`cg:game.start`                  |
 +-----------------------+--------------------------------------------+
-|Direction              |Clientbound                                 |
+|Direction              |Bidirectional                               |
 +-----------------------+--------------------------------------------+
 |Since Version          |v0.1.0                                      |
 +-----------------------+--------------------------------------------+
@@ -21,6 +21,9 @@ Purpose
 
 This packet is used to start the game, either when all clients in a lobby conveyed their
 readiness or when a client reconnects to the server after exiting from a running game.
+Upon receiving this packet, as well as all the card creation packets, the client will send this
+packet back to the server so that it knows, when all the players are ready and the cards
+can be dealt
 
 Structure
 ---------
@@ -46,3 +49,5 @@ This is the data sent by the server: ::
 
 ``player_list`` is a list of the :term:`UUID`\ s of the players in the game, in the same order as in the server's
 game object
+
+The client will send and empty packet to the server.

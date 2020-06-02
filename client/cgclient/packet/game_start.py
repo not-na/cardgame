@@ -29,7 +29,7 @@ from cg.util import uuidify
 
 
 class GameStartPacket(CGPacket):
-    state = [STATE_LOBBY, STATE_ACTIVE]
+    state = [STATE_LOBBY, STATE_ACTIVE, STATE_GAME_DK]
     required_keys = [
         "game_type",
         "game_id",
@@ -42,7 +42,6 @@ class GameStartPacket(CGPacket):
         "player_list",
         "game_summaries",
     ]
-    side = SIDE_CLIENT
 
     def receive(self, msg, cid=None):
         if msg["game_type"] == "doppelkopf":

@@ -28,21 +28,22 @@ from cg.packet import CGPacket
 
 
 class GameStartPacket(CGPacket):
-    state = [STATE_LOBBY, STATE_ACTIVE]
-    required_keys = [
-        "game_type",
-        "game_id",
-        "player_list",
-    ]
+    state = [STATE_LOBBY, STATE_ACTIVE, STATE_GAME_DK]
+    required_keys = []
     allowed_keys = [
         "game_type",
         "game_id",
         "player_list",
     ]
-    side = SIDE_CLIENT
 
     def send(self, msg, cid=None):
         self.peer.clients[cid].state = STATE_GAME_DK
+
+    def receive(self,msg,cid=None):
+        print("READY_TO_DEAL")
+        self.cg.send_event("cg:game.dk.ready_to_deal", {
+            "player": self.peer.clients[cid].user.uuid.hex
+        })
 
 
 

@@ -109,6 +109,8 @@ class PengGUI(object):
 
         self.peng.i18n.setLang("de")
 
+        self.peng.keybinds.add("f12", "cg:set_fullscreen", self.toggle_fullscreen)
+
         self.peng.resourceMgr.addCategory("gui")    # GUI elements like buttons etc.
         self.peng.resourceMgr.addCategory("bg")     # Backgrounds
         self.peng.resourceMgr.addCategory("icn")    # Game icons for play menu
@@ -203,6 +205,10 @@ class PengGUI(object):
                 names.add(m.group("name"))
 
         return list(names)
+
+    def toggle_fullscreen(self, symbol, modifiers, release):
+        if release:
+            self.window.set_fullscreen(not self.window.fullscreen)
 
     # Event Handlers
 
