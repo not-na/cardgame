@@ -94,6 +94,16 @@ class BackgroundLayer(peng3d.gui.GUILayer):
         self.addSubMenu(self.sm)
         self.changeSubMenu("sm")
 
+    def on_resize(self, w, h):
+        super().on_resize(w, h)
+        if self.peng.cg.client.game is None:
+            return
+        # This must be done here for GameLayer has no on_resize method
+        for i in ["hand1", "hand3", "tricks0", "tricks1", "tricks2", "tricks3"]:
+            for c in self.peng.cg.client.game.slots[i]:
+                if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE:
+                    c.start_anim(i, i)
+
 
 class GameLayer(peng3d.layer.Layer):
     peng: peng3d.Peng
@@ -603,15 +613,16 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
         def f(sw, sh, bw, bh):
             y_diff = x_diff = 0
             if "gui_layer" in self.menu.menu.__dict__:
-                y_diff = self.menu.menu.gui_layer.s_ingame.pigsbtn.visible * (self.menu.menu.gui_layer.s_ingame.pigsbtn.size[1] + 5)
-                x_diff = self.menu.menu.gui_layer.s_ingame.pigsbtn.visible * 0.01
-            return (sw * (0.663 + x_diff) - (bw / 2)), (55 - (bh / 2) + y_diff)
+                v = self.menu.menu.gui_layer.s_ingame.pigsbtn.visible
+                y_diff = v * (self.menu.menu.gui_layer.s_ingame.pigsbtn.size[1] + 5)
+                x_diff = v * 0.03
+            return (sw + (0.489 + x_diff) * sh) / 2, 5 + y_diff
 
         # Profile Image
         self.self_img = PlayerIcon(
             "selfimg", self, self.window, self.peng,
             pos=f,
-            size=(lambda sw, sh: (min(100, sw/10),)*2)
+            size=(lambda sw, sh: (sh/8,)*2)
         )
         self.self_img.lbl._label.anchor_x = "left"
         self.self_img.lbl.offset = (lambda sx, sy, sw, sh: (sw/2 + 5, 0))
@@ -619,8 +630,8 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
 
         self.left_img = PlayerIcon(
             "leftimg", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (55 - (bw / 2), sh * 1/5 - (bh / 2))),
-            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+            pos=(lambda sw, sh, bw, bh: (5, sh * 1/5 - (bh / 2))),
+            size=(lambda sw, sh: (sh/8,)*2)
         )
         self.left_img.lbl._label.anchor_x = "left"
         self.left_img.lbl.offset = (lambda sx, sy, sw, sh: (sw / 2 + 5, 0))
@@ -628,8 +639,8 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
 
         self.top_img = PlayerIcon(
             "topimg", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw * 0.337 - (bw / 2), sh - 55 - (bh / 2))),
-            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+            pos=(lambda sw, sh, bw, bh: ((sw - 0.489 * sh) / 2 - bw, sh - bh - 5)),
+            size=(lambda sw, sh: (sh/8,)*2)
         )
         self.top_img.lbl._label.anchor_x = "right"
         self.top_img.lbl.offset = (lambda sx, sy, sw, sh: (-sw / 2 - 5, 0))
@@ -637,8 +648,8 @@ class MainHUDSubMenu(peng3d.gui.SubMenu):
 
         self.right_img = PlayerIcon(
             "rightimg", self, self.window, self.peng,
-            pos=(lambda sw, sh, bw, bh: (sw - 55 - (bw / 2), sh * 4/5 - (bh / 2))),
-            size=(lambda sw, sh: (min(100, sw / 10),) * 2),
+            pos=(lambda sw, sh, bw, bh: (sw - bw - 5, sh * 4/5 - (bh / 2))),
+            size=(lambda sw, sh: (sh/8,)*2)
         )
         self.right_img.lbl._label.anchor_x = "right"
         self.right_img.lbl.offset = (lambda sx, sy, sw, sh: (-sw / 2 - 5, 0))

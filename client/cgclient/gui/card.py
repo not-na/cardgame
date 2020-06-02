@@ -279,6 +279,8 @@ class Card(object):
     def get_card_pos_rot(self, slot: str, index: int, count: int = 1):
         open_card = self.game.lobby.gamerules.get("dk.open_cards", False)*180 or OPEN_CARDS
 
+        ar = self.cg.client.gui.window.width/self.cg.client.gui.window.height
+
         # First, map virtual slots to physical slots
         slot = self.layer.norm_card_slot(slot)
 
@@ -324,10 +326,10 @@ class Card(object):
                 pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 4)
                 return pos, [0, 180, r]
             elif self.game.poverty_pos == "left":
-                pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 4)
+                pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 90, 180, 4)
                 return pos, [0, open_card, r]
             elif self.game.poverty_pos == "right":
-                pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 4)
+                pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 270, 180, 4)
                 return pos, [0, open_card, r]
             elif self.game.poverty_pos == "top":
                 pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 4)
@@ -336,10 +338,10 @@ class Card(object):
             pos, r = self.get_radial_pos_rot([0, 0.1, 4.3], index, count, 2, 180, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_left":
-            pos, r = self.get_radial_pos_rot([-6, 0.1, 0], index, count, 2, 90, 180, 3)
+            pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 90, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "player_right":
-            pos, r = self.get_radial_pos_rot([6, 0.1, 0], index, count, 2, 270, 180, 3)
+            pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 270, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "player_top":
             pos, r = self.get_radial_pos_rot([0, 0.1, -4.3], index, count, 2, 0, 180, 3)
@@ -349,7 +351,7 @@ class Card(object):
                 return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
             else:
                 return [
-                    [3.1, 0.01 + 0.001 * index, 1.5],
+                    [(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
                     [0, OPEN_CARDS, 0],
                 ]
         elif slot == "ptrick_left":
@@ -357,7 +359,7 @@ class Card(object):
                 return [-2.5-0.1*index, 0.5+0.001*index, -1], [0, 180, 0]
             else:
                 return [
-                    [-3.1, 0.01 + 0.001 * index, 1.5],
+                    [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
                     [0, OPEN_CARDS, 90],
                 ]
         elif slot == "ptrick_right":
@@ -365,7 +367,7 @@ class Card(object):
                 return [-2.5-0.1*index, 0.5+0.001*index, 1], [0, 180, 0]
             else:
                 return [
-                    [3.1, 0.01 + 0.001 * index, -1.5],
+                    [(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
                     [0, OPEN_CARDS, 90],
                 ]
         elif slot == "ptrick_top":
@@ -373,7 +375,7 @@ class Card(object):
                 return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
             else:
                 return [
-                    [-3.1, 0.01 + 0.001 * index, -1.5],
+                    [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
                     [0, OPEN_CARDS, 0],
                 ]
         else:
