@@ -102,6 +102,7 @@ class Client(object):
         self.lobby_invitation: List[uuid.UUID] = []  # (inviter, lobby_id)
 
         self.server_ref: Optional[str] = None
+        self.server_id: Optional[uuid.UUID] = None
 
         self._pingcount = 1
         self._pinglock = threading.Lock()
@@ -138,7 +139,8 @@ class Client(object):
             "peer": self._client,
         })
 
-        self.cg.debug(f"Packet Registry: {dict(self._client.registry.reg_int_str.inv)}")
+        self.cg.debug(f"Packet Registry Int-Str: {dict(self._client.registry.reg_int_str)}")
+        self.cg.debug(f"Packet Registry Int-Obj: {dict(self._client.registry.reg_int_obj)}")
 
         # Start the network loop
         self.cg.debug("Starting main networking loop in separate thread")

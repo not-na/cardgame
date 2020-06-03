@@ -71,7 +71,9 @@ class ReadyPacket(CGPacket):
             self.cg.server.games[g.game_id] = g
 
             l.started = True
-            g.start()
 
             for i in l.users:
                 l.user_ready[i] = False
+                self.cg.server.users_uuid[i].cur_game = g.game_id
+
+            g.start()

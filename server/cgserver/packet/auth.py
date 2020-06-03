@@ -45,6 +45,7 @@ class AuthPacket(CGPacket):
         "username",
         "uuid",
         "status",
+        "serverid",
     ]
 
     def receive(self, msg, cid=None):
@@ -97,7 +98,8 @@ class AuthPacket(CGPacket):
                     "status": "logged_in",
                     "username": u.username,
                     "uuid": u.uuid.hex,
-                    "pwd": u.pwd
+                    "pwd": u.pwd,
+                    "serverid": self.cg.server.serverid.hex,
                 }, cid)
         else:
             if username.lower() not in self.cg.server.users:
@@ -124,7 +126,8 @@ class AuthPacket(CGPacket):
                     "status": "logged_in",
                     "username": u.username,
                     "uuid": u.uuid.hex,
-                    "pwd": u.pwd
+                    "pwd": u.pwd,
+                    "serverid": self.cg.server.serverid.hex,
                 }, cid)
             else:
                 # Incorrect credentials

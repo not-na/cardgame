@@ -400,6 +400,8 @@ class DoppelkopfGame(CGame):
         "solo_boneless"
     ]
 
+    GAME_VERSION = 1
+
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
         super().__init__(c, lobby)
 
@@ -458,23 +460,6 @@ class DoppelkopfGame(CGame):
         })
 
         self.current_round.start()
-
-    def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
-        if exclude is None:
-            exclude = []
-
-        for u in self.players:
-            if u not in exclude:
-                self.send_to_user(u, packet, data)
-
-    def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
-        if user not in self.fake_players:
-            self.cg.server.send_to_user(user, packet, data)
-
-        if user in self.fake_players:
-            user = "fake_player_" + str(self.fake_players.index(user))
-        if packet != "cg:game.dk.card.transfer":
-            self.cg.info(f"sent packet {packet} with content {data} to user {user}")
 
     def collect_statistics(self):
         data = {
@@ -702,10 +687,10 @@ class DoppelkopfGame(CGame):
                 "cancel": set(),
                 "end": set()
             }
-            self.collect_statistics()
-            self.cg.info(f"game_data: {self.serialize()}")
-            # TODO Implement adjourning games: Save Game to file, beware of game_id key and data for the packet
-            self.cancel_game()
+            #self.collect_statistics()
+            #self.cg.info(f"game_data: {self.serialize()}")
+            self.adjourn()
+            self.cancel_game(notify=False)
 
     def handle_not_adjourn_play(self, event: str, data: Dict):
         self.player_decisions["adjourn"].discard(data["player"])
@@ -718,6 +703,7 @@ class DoppelkopfGame(CGame):
         data = {
             "id": self.game_id.hex,
             "type": "dk",
+            "version": self.GAME_VERSION,
             "creation_time": self.creation_time,
             "players": [i.hex for i in self.players],
             "gamerules": self.gamerules,
@@ -741,7 +727,7 @@ class DoppelkopfGame(CGame):
         return data
 
     @classmethod
-    def deserialize(cls, cg, lobby, data):
+    def deserialize(cls, cg, lobby, data) -> "CGame":
         game = cls(cg, lobby)
         game.game_id = uuidify(data["id"])
         game.creation_time = data["creation_time"]
@@ -767,7 +753,10 @@ class DoppelkopfGame(CGame):
 class DoppelkopfRound(object):
     DEV_MODE_PREP_CARDS = False
 
-    CARD_DEAL_DELAY = 1.0
+    if DoppelkopfGame.DEV_MODE:
+        CARD_DEAL_DELAY = 0.3
+    else:
+        CARD_DEAL_DELAY = 1.0
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game
@@ -1581,7 +1570,7 @@ class DoppelkopfRound(object):
         })
 
     def start(self):
-        self.game.cg.info(f"START")
+        self.game.cg.info(f"START Round")
 
         # Create card deck
         with9 = self.game.gamerules["dk.without9"]
@@ -1596,6 +1585,8 @@ class DoppelkopfRound(object):
 
         for card in self.cards.values():
             self.transfer_card(card, None, "stack")
+
+        self.game.cg.info("Initialized cards")
 
     def start_normal(self):
         self.reserv_state = "finished"
@@ -2241,15 +2232,20 @@ class DoppelkopfRound(object):
         # Check for valid states
         if uuidify(data["player"]) not in self.game.fake_players and \
                 self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+            self.game.cg.warn(f"Ignored ready to deal due to invalid player")
+            self.game.cg.warn(f"Player: {data['player']}")
             return
         if self.game_state != "":
             raise GameStateError(f"Game state for ready handling must be '', not {self.game_state}!")
 
         self.players_loaded.add(data["player"])
+        self.game.cg.info(f"Player {data['player']} is done loading")
         if self.game.DEV_MODE:
+            self.game.cg.info(f"Added fake players to ready list: {self.game.fake_players}")
             for p in self.game.fake_players:
                 self.players_loaded.add(p)
         if len(self.players_loaded) == 4:
+            self.game.cg.info(f"All players have loaded, dealing cards")
             # Deal the cards
             self.game_state = "dealing"
             self.game.send_to_all("cg:game.dk.round.change", {

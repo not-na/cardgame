@@ -45,8 +45,8 @@ class GameEndPacket(CGPacket):
             self.cg.client.gui.window.changeMenu("servermain")
             self.cg.client.gui.servermain.changeSubMenu("lobby")
 
-            self.cg.send_event("cg:status.message.open", {
-                "type": "notice",
-                "message": "cg:msg.game.cancel",
-                "data": {}
-            })
+            # self.cg.send_event("cg:status.message.open", {
+            #     "type": "notice",
+            #     "message": "cg:msg.game.cancel",
+            #     "data": {}
+            # })

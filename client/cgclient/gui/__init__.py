@@ -24,6 +24,8 @@
 import functools
 import glob
 import re
+import ctypes
+import platform
 
 import peng3d
 import peng3dnet
@@ -79,6 +81,8 @@ CGButtonBG = functools.partial(peng3d.gui.FramedImageBackground,  # Button like 
 
 
 class PengGUI(object):
+    CG_APPID = "cg.cg.cardgame.1"
+
     loadingscreen: loadingscreen.LoadingScreenMenu
     serverselect: serverselect.ServerSelectMenu
     servermain: servermain.ServerMainMenu
@@ -97,14 +101,23 @@ class PengGUI(object):
         self.peng.cfg["rsrc.maxtexsize"] = 4096
         self.peng.cfg["graphics.clearColor"] = (1.0, 0.0, 1.0, 1.0)
 
+        # Based on https://stackoverflow.com/a/1552105
+        if platform.system() in "Windows":
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(self.CG_APPID)
+
         self.window = self.peng.createWindow(
             width=self.cg.get_config_option("cg:graphics.resolution.width"),
             height=self.cg.get_config_option("cg:graphics.resolution.height"),
-            caption_t="cg:window.caption",
+            #caption_t="cg:window.caption",
+            caption="Card Game",
             resizable=True,
             vsync=self.cg.get_config_option("cg:graphics.vsync"),
             fullscreen=self.cg.get_config_option("cg:graphics.fullscreen"),
         )
+
+        self.window.setIcons("cg:icon.icon_{size}")
+        if platform.system() == "Linux":
+            self.window.set_minimum_size(640, 480)
         self.window.maximize()
 
         self.peng.i18n.setLang("de")

@@ -92,7 +92,6 @@ class User(object):
         elif self.pwd_type == "pbkdf2_hmac-sha256":
             phash = hashlib.pbkdf2_hmac("sha256", password, self.pwd_salt, self.pwd_iterations)
 
-            # TODO: fix this to use compare_digest
             if hmac.compare_digest(phash.hex(), self.pwd.hex()):
                 # Success!
                 # Upgrade password automatically

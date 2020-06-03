@@ -24,9 +24,10 @@
 import abc
 import time
 import uuid
-from typing import Any, Union, Tuple, Dict, Callable, List
+from typing import Any, Union, Tuple, Dict, Callable, List, Optional
 
 import cgserver
+import jwt
 
 from . import card
 
@@ -78,6 +79,8 @@ class CGame(object, metaclass=abc.ABCMeta):
     inclusive limits.
     """
 
+    GAME_VERSION = 1
+
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
         self.cg: cg.CardGame = c
 
@@ -111,19 +114,39 @@ class CGame(object, metaclass=abc.ABCMeta):
             if rule not in self.gamerules:
                 self.gamerules[rule] = self.GAMERULES[rule]["default"]
 
-    def cancel_game(self):
+    def cancel_game(self, notify=True):
         for p in self.players:
             if self.DEV_MODE and p in self.fake_players:
                 continue
 
             self.lobby.started = False
-            self.cg.server.users_uuid[p].game = None
+            self.cg.server.users_uuid[p].cur_game = None
             self.cg.server.send_to_user(p, "cg:game.end", {
-                "next_state": "lobby"
+                "next_state": "lobby",
             })
+
+        if notify:
+            self.send_to_all("cg:status.message", {"type": "notice", "message": "cg:msg.game.cancel"})
 
         self.delete()
         del self.cg.server.games[self.game_id]
+
+    def send_to_all(self, packet: str, data: dict, exclude: Optional[List[uuid.UUID]] = None):
+        if exclude is None:
+            exclude = []
+
+        for u in self.players:
+            if u not in exclude:
+                self.send_to_user(u, packet, data)
+
+    def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
+        if user not in self.fake_players:
+            self.cg.server.send_to_user(user, packet, data)
+
+        if user in self.fake_players:
+            user = "fake_player_" + str(self.fake_players.index(user))
+        if packet != "cg:game.dk.card.transfer":
+            self.cg.info(f"sent packet {packet} with content {data} to user {user}")
 
     @abc.abstractmethod
     def start(self):
@@ -145,6 +168,59 @@ class CGame(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def check_playercount(cls, count: int, ignore_devmode=False):
         pass
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
+        """
+        Serialize the game to a dictionary.
+
+        Typically used by :py:meth:`adjourn()` to save game state.
+
+        At least the keys ``id``\\ , ``type``\\ , ``creation_time`` and ``players`` should exist.
+
+        ``players`` should be a list of hex'd UUIDs of the players that participated in the game.
+
+        All other keys depend on the game. They should be loadable with :py:meth:`deserialize()`\\ .
+
+        :return:
+        """
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def deserialize(cls, cg, lobby, data) -> "CGame":
+        """
+        Creates a working game instance from a stored game.
+
+        :param cg: An instance of :py:class:`CardGame`
+        :param lobby: UUID of a lobby containing all players of the game
+        :param data: Dictionary returned by calling :py:meth:`serialize()`
+        :return:
+        """
+        pass
+
+    def adjourn(self) -> None:
+        """
+        Serializes and stores a game on the client.
+
+        Game saves are stored using JSON Web Tokens (JWT) and thus do not require any storage
+        on the client.
+
+        :return: None
+        """
+
+        self.cg.info(f"Adjourning game {self.game_id.hex}")
+
+        data = self.serialize()
+
+        jwtok = jwt.encode({
+            "data": data,
+            "iss": self.cg.server.serverid.hex,
+            "iat": time.time(),
+        }, key=self.cg.server.secret,
+        )
+
+        self.send_to_all("cg:game.save", {"game_id": self.game_id.hex, "data": jwtok})
 
     def register_event_handlers(self):
         pass

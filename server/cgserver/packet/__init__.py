@@ -98,7 +98,6 @@ def register_default_packets(reg, peer, cg, add):
     r("cg:game.save", game_save.GameSavePacket)
 
     # GAME DK PACKETS
-
     from . import game_dk
 
     # Request an answer from a client

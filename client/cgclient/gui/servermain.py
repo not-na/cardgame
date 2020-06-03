@@ -22,6 +22,7 @@
 #
 import glob
 import math
+import os
 import re
 import time
 import datetime
@@ -29,13 +30,16 @@ import uuid
 from typing import Tuple, Union, Dict, List
 
 import peng3d
+import jwt
 
 import cgclient.gui
 import pyglet
 from pyglet.window.mouse import LEFT
 
+import cg
 from cg.constants import ROLE_ADMIN
 from cg.util import uuidify
+from cg.util.serializer import msgpack
 
 GAMES = [
     "sk",  # Skat
@@ -975,7 +979,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
             self.w_upper_bar,
             bg_idle=("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(.3, .3)
+            scale=(.3, .3),
         ))
         self.w_upper_bar.clickable = False
         self.addWidget(self.w_upper_bar)
@@ -989,7 +993,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
             self.w_lower_bar,
             bg_idle=("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(.3, .3)
+            scale=(.3, .3),
         ))
         self.w_lower_bar.clickable = False
         self.addWidget(self.w_lower_bar)
@@ -1022,30 +1026,62 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         self.loadbtn = cgclient.gui.CGButton(
             "loadbtn", self, self.window, self.peng,
             pos=self.grid.get_cell([6, 0], [6, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.adjourn.loadbtn.label")
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.loadbtn.label"),
         )
         self.addWidget(self.loadbtn)
 
         def f():
             if self.chosen_game is None:
                 return
-            self.peng.cg.client.send_message("cg:lobby.change", {
-                "gamerules": self.save_games[self.chosen_game]["gamerules"]
-            })
+            #self.peng.cg.client.send_message("cg:lobby.change", {
+            #    "gamerules": self.save_games[self.chosen_game]["gamerules"]
+            #})
             self.peng.cg.client.send_message("cg:game.load", {
                 "game_id": self.chosen_game,
-                "data": self.save_games[self.chosen_game]
+                "data": self.save_games[self.chosen_game]["data"],
             })
             self.menu.changeSubMenu("lobby")
 
         self.loadbtn.addAction("click", f)
+
+        # Prev Page Button
+        self.prevbtn = cgclient.gui.CGButton(
+            "prevbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 5], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.prevbtn.label"),
+        )
+        self.addWidget(self.prevbtn)
+
+        def f():
+            self.save_offset = max(0, self.save_offset-6)
+            self.nextbtn.enabled = self.save_offset < math.ceil(len(self.save_games) / 6 - 1) * 6
+            self.prevbtn.enabled = self.save_offset > 0
+            self.redraw_gamebtns()
+        self.prevbtn.addAction("click", f)
+
+        # Next Page Button
+        self.nextbtn = cgclient.gui.CGButton(
+            "nextbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([9, 5], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.nextbtn.label"),
+        )
+        self.addWidget(self.nextbtn)
+
+        def f():
+            self.menu.cg.info(f"Ceil: {math.ceil(len(self.save_games)/6-1)*6=}")
+            self.save_offset = min(math.ceil(len(self.save_games)/6-1)*6, self.save_offset + 6)
+            self.nextbtn.enabled = self.save_offset < math.ceil(len(self.save_games)/6-1)*6
+            self.prevbtn.enabled = self.save_offset > 0
+            self.redraw_gamebtns()
+
+        self.nextbtn.addAction("click", f)
 
         self.save_btns = []
         for i in range(3):
             for j in range(2):
                 btn = AdjournGameButton(
                     f"button{j}:{i}", self, self.window, self.peng,
-                    pos=self.grid.get_cell([j * 4, 3 - j * 2], [4, 2]),
+                    pos=self.grid.get_cell([j * 4, 3 - i * 2], [4, 2]),
                 )
                 self.addWidget(btn)
                 self.save_btns.append(btn)
@@ -1067,119 +1103,103 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
 
                 btn.addAction("press_up", f)
 
-    @property
-    def save_games(self):
-        return {  # TODO Implement adjourning games: Load all the saved games
-            '1810f102574e466aa7aa127e4a49445f': {
-                'id': '1810f102574e466aa7aa127e4a49445f',
-                'type': 'dk',
-                'creation_time': 1591027932.0652864,
-                'players': [
-                    '688ff40f28fb43a49a48befa15a76abf',
-                    '123f135645b049e691328d5e50a7d639',
-                    '51a2834bc17d4b2787a7ca70b61f0aeb',
-                    '40b26c88bc204df4924de4d5661a257d'
-                ],
-                'gamerules': {'dk.heart10': True, 'dk.heart10_prio': 'first', 'dk.heart10_lasttrick': 'first',
-                              'dk.doppelkopf': True, 'dk.fox': True, 'dk.fox_lasttrick': False,
-                              'dk.pigs': 'two_reservation', 'dk.superpigs': 'reservation', 'dk.charlie': True,
-                              'dk.charlie_broken': False, 'dk.jane': False, 'dk.charlie_prio': 'first',
-                              'dk.without9': 'with_all', 'dk.heart_trick': False, 'dk.sec_black_trick': False,
-                              'dk.joker': 'None', 'dk.hobgoblin': False, 'dk.poverty': 'sell',
-                              'dk.poverty_consequence': 'black_sow', 'dk.throw': 'None', 'dk.throw_cases': [],
-                              'dk.coward': 'None', 'dk.wedding': 'None', 'dk.repeat_game': False, 'dk.re_kontra': '+2',
-                              'dk.buck_round': 'None', 'dk.buck_cause': [], 'dk.buck_amount': '4',
-                              'dk.solo_shift_h10': False, 'dk.solist_begins': False, 'dk.solo_prio': 'first',
-                              'dk.solos': ['solo_queen', 'solo_jack', 'solo_clubs', 'solo_spades', 'solo_hearts',
-                                           'solo_diamonds', 'solo_fleshless'], 'dk.open_cards': False},
-                'round_num': 3,
-                'buckrounds': [],
-                'scores': [[1, 1, -3, 1], [-5, 5, 5, -5], [3, 3, -3, -3]],
-                'current_points': [-1, 9, -1, -7],
-                'game_summaries': [
-                    {'round_num': 0, 'winner': 'kontra', 'game_type': 'silent_wedding', 'eyes': (111, 129),
-                     'extras': ['kontra_win'], 'point_change': [1, 1, -3, 1], 'points': [-1, 9, -1, -7]},
-                    {'round_num': 1, 'winner': 'kontra', 'game_type': 'normal', 'eyes': (73, 167),
-                     'extras': ['kontra_win', 'no90', 'p_against_cqs', 'p_fox', 'p_fox'],
-                     'point_change': [-5, 5, 5, -5],
-                     'points': [-1, 9, -1, -7]},
-                    {'round_num': 2, 'winner': 're', 'game_type': 'normal', 'eyes': (149, 91),
-                     'extras': ['re_win', 'p_fox', 'p_fox'], 'point_change': [3, 3, -3, -3],
-                     'points': [-1, 9, -1, -7]}
-                ],
-                'rounds': {
-                    'e4f50ad6f06646c180c6ffc8125e797a': {
-                        'moves': [
-                            (0, 'announcement:reservation_no'), (1, 'announcement:reservation_no'),
-                            (2, 'announcement:reservation_no'), (3, 'announcement:reservation_no'), (0, 'card:cj'),
-                            (1, 'card:hj'), (2, 'card:dk'), (3, 'card:hq'), (3, 'card:ha'), (0, 'card:hk'),
-                            (1, 'card:h9'), (2, 'card:ha'), (3, 'card:s9'), (0, 'card:sa'), (1, 'card:s9'),
-                            (2, 'card:s10'), (0, 'card:da'), (1, 'card:dj'), (2, 'card:cq'), (3, 'card:d10'),
-                            (2, 'card:cq'), (3, 'card:sj'), (0, 'card:dq'), (1, 'card:dq'), (2, 'card:c9'),
-                            (3, 'card:ca'), (0, 'card:ca'), (1, 'card:h10'), (1, 'card:h10'), (2, 'card:d10'),
-                            (3, 'card:sj'), (0, 'card:dj'), (1, 'card:da'), (2, 'card:sq'), (3, 'card:d9'),
-                            (0, 'card:sq'), (2, 'card:sk'), (3, 'card:h9'), (0, 'card:c10'), (1, 'card:sk'),
-                            (2, 'card:cj'), (3, 'card:ck'), (0, 'card:hj'), (1, 'card:hk'), (2, 'card:d9'),
-                            (3, 'card:c9'), (0, 'card:dk'), (1, 'card:sa'), (0, 'card:c10'), (1, 'card:s10'),
-                            (2, 'card:hq'), (3, 'card:ck')
-                        ]
-                    },
-                    '35671662840042549360142fde2191ce': {
-                        'moves': [
-                            (1, 'announcement:reservation_no'), (2, 'announcement:reservation_no'),
-                            (3, 'announcement:reservation_no'), (0, 'announcement:reservation_no'), (1, 'card:dq'),
-                            (2, 'card:cj'), (3, 'card:hq'), (0, 'card:cj'), (3, 'card:ca'), (0, 'card:c10'),
-                            (1, 'card:c9'), (2, 'card:ck'), (3, 'card:s9'), (0, 'card:sa'), (1, 'card:sk'),
-                            (2, 'card:s10'), (0, 'card:ha'), (1, 'card:h9'), (2, 'card:d9'), (3, 'card:hk'),
-                            (2, 'card:sj'), (3, 'card:da'), (0, 'card:hj'), (1, 'card:dj'), (2, 'card:sq'),
-                            (3, 'card:d10'), (0, 'card:dj'), (1, 'card:hj'), (2, 'card:ck'), (3, 'card:c9'),
-                            (0, 'card:c10'), (1, 'card:sj'), (1, 'card:hk'), (2, 'card:hq'), (3, 'card:sa'),
-                            (0, 'card:h9'), (2, 'card:dq'), (3, 'card:cq'), (0, 'card:cq'), (1, 'card:dk'),
-                            (3, 'card:s9'), (0, 'card:s10'), (1, 'card:sk'), (2, 'card:d9'), (2, 'card:h10'),
-                            (3, 'card:h10'), (0, 'card:da'), (1, 'card:dk'), (2, 'card:ca'), (3, 'card:d10'),
-                            (0, 'card:ha'), (1, 'card:sq')
-                        ]
-                    },
-                    '56b57670fe50491f860e838e0bb05c56': {
-                        'moves': [
-                            (2, 'announcement:reservation_no'), (3, 'announcement:reservation_no'),
-                            (0, 'announcement:reservation_no'), (1, 'announcement:reservation_no'), (2, 'card:da'),
-                            (3, 'card:sq'), (0, 'card:cq'), (1, 'card:cq'), (0, 'card:ck'), (1, 'card:ca'),
-                            (2, 'card:c10'), (3, 'card:c9'), (1, 'card:dq'), (2, 'card:hj'), (3, 'card:sj'),
-                            (0, 'card:cj'), (1, 'card:hk'), (2, 'card:h9'), (3, 'card:s10'), (0, 'card:hk'),
-                            (1, 'card:d10'), (2, 'card:d10'), (3, 'card:dk'), (0, 'card:cj'), (0, 'card:sk'),
-                            (1, 'card:sk'), (2, 'card:sa'), (3, 'card:s10'), (2, 'card:sa'), (3, 'card:s9'),
-                            (0, 'card:ck'), (1, 'card:c10'), (2, 'card:dj'), (3, 'card:da'), (0, 'card:hq'),
-                            (1, 'card:sj'), (0, 'card:ha'), (1, 'card:ha'), (2, 'card:h9'), (3, 'card:d9'),
-                            (3, 'card:dk'), (0, 'card:sq'), (1, 'card:h10'), (2, 'card:dq'), (1, 'card:c9'),
-                            (2, 'card:hj'), (3, 'card:dj'), (0, 'card:ca'), (2, 'card:s9'), (3, 'card:hq'),
-                            (0, 'card:d9'), (1, 'card:h10')
-                        ]
-                    }
-                }
-            }
-        }
+        self.save_games = {}
+        self.save_offset = 0
+
+    def load_save_games(self):
+        data = {}
+
+        base_dir = os.path.join(cg.config.get_settings_path("cardgame"), "adjourned-games")
+
+        if not os.path.isdir(base_dir):
+            self.menu.cg.info(f"Did not find any saved games")
+            return
+
+        # Scan the directory for possible savegames
+        for fname in os.listdir(base_dir):
+            fname = os.path.join(base_dir, fname)
+            if fname.endswith(".cgg"):
+                try:
+                    with open(fname, "rb") as f:
+                        d = msgpack.load(f)
+
+                        # Extract the server ID from the Issuer claim
+                        d["server"] = uuidify(jwt.decode(d["data"], verify=False)["iss"])
+
+                    if "id" not in d:
+                        self.menu.cg.error(f"Missing key id while loading savegame")
+                    elif "type" not in d:
+                        self.menu.cg.error(f"Missing key type while loading savegame")
+                    elif "creation_time" not in d:
+                        self.menu.cg.error(f"Missing key creation_time while loading savegame")
+                    elif "players" not in d:
+                        self.menu.cg.error(f"Missing key players while loading savegame")
+                    elif "data" not in d:
+                        self.menu.cg.error(f"Missing key data while loading savegame")
+                    else:
+                        data[d["id"]] = d
+                except Exception:
+                    self.menu.cg.error(f"Error while loading savegame {fname}")
+                    self.menu.cg.exception(f"Exception while loading savegame: ")
+
+        self.menu.cg.info(f"Found {len(data)} saved games")
+
+        # First, sort after players matching and within that by time
+        def sortkey(k: str):
+            if self.peng.cg.client.lobby is None:
+                return data[k]["creation_time"]
+
+            player_match = sorted(map(uuidify, data[k]["players"])) == sorted(self.peng.cg.client.lobby.users)
+
+            if player_match:
+                # Negate time to ensure it is less than all other games
+                return -data[k]["creation_time"]
+            else:
+                return data[k]["creation_time"]
+        sort_order = sorted(data.keys(), key=sortkey)
+
+        sorted_dat = {k: data[k] for k in sort_order}
+        self.save_games = sorted_dat
 
     def on_enter(self, old):
+        self.save_offset = 0
+        self.load_save_games()
+
+        self.nextbtn.enabled = self.save_offset < math.ceil(len(self.save_games) / 6 - 1) * 6
+        self.prevbtn.enabled = False
+
+        self.redraw_gamebtns()
+
+    def redraw_gamebtns(self):
         self.chosen_game = None
         save_games = list(self.save_games.values())
         for i, btn in enumerate(self.save_btns):
-            if i < len(save_games):
-                btn.visible = True
-                btn.game_id = save_games[i]["id"]
-                btn.date_layer.label = time.strftime(
-                    "%d.%m.%Y, %X", time.localtime(save_games[i]["creation_time"]))
-                players = ""
-                for p in save_games[i]["players"]:
-                    players += self.peng.cg.client.get_user_name(uuidify(p)) + "\n"
-                players = players.strip("\n")
-                btn.player_layer.label = players
-                btn.pressed = False
+            if (i+self.save_offset) < len(save_games):
+                try:
+                    btn.visible = True
+                    btn.game_id = save_games[i]["id"]
+                    self.menu.cg.info(f"{i=} {save_games[i]['creation_time']=}")
+                    btn.date_layer.label = time.strftime(
+                        "%d.%m.%Y, %X", time.localtime(save_games[i]["creation_time"]))
+                    players = ""
+                    for p in save_games[i]["players"]:
+                        players += self.peng.cg.client.get_user_name(uuidify(p)) + "\n"
+                    players = players.strip("\n")
+                    btn.player_layer.label = players
+                    btn.pressed = False
 
-                if sorted(save_games[i]["players"]) != sorted(self.peng.cg.client.lobby.users):
-                    self.save_btns[i].enabled = False
-                    self.save_btns[i].bg_layer.switchImage("disabled")
-                    self.save_btns[i].redraw()
+                    users_match = sorted(map(uuidify, save_games[i]["players"])) == sorted(self.peng.cg.client.lobby.users)
+                    server_match = save_games[i]["server"] == self.menu.cg.client.server_id
+
+                    self.menu.cg.info(f"{server_match=}: {save_games[i]['server']=} {self.menu.cg.client.server_id=}")
+                    self.menu.cg.info(f"Players: {sorted(map(uuidify, save_games[i]['players']))}")
+
+                    if not (users_match and server_match):
+                        self.save_btns[i].enabled = False
+                        self.save_btns[i].bg_layer.switchImage("disabled")
+                        self.save_btns[i].redraw()
+                except Exception:
+                    self.menu.cg.exception(f"Exception while rendering saved game")
             else:
                 btn.visible = False
                 btn.pressed = False
@@ -1817,32 +1837,7 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.bg_layer)
 
-        def f():
-            if not self.pressed and self.enabled:
-                self.bg_layer.switchImage("hover")
-
-        self.addAction("hover_start", f)
-
-        def f():
-            if not self.pressed and self.enabled:
-                self.bg_layer.switchImage("idle")
-
-        self.addAction("hover_end", f)
-
-        def f():
-            if self.enabled:
-                self.bg_layer.switchImage("pressed")
-
-        self.addAction("press_down", f)
-
-        def f():
-            if self.enabled:
-                if not self.is_hovering:
-                    self.bg_layer.switchImage("idle")
-                else:
-                    self.bg_layer.switchImage("hover")
-
-        self.addAction("press_up", f)
+        self.addAction("statechanged", lambda: self.bg_layer.switchImage(self.getState()))
 
         h = pyglet.font.load("Times New Roman", 30).ascent / 2
         self.date_layer = peng3d.gui.LabelWidgetLayer(
