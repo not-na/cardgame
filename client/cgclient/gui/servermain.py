@@ -1176,23 +1176,18 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         for i, btn in enumerate(self.save_btns):
             if (i+self.save_offset) < len(save_games):
                 try:
+                    sg = save_games[i+self.save_offset]
                     btn.visible = True
-                    btn.game_id = save_games[i]["id"]
-                    self.menu.cg.info(f"{i=} {save_games[i]['creation_time']=}")
+                    btn.game_id = sg["id"]
+                    btn.players = list(map(uuidify, sg["players"]))
+                    btn.update_players()
+                    #self.menu.cg.info(f"{i=} {sg['creation_time']=}")
                     btn.date_layer.label = time.strftime(
-                        "%d.%m.%Y, %X", time.localtime(save_games[i]["creation_time"]))
-                    players = ""
-                    for p in save_games[i]["players"]:
-                        players += self.peng.cg.client.get_user_name(uuidify(p)) + "\n"
-                    players = players.strip("\n")
-                    btn.player_layer.label = players
+                        "%d.%m.%Y, %X", time.localtime(sg["creation_time"]))
                     btn.pressed = False
 
-                    users_match = sorted(map(uuidify, save_games[i]["players"])) == sorted(self.peng.cg.client.lobby.users)
-                    server_match = save_games[i]["server"] == self.menu.cg.client.server_id
-
-                    self.menu.cg.info(f"{server_match=}: {save_games[i]['server']=} {self.menu.cg.client.server_id=}")
-                    self.menu.cg.info(f"Players: {sorted(map(uuidify, save_games[i]['players']))}")
+                    users_match = sorted(map(uuidify, sg["players"])) == sorted(self.peng.cg.client.lobby.users)
+                    server_match = sg["server"] == self.menu.cg.client.server_id
 
                     if not (users_match and server_match):
                         self.save_btns[i].enabled = False
@@ -1856,8 +1851,22 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.player_layer)
 
+        self.players = []
+
+        self.submenu.menu.cg.add_event_listener("cg:user.update", self.handle_user_update, cg.event.F_RAISE_ERRORS)
+
     def _mouse_aabb(self, mpos, size, pos):
         return pos[0] <= mpos[0] <= pos[0] + size[0] and pos[1] <= mpos[1] <= pos[1] + size[1]
+
+    def update_players(self):
+        players = ""
+        for p in self.players:
+            username = self.peng.cg.client.get_user_name(p)
+            if username == "<UNKNOWN>":
+                self.peng.cg.client.send_message("cg:status.user", {"uuid": p.hex})
+            players += username + "\n"
+        players = players.strip("\n")
+        self.player_layer.label = players
 
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.clickable:
@@ -1876,6 +1885,11 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
 
     def on_mouse_release(self, x, y, button, modifiers):
         pass
+
+    def handle_user_update(self, event: str, data: Dict):
+        for p in self.players:
+            if p == uuidify(data["uuid"]):
+                self.update_players()
 
 
 class _FakeUser:

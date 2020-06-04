@@ -238,6 +238,9 @@ class Card(object):
 
         # Do a linear interpolation of all components of position and rotation
         self.pos = multi_interpolate(self.anim_frompos, tpos, p)
+        if self.anim_fromslot != self.slot:
+            self.pos[1] = tpos[1]  # Y axis is animated instantly to prevent card shoot-through
+            # Most noticeable when dealing cards
         self.rot = multi_interpolate(self.anim_fromrot, trot, p)
 
         self.redraw()

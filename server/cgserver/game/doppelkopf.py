@@ -3628,7 +3628,7 @@ class DoppelkopfRound(object):
                     self.buckround_events += 1
 
         # Transfer the trick to the winners trick stack
-        for i in self.current_trick:
+        for i in reversed(self.current_trick):
             self.transfer_card(self.cards[i[1]],
                                "table",
                                f"tricks{self.players.index(trick_winner)}")
