@@ -479,15 +479,15 @@ class MainSubMenu(peng3d.gui.SubMenu):
         self.playbtn.addAction("press_up", f)
         self.addWidget(self.playbtn)
 
-        # Create Party Button
-        # This button opens the party container
-        self.partybtn = peng3d.gui.ToggleButton(
-            "partybtn", self, self.window, self.peng,
+        # Adjourned Button
+        # This button opens the adjourned games containers
+        self.adjourned = peng3d.gui.ToggleButton(
+            "adjourned", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 3], [1, 1]),
-            label=self.peng.tl("cg:gui.menu.smain.main.partybtn.label")
+            label=self.peng.tl("cg:gui.menu.smain.main.adjourned.label")
         )
-        self.partybtn.setBackground(peng3d.gui.FramedImageBackground(
-            self.partybtn,
+        self.adjourned.setBackground(peng3d.gui.FramedImageBackground(
+            self.adjourned,
             bg_idle=("cg:img.btn.btn_idle", "gui"),
             bg_hover=("cg:img.btn.btn_hov", "gui"),
             bg_pressed=("cg:img.btn.btn_press", "gui"),
@@ -497,9 +497,9 @@ class MainSubMenu(peng3d.gui.SubMenu):
             repeat_edge=True, repeat_center=True,
         ))
 
-        self.partybtn.addAction("press_down", f1, self.partybtn)
-        self.addWidget(self.partybtn)
-        self.partybtn.enabled = False
+        self.adjourned.addAction("press_down", f1, self.adjourned)
+        self.addWidget(self.adjourned)
+        self.adjourned.enabled = False
 
         # Leaderboards Button
         # This button opens the leaderboard container
@@ -553,7 +553,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
 
         self.exitbtn.addAction("click", f)
 
-        self.togglebuttons = [self.profile_img, self.profile_label, self.playbtn, self.partybtn, self.lbbtn]
+        self.togglebuttons = [self.profile_img, self.profile_label, self.playbtn, self.adjourned, self.lbbtn]
 
         # Play Container
         self.c_play = PlayContainer("play", self, self.window, self.peng,
@@ -562,7 +562,7 @@ class MainSubMenu(peng3d.gui.SubMenu):
                                     )
         self.addWidget(self.c_play)
 
-        # Party Container
+        # Adjourn Container
 
         # Leaderboard Container
 
@@ -2179,6 +2179,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         self.peng.cg.add_event_listener("cg:user.update", self.handler_userupdate)
         self.peng.cg.add_event_listener("cg:lobby.admin.change", self.handle_admin_change)
         self.peng.cg.add_event_listener("cg:lobby.player.ready", self.handle_ready)
+        self.peng.cg.add_event_listener("cg:lobby.user.remove", self.handle_user_leave)
 
     def handler_userupdate(self, event: str, data: dict):
         if data["uuid"] == self.peng.cg.client.user_id:
@@ -2220,6 +2221,13 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                 self.readybtn.switchImage("default")
             else:
                 self.readybtn.switchImage("transparent")
+
+    def handle_user_leave(self, event: str, data: dict):
+        print(data, self.player.uuid)
+        if data["user"] == self.player.uuid:
+            self.readybtn.switchImage("transparent")
+            self.admin_icon.switchImage("transparent")
+            self.player = None
 
 
 class InviteDialog(peng3d.gui.Container):

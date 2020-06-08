@@ -67,13 +67,16 @@ class Lobby(object):
 
         self.game_data = None
 
-        creator_left = self.user_roles[user] == ROLE_CREATOR
-
         del self.users[self.users.index(user)]
         del self.user_roles[user]
         del self.user_ready[user]
 
-        if creator_left and len(self.users) > 0:
+        admins = 0
+        for i in self.user_roles.values():
+            if i >= ROLE_ADMIN:
+                admins += 1
+
+        if admins == 0 and len(self.users) > 0:
             self.user_roles[self.users[0]] = ROLE_ADMIN
 
         if not left:
@@ -87,6 +90,7 @@ class Lobby(object):
 
         self.send_to_all("cg:lobby.change", {
             "users": udat,
+            "user_roles": {k.hex: v for k, v in self.user_roles.items()}
         })
 
         # Delete empty lobbies

@@ -33,7 +33,7 @@ from pyglet.gl import *
 import cgclient.gui
 import pyglet
 
-FLIGHT_MODE = True
+FLIGHT_MODE = False
 
 
 class IngameMenu(peng3d.gui.Menu):

@@ -51,7 +51,6 @@ class ChangePacket(CGPacket):
                 uid = uuidify(uid)
                 if udat.get("role", ROLE_NONE) == ROLE_REMOVE:
                     # Remove user from visual user list
-                    player_buttons[self.cg.client.lobby.users.index(uid)].player = None
                     # Remove user from list
                     self.cg.client.lobby.remove_user(uid)
                     continue
@@ -158,7 +157,7 @@ class ChangePacket(CGPacket):
                 if uuidify(i) in self.cg.client.lobby.user_roles:
                     self.cg.client.lobby.user_roles[uuidify(i)] = msg["user_roles"][i]
                 else:
-                    self.cg.warn("Tried to set user role of user that is not in the conderned lobby (on the client)!")
+                    self.cg.warn("Tried to set user role of user that is not in the concerned lobby (on the client)!")
                     return
             self.cg.send_event("cg:lobby.admin.change", {
                 uuidify(k): v for k, v in msg["user_roles"].items()

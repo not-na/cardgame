@@ -94,10 +94,7 @@ class StatusUserPacket(CGPacket):
                     # TODO Send not to everyone
                     for user in self.cg.server.users.values():
                         if user.cid is not None:
-                            self.cg.server.send_to_user(user, "cg:status.user", {
-                                "uuid": u.uuid.hex,
-                                "profile_img": u.profile_img
-                            })
+                            self.cg.server.send_user_data(u.uuid, user.uuid)
 
         # Request of an other player's user data by username
         elif "username" in msg:

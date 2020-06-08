@@ -259,7 +259,7 @@ gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
 
 gui.menu.smain.main.createbtn.label=Lobby erstellen
 gui.menu.smain.main.playbtn.label=Spielen
-gui.menu.smain.main.partybtn.label=Party erstellen
+gui.menu.smain.main.adjourned.label=Vertagte Spiele
 gui.menu.smain.main.lbbtn.label=Bestenliste
 gui.menu.smain.main.settingsbtn.label=Einstellungen
 gui.menu.smain.main.exitbtn.label=Spiel verlassen

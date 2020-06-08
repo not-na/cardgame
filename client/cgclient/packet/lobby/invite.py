@@ -45,4 +45,6 @@ class InvitePacket(CGPacket):
 
         self.cg.client.lobby_invitation = [uuidify(msg["inviter"]), uuidify(msg["lobby_id"])]
 
+        self.cg.client.gui.servermain.d_lobby_inv.label_main = self.cg.client.gui.peng.tl(
+            "cg:gui.menu.smain.lobby_inv.label_main", data={"username": msg["username"]})
         self.cg.client.gui.servermain.changeSubMenu("lobby_inv")

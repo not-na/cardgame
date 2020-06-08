@@ -49,7 +49,6 @@ class LeavePacket(CGPacket):
             return
 
         lobby.remove_user(u.uuid)
-        for btn in self.cg.client.gui.servermain.s_lobby.player_buttons.values():
-            btn.player = None
+        self.cg.client.gui.servermain.s_lobby.readybtn.pressed = False
 
         self.cg.client.gui.servermain.changeSubMenu("main")

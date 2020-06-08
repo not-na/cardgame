@@ -83,6 +83,7 @@ class InvitePacket(CGPacket):
             lobby.invitations.add(user.uuid)
 
             self.cg.server.send_to_user(user, "cg:lobby.invite", {
+                "username": u.username,
                 "inviter": u.uuid.hex,
                 "lobby_id": lobby.uuid.hex
             })

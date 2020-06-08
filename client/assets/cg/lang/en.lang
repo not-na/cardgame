@@ -7,6 +7,213 @@ meta.name.de=Englisch
 
 window.caption=Card Game
 
+game.doppelkopf=Doppelkopf
+
+game.doppelkopf.game_type.None=Game type NONE
+game.doppelkopf.game_type.normal=Normal game
+game.doppelkopf.game_type.silent_wedding=Silent wedding
+
+game.doppelkopf.extra.re_win=Re wins
+game.doppelkopf.extra.kontra_win=Kontra wins
+game.doppelkopf.extra.no_win=Nobody wins
+
+game.doppelkopf.extra.re=+ Re
+game.doppelkopf.extra.kontra=+ Kontra
+game.doppelkopf.extra.no90=+ less than 90 eyes
+game.doppelkopf.extra.no60=+ less than 60 eyes
+game.doppelkopf.extra.no30=+ less than 30 eyes
+game.doppelkopf.extra.black=+ played black
+game.doppelkopf.extra.c_no90=+ called less than 90
+game.doppelkopf.extra.c_no60=+ called less than 60
+game.doppelkopf.extra.c_no30=+ called less than 30
+game.doppelkopf.extra.c_black=+ called black
+game.doppelkopf.extra.fc_no90=+ failed less than 90
+game.doppelkopf.extra.fc_no60=+ failed less than 60
+game.doppelkopf.extra.fc_no30=+ failed less than 30
+game.doppelkopf.extra.fc_black=+ failed black
+
+game.doppelkopf.extra.240vs_no90=+ 240 against less than 90
+game.doppelkopf.extra.240vs_no60=+ 240 against less than 60
+game.doppelkopf.extra.240vs_no30=+ 240 against less than 30
+game.doppelkopf.extra.240vs_black=+ 240 against black
+game.doppelkopf.extra.210vs_no90=+ 210 against less than 90
+game.doppelkopf.extra.210vs_no60=+ 210 against less than 60
+game.doppelkopf.extra.210vs_no30=+ 210 against less than 30
+game.doppelkopf.extra.210vs_black=+ 210 against black
+game.doppelkopf.extra.180vs_no90=+ 180 against less than 90
+game.doppelkopf.extra.180vs_no60=+ 180 against less than 60
+game.doppelkopf.extra.180vs_no30=+ 180 against less than 30
+game.doppelkopf.extra.180vs_black=+ 180 against black
+game.doppelkopf.extra.150vs_no90=+ 150 against less than 90
+game.doppelkopf.extra.150vs_no60=+ 150 against less than 60
+game.doppelkopf.extra.150vs_no30=+ 150 against less than 30
+game.doppelkopf.extra.150vs_black=+ 150 against black
+game.doppelkopf.extra.120vs_no90=+ 120 against less than 90
+game.doppelkopf.extra.120vs_no60=+ 120 against less than 60
+game.doppelkopf.extra.120vs_no30=+ 120 against less than 30
+game.doppelkopf.extra.120vs_black=+ 120 against black
+game.doppelkopf.extra.90vs_no60=+ 90 against less than 60
+game.doppelkopf.extra.90vs_no30=+ 90 against less than 30
+game.doppelkopf.extra.90vs_black=+ 90 against black
+game.doppelkopf.extra.60vs_no30=+ 60 against less than 30
+game.doppelkopf.extra.60vs_black=+ 60 against black
+game.doppelkopf.extra.30vs_black=+ 30 against black
+
+game.doppelkopf.extra.p_against_cqs=+ Against the ladies
+game.doppelkopf.extra.p_fox=+ Fox
+game.doppelkopf.extra.p_doppelkopf=+ Doppelkopf
+game.doppelkopf.extra.p_charlie=+ Charlie
+game.doppelkopf.extra.p_fox_lasttrick=+ Last trick with fox
+game.doppelkopf.extra.p_jane=+ Jane
+game.doppelkopf.extra.p_charlie_broken=+ Broken Charlie
+game.doppelkopf.extra.p_heart_trick=+ Heart trick
+game.doppelkopf.extra.p_sec_black_trick=+ Second black trick
+game.doppelkopf.extra.p_hobgoblin=+ Hobgoblin
+game.doppelkopf.extra.n_fox=- Fox
+game.doppelkopf.extra.n_doppelkopf=- Doppelkopf
+game.doppelkopf.extra.n_charlie=- Charlie
+game.doppelkopf.extra.n_fox_lasttrick=- Last trick with fox
+game.doppelkopf.extra.n_jane=- Jane
+game.doppelkopf.extra.n_charlie_broken=- Broken Charlie
+game.doppelkopf.extra.n_heart_trick=- Heart trick
+game.doppelkopf.extra.n_sec_black_trick=- Second black trick
+game.doppelkopf.extra.n_hobgoblin=- Hobgoblin
+
+msg.status.user.username_not_available=Username not available!
+msg.status.user.wrong_pwd=Wrong password!
+msg.status.user.empty_img=Invalid profile image name!
+msg.status.user.img_name_long=Profile image name too long!
+
+msg.lobby.change_user_order.missing_rights=Only admins may change the order of users!
+msg.lobby.change_gamerules.missing_rights=Only admins may change the game rules!
+msg.lobby.change_game.missing_rights=Only admins may change the game!
+msg.lobby.change_admin.missing_rights=Only admins may promote other players to admins!
+
+msg.lobby.invite.lobby_full=The lobby is already full!
+msg.lobby.invite.user_does_not_exist=The user {username} does not exist!
+msg.lobby.invite.user_not_online=The user {username} is not online!
+msg.lobby.invite.user_in_lobby=The user {username} is already in a lobby!
+msg.lobby.invite.user_in_dk_game=The user {username} is already playing Doppelkopf!
+msg.lobby.invite.user_cur_not_available=The user {username} is currently not available (State: {state})
+msg.lobby.invite.user_invited=The user {username} has been invited!
+
+msg.lobby.invite.accept.lobby_not_exists=This lobby does not exist!
+msg.lobby.invite.accept.invalid_inviter=This invitation comes from an unauthorized player!
+msg.lobby.invite.accept.not_invited=You have never been invited to this lobby!
+msg.lobby.invite.accept.lobby_started_game=This lobby has already started a game!
+msg.lobby.invite.accept.lobby_full=The lobby is already full!
+msg.lobby.invite.decline=The user {username} has declined your invitation!
+
+msg.lobby.kick.user_not_exist=The user with the UUID {uuid} does not exist!
+msg.lobby.kick.user_not_in_lobby=The user {username} is not in this lobby!
+msg.lobby.kick.lobby_started=The game has already been started!
+msg.lobby.kick.no_reason=You have been kicked out of the lobby!
+msg.lobby.kick.reason=You have been kicked out of the lobby!\nReason: {reason}
+msg.lobby.kick.success=The user {username} has been successfully kicked out of the lobby!
+
+msg.lobby.load_game.invalid_signature=Invalid player signature!
+msg.lobby.load_game.oldversion=This save game is from an outdated version!
+msg.lobby.load_game.invalid_data=Invalid / Flawed save game!
+msg.lobby.load_game.missing_rights=Only admins can load a save game!
+msg.lobby.load_game.users_not_identical=Exactly the same players have to be in the lobby!
+msg.lobby.load_game.success=Save game has been loaded successfully!
+
+msg.game.cancel=The game has been cancelled!
+
+msg.game.dk.invalid_throw=Throwing is not possible with this hand!
+msg.game.dk.invalid_pigs=Your hand does not contain valid pigs!
+msg.game.dk.invalid_pigs_game=The game type does not support pigs!
+msg.game.dk.invalid_superpigs=Your hand does not contain valid superpigs!
+msg.game.dk.invalid_superpigs_game=The game type does not support superpigs!
+msg.game.dk.invalid_superpigs_call=Superpigs had to be called directly after the pigs!
+msg.game.dk.invalid_poverty=You have too many trumps for a poverty!
+msg.game.dk.invalid_poverty_cards=In a poverty, you have to give away all your trumps!
+msg.game.dk.invalid_return_amount=The stated amount of trumps ({ca}) is not equal to the amount of trumps ({ta})!
+msg.game.dk.invalid_wedding=For a wedding, you need two Queens of Clubs!
+
+msg.game.dk.pc_wrong_phase=You may not play any cards in the current phase!
+msg.game.dk.pc_wrong_turn=It's not your turn!
+msg.game.dk.pc_wrong_card=You may not renege!
+msg.game.dk.pc_called_pigs=After calling pigs, you have to play them!
+msg.game.dk.pc_called_superpigs=After calling superpigs, you have to play them!
+msg.game.dk.re_no_party=Announcements can only be made when the parties are decided!
+msg.game.dk.re_too_late=You had to make this announcement earlier!
+
+announce.reservation_yes=Reservation
+announce.reservation_no=No reservation
+announce.solo_yes.key=cg:announce.solo.{type}
+announce.solo_no=No solo
+announce.throw_yes=Throw
+announce.throw_no=Don't throw
+announce.pigs_yes=Pigs
+announce.pigs_no=No pigs
+announce.superpigs_yes=Superpigs
+announce.superpigs_no=No superpigs
+announce.poverty_yes=Poverty
+announce.poverty_no=No poverty
+announce.poverty_accept=Poverty accepted
+announce.poverty_decline=Poverty declined
+announce.poverty_return.key=cg:announce.poverty_return.{amount}
+announce.wedding_yes=Wedding
+announce.wedding_no=No wedding
+announce.wedding_clarification_trick.key=cg:announce.wedding_clarification_trick.{type}
+announce.pigs=Pigs
+announce.superpigs=Superpigs
+announce.re=Re
+announce.kontra=Kontra
+announce.no90.key=cg:announce.no90.{party}
+announce.no60.key=cg:announce.no60.{party}
+announce.no30.key=cg:announce.no30.{party}
+announce.black.key=cg:announce.black.{party}
+announce.black_sow_solo=cg:announce.solo.{type}
+announce.throw=Throw
+announce.ready=Ready
+
+announce.solo.solo_queen=Queens solo
+announce.solo.solo_jack=Jacks solo
+announce.solo.solo_clubs=Clubs solo
+announce.solo.solo_spades=Spades solo
+announce.solo.solo_hearts=Hearts solo
+announce.solo.solo_diamonds=Diamonds solo
+announce.solo.solo_fleshless=Fleshless solo
+announce.solo.solo_null=Null solo
+announce.solo.solo_boneless=Boneless solo
+announce.solo.solo_pure_clubs=Pure clubs solo
+announce.solo.solo_pure_spades=Pure spades solo
+announce.solo.solo_pure_hearts=Pure hearts solo
+announce.solo.solo_pure_diamonds=Pure diamonds solo
+announce.solo.solo_king=Kings solo
+announce.solo.solo_brothel=Jacks-Queens solo
+announce.solo.solo_noble_brothel=Queens-Kings solo
+announce.solo.solo_picture=Image solo
+announce.solo.solo_monastery=Jacks-Kings solo
+announce.solo.solo_aces=Aces solo
+announce.solo.solo_10s=Tens solo
+announce.solo.solo_9s=Nines solo
+
+announce.wedding_clarification_trick.foreign=First foreign
+announce.wedding_clarification_trick.trump=First trump trick
+announce.wedding_clarification_trick.miss=First non-trump trick
+announce.wedding_clarification_trick.hearts=First hearts trick
+announce.wedding_clarification_trick.spades=First spades trick
+announce.wedding_clarification_trick.clubs=First clubs trick
+announce.wedding_clarification_trick.diamonds=First diamonds trick
+
+announce.poverty_return.0=Without trumps
+announce.poverty_return.1=With one trump
+announce.poverty_return.2=With two trumps
+announce.poverty_return.3=With three trumps
+
+announce.no90.re=less than 90 (Re)
+announce.no60.re=less than 60 (Re)
+announce.no30.re=less than 30 (Re)
+announce.black.re=black (Re)
+
+announce.no90.kontra=less than 90 (Kontra)
+announce.no60.kontra=less than 60 (Kontra)
+announce.no30.kontra=less than 30 (Kontra)
+announce.black.kontra=black (Kontra)
+
 gui.menu.load.progress.loading=Loading...
 
 gui.menu.serverselect.title.playbtn.label=Play
@@ -14,25 +221,414 @@ gui.menu.serverselect.title.settingsbtn.label=Settings
 
 gui.menu.serverselect.serverselect.okbtn.label=Connect
 
+gui.menu.serverselect.serverselect.connectbtn.label=Connect
+gui.menu.serverselect.serverselect.addbtn.label=Add server
+gui.menu.serverselect.serverselect.editbtn.label=Edit server
+gui.menu.serverselect.serverselect.deletebtn.label=Delete server
+gui.menu.serverselect.serverselect.refreshbtn.label=Reload
+gui.menu.serverselect.serverselect.cancelbtn.label=Cancel
+
+gui.menu.serverselect.serverselect.add.heading=Add server
+gui.menu.serverselect.serverselect.add.addr.default=Enter address
+gui.menu.serverselect.serverselect.add.name.default=Enter server name
+gui.menu.serverselect.serverselect.add.okbtn.label=Finished
+gui.menu.serverselect.serverselect.add.cancelbtn.label=Cancel
+
+gui.menu.serverselect.serverselect.edit.heading=Edit server
+gui.menu.serverselect.serverselect.edit.addr.default=Enter address
+gui.menu.serverselect.serverselect.edit.name.default=Enter server name
+gui.menu.serverselect.serverselect.edit.okbtn.label=Finished
+gui.menu.serverselect.serverselect.edit.cancelbtn.label=Cancel
+
 gui.menu.smain.load.connect=Connecting...
 gui.menu.smain.load.load=Loading...
 gui.menu.smain.load.login=Logging in...
 
-gui.menu.smain.login.okbtn.label=Login
+gui.menu.smain.login.okbtn.label=Log in
 
-gui.menu.smain.create_acc.confirm=Create Account
+gui.menu.smain.create_acc.confirm=Create account
 gui.menu.smain.create_acc.cancel=Cancel
-gui.menu.smain.create_acc.label_main=The account does not yet exist. Do you want to create it?
+gui.menu.smain.create_acc.label_main=This account does not exist yet. Do you want to create it?
 
-gui.menu.smain.loginerr.unknown=Unknown Error during login
+gui.menu.smain.loginerr.unknown=Unknown error during logging in
 gui.menu.smain.loginerr.ok=OK
-gui.menu.smain.loginerr.wrongcred=Wrong Credentials or invalid Username!
-gui.menu.smain.loginerr.userexists=Username is already taken!
+gui.menu.smain.loginerr.wrongcred=Invalid log in credentials or invalid username!
+gui.menu.smain.loginerr.userexists=This username is already used!
 
 gui.menu.smain.main.createbtn.label=Create Lobby
+gui.menu.smain.main.playbtn.label=Play
+gui.menu.smain.main.adjourned.label=Adjourned Games
+gui.menu.smain.main.lbbtn.label=Leaderboard
+gui.menu.smain.main.settingsbtn.label=Settings
+gui.menu.smain.main.exitbtn.label=Quit Game
 
-gamerule.general.wrongmove.name=Illegal Move Handling
-gamerule.general.wrongmove.description=Action to be taken upon a wrong move
-gamerule.general.wrongmove.opt.disallow=Do not accept wrong moves
-gamerule.general.wrongmove.opt.allow_points=Allow, and remove points when caught by other players
-gamerule.general.wrongmove.opt.allow_stopgame=Allow, and stop the game when caught by other players
+gui.menu.smain.play.sks.label.0=Skat
+gui.menu.smain.play.sks.label.1=Tournament rules
+gui.menu.smain.play.skm.label.0=Skat
+gui.menu.smain.play.skm.label.1=Extra rules
+gui.menu.smain.play.skc.label.0=Skat
+gui.menu.smain.play.skc.label.1=Custom game
+gui.menu.smain.play.dks.label.0=Doppelkopf
+gui.menu.smain.play.dks.label.1=Tournament rules
+gui.menu.smain.play.dkm.label.0=Doppelkopf
+gui.menu.smain.play.dkm.label.1=Extra rules
+gui.menu.smain.play.dkc.label.0=Doppelkopf
+gui.menu.smain.play.dkc.label.1=Custom game
+gui.menu.smain.play.rms.label.0=Rummy
+gui.menu.smain.play.rms.label.1=Tournament rules
+gui.menu.smain.play.rmm.label.0=Rummy
+gui.menu.smain.play.rmm.label.1=Extra rules
+gui.menu.smain.play.rmc.label.0=Rummy
+gui.menu.smain.play.rmc.label.1=Custom game
+gui.menu.smain.play.cns.label.0=Canasta
+gui.menu.smain.play.cns.label.1=Tournament rules
+gui.menu.smain.play.cnm.label.0=Canasta
+gui.menu.smain.play.cnm.label.1=Extra rules
+gui.menu.smain.play.cnc.label.0=Canasta
+gui.menu.smain.play.cnc.label.1=Custom game
+
+gui.menu.smain.profile.img_label=Profile image:
+gui.menu.smain.profile.imgchangebtn.label=Change profile image
+gui.menu.smain.profile.name_label=Username:
+gui.menu.smain.profile.unamechangebtn.label=Change username
+gui.menu.smain.profile.uname_commit.label=Change
+gui.menu.smain.profile.uname_cancel.label=Cancel
+gui.menu.smain.profile.pwd_label=Password:
+gui.menu.smain.profile.pwdchangebtn.label=Change password
+gui.menu.smain.profile.old_pwd_field.default=Enter old password
+gui.menu.smain.profile.new_pwd_field.default=Enter new password
+gui.menu.smain.profile.confirm_pwd_field.default=Confirm new password
+gui.menu.smain.profile.pwd_commit.label=Change
+gui.menu.smain.profile.pwd_cancel.label=Cancel
+
+gui.menu.smain.lobby.invitebtn.label=Invite player
+gui.menu.smain.lobby.leavebtn.label=Leave lobby
+gui.menu.smain.lobby.gamebtn.label=Change game
+gui.menu.smain.lobby.gamerulebtn.label=Change game rules
+gui.menu.smain.lobby.readybtn.label=Ready to play
+gui.menu.smain.lobby.loadgamebtn.label=Load adjourned games
+
+gui.menu.smain.lobby.kick_okbtn.label=Kick player
+gui.menu.smain.lobby.kick_cancelbtn.label=Cancel
+gui.menu.smain.lobby.kick_heading=Why do you want to kick {username}?
+
+gui.menu.smain.lobby.invite_heading=Enter username:
+gui.menu.smain.lobby.invite_okbtn.label=Invite
+gui.menu.smain.lobby.invite_cancelbtn.label=Cancel
+
+gui.menu.smain.lobby_inv.label_main=You have been invited by {username} into a lobby. Do you want to accept the invitation?
+gui.menu.smain.lobby_inv.confirm=Accept
+gui.menu.smain.lobby_inv.cancel=Decline
+
+gui.menu.smain.gamerule.heading={game} - Gamerules
+gui.menu.smain.gamerule.backbtn.label=Back
+gui.menu.smain.gamerule.savebtn.label=Save
+gui.menu.smain.gamerule.loadtmplbtn.label=Load template
+gui.menu.smain.gamerule.savetmplbtn.label=Save as template
+gui.menu.smain.gamerule.prevpagebtn.label=Previous page
+gui.menu.smain.gamerule.nextpagebtn.label=Next page
+gui.menu.smain.gamerule.save_template_heading=Save as template:
+gui.menu.smain.gamerule.save_okbtn.label=Save
+gui.menu.smain.gamerule.save_cancelbtn.label=Cancel
+
+gui.menu.smain.template.heading=Templates
+gui.menu.smain.template.backbtn.label=Back
+gui.menu.smain.template.loadtmplbtn.label=Load template
+gui.menu.smain.template.deletebtn.label=Delete template
+
+gui.menu.smain.adjourn.heading=Load adjourned game
+gui.menu.smain.adjourn.backbtn.label=Back
+gui.menu.smain.adjourn.loadbtn.label=Load game
+
+gui.menu.ingame.ingamegui.readybtn.label=Ready!
+gui.menu.ingame.ingamegui.throwbtn.label=Throw!
+gui.menu.ingame.ingamegui.pigsbtn.pigs=Pigs!
+gui.menu.ingame.ingamegui.pigsbtn.superpigs=Superpigs!
+gui.menu.ingame.ingamegui.rebtn.re=Re!
+gui.menu.ingame.ingamegui.rebtn.kontra=Kontra!
+gui.menu.ingame.ingamegui.rebtn.no90=Less than 90!
+gui.menu.ingame.ingamegui.rebtn.no60=Less than 60!
+gui.menu.ingame.ingamegui.rebtn.no30=Less than 30!
+gui.menu.ingame.ingamegui.rebtn.black=Black!
+
+gui.menu.ingame.scoreboard.heading=Round {round}
+gui.menu.ingame.scoreboard.continuebtn.label=Continue playing
+gui.menu.ingame.scoreboard.continuebtn.label2=Continue playing ({amount})
+gui.menu.ingame.scoreboard.adjournbtn.label=Adjourn game
+gui.menu.ingame.scoreboard.adjournbtn.label2=Adjourn game ({amount})
+gui.menu.ingame.scoreboard.quitbtn.label=Leave game
+gui.menu.ingame.scoreboard.quitbtn.label2=Leave game ({amount})
+gui.menu.ingame.scoreboard.quitbtn.label3=Leave game (noch {rounds} Runden)
+gui.menu.ingame.scoreboard.cancelbtn.label=Cancel game
+gui.menu.ingame.scoreboard.cancelbtn.label2=Cancel game ({amount})
+
+gui.menu.settings.exitbtn.label=Back
+
+question.unknown.text=Question?
+question.unknown.choice1=Perhaps
+question.unknown.choice2=Maybe
+
+question.reservation.text=Do you have a reservation?
+question.reservation.choice1=Yes
+question.reservation.choice2=No
+
+question.solo.text=Do you want to play a solo?
+question.solo.choice1=Yes
+question.solo.choice2=No
+
+question.solo.heading=Which solo do you want to play?
+question.solo.queen=Queens solo
+question.solo.jack=Jacks solo
+question.solo.clubs=Clubs solo
+question.solo.spades=Spades solo
+question.solo.hearts=Hearts solo
+question.solo.diamonds=Diamonds solo
+question.solo.fleshless=Fleshless solo
+question.solo.null=Null solo
+question.solo.boneless=Boneless solo
+question.solo.pure_clubs=Pure clubs solo
+question.solo.pure_spades=Pure spades solo
+question.solo.pure_hearts=Pure hearts solo
+question.solo.pure_diamonds=Pure diamonds solo
+question.solo.king=Kings solo
+question.solo.brothel=Jacks-Queens solo
+question.solo.noble_brothel=Queens-Kings solo
+question.solo.picture=Image solo
+question.solo.monastery=Jacks-Kings solo
+question.solo.aces=Aces solo
+question.solo.10s=Tens solo
+question.solo.9s=Nines solo
+
+question.throw.text=Do you want to throw?
+question.throw.choice1=Yes
+question.throw.choice2=No
+
+question.pigs.text=Do you want to announce pigs?
+question.pigs.choice1=Yes
+question.pigs.choice2=No
+
+question.superpigs.text=Do you want to announce superpigs?
+question.superpigs.choice1=Yes
+question.superpigs.choice2=No
+
+question.poverty.text=Do you want to announce a poverty?
+question.poverty.choice1=Yes
+question.poverty.choice2=No
+
+question.poverty_accept.text=Do you want to accept the poverty?
+question.poverty_accept.choice1=Yes
+question.poverty_accept.choice2=No
+
+question.poverty_trump_choice.text=Choose your trumps!
+
+question.poverty_return_choice.text=Choose the cards you want to return!
+
+question.poverty_return_trumps.text=How many trumps did you return?
+question.poverty_return_trumps.choice1=0
+question.poverty_return_trumps.choice2=1
+question.poverty_return_trumps.choice3=2
+question.poverty_return_trumps.choice4=3
+
+question.wedding.text=Do you want to announce a wedding?
+question.wedding.choice1=Yes
+question.wedding.choice2=No
+
+question.wedding_clarification_trick.text=What kind of trick is supposed to decide the wedding?
+question.wedding_clarification_trick.choice1=First foreign
+question.wedding_clarification_trick.choice2=First trump trick
+question.wedding_clarification_trick.choice3=First non-trump trick
+question.wedding_clarification_trick.choice4=First hearts trick
+question.wedding_clarification_trick.choice5=First spades trick
+question.wedding_clarification_trick.choice6=First clubs trick
+question.wedding_clarification_trick.choice7=First diamonds trick
+
+question.black_sow_solo.heading=Which solo do you want to play?
+
+
+gamerule.opt.true=Activate rule
+gamerule.opt.false=Deactivate rule
+
+gamerule.dk.heart10.name=Heart 10s
+gamerule.dk.heart10.description=The heart 10s are the highest cards in the game.
+
+gamerule.dk.heart10_prio.name=Heart 10 priority
+gamerule.dk.heart10_prio.description=If both heart 10s are in the same trick, which one beats the other?
+gamerule.dk.heart10_prio.opt.first=The first heart 10 beats the second
+gamerule.dk.heart10_prio.opt.second=The second heart 10 beats the first
+
+gamerule.dk.heart10_lasttrick.name=Heart 10 priority in the last trick
+gamerule.dk.heart10_lasttrick.description=If both heart 10s are in the last trick, which one beats the other?
+gamerule.dk.heart10_lasttrick.opt.first=The first heart 10 beats the second
+gamerule.dk.heart10_lasttrick.opt.second=The second heart 10 beats the first
+
+gamerule.dk.doppelkopf.name=Doppelkopfs
+gamerule.dk.doppelkopf.description=If 40 or more eyes are in the trick, the party, that won the trick, gets an extra point.
+
+gamerule.dk.fox.name=Foxes
+gamerule.dk.fox.description=If a party catches the adversary's ace of diamonds, it gains an extra point.
+
+gamerule.dk.fox_lasttrick.name=Last trick with the fox
+gamerule.dk.fox_lasttrick.description=If the last trick is won with an ace of diamonds, an extra point is gained.
+
+gamerule.dk.pigs.name=Pigs
+gamerule.dk.pigs.description=If a player has both aces of diamonds in his hand, one or both of them become the pigs, the highest trumps in the game.
+gamerule.dk.pigs.opt.None=Deactivate rule
+gamerule.dk.pigs.opt.one_first=Only the first ace of diamonds becomes a pig
+gamerule.dk.pigs.opt.one_on_play=Only on pig; the player decides, which one
+gamerule.dk.pigs.opt.one_on_fox=Only one pig, and only if the first fox was brought home
+gamerule.dk.pigs.opt.two_reservation=Two pigs, as reservation
+gamerule.dk.pigs.opt.two_on_play=Two pigs, called only when played
+
+gamerule.dk.superpigs.name=Superpigs
+gamerule.dk.superpigs.description=Upon pigs being called, the diamond 9s (or kings of diamonds) become superpigs, even higher than the pigs.
+gamerule.dk.superpigs.opt.None=Deactivate rule
+gamerule.dk.superpigs.opt.reservation=Reservation, after pigs
+gamerule.dk.superpigs.opt.on_pig=Called upon the first pig being played
+gamerule.dk.superpigs.opt.on_play=Only called, when the superpig is being played
+
+gamerule.dk.charlie.name=Charlie
+gamerule.dk.charlie.description=If the last trick is won with an jack of clubs, the trick winning party gets an extra point.
+
+gamerule.dk.charlie_broken.name=Charlie broken
+gamerule.dk.charlie_broken.description=If a jack of clubs is caught in the last trick, the catching party gets an extra point.
+
+gamerule.dk.jane.name=Jane
+gamerule.dk.jane.description=If a jack of clubs is caught in the last trick by a queen of diamonds, the catching party gets an extra point.
+
+gamerule.dk.charlie_prio.name=Priority of Charlies
+gamerule.dk.charlie_prio.description=If both jacks of clubs are in the last trick, which one beats the other?
+gamerule.dk.charlie_prio.opt.first=The first jack of clubs beats the second
+gamerule.dk.charlie_prio.opt.second=The second jack of clubs beats the first
+
+gamerule.dk.without9.name=Game without 9s
+gamerule.dk.without9.description=Half of the 9s or all of them are removed from the cards.
+gamerule.dk.without9.opt.with_all=All the 9s stay in the cards
+gamerule.dk.without9.opt.with_four=One 9 of each color is removed from the cards
+gamerule.dk.without9.opt.without=All of the 9s are removed from the cards
+
+gamerule.dk.heart_trick.name=Heart trick
+gamerule.dk.heart_trick.description=If the trick of hearts is not trumped, the trick winning party gets an extra point.
+
+gamerule.dk.sec_black_trick.name=Second black trick
+gamerule.dk.sec_black_trick.description=If the second trick of clubs or spades isn't trumped, the trick winning party gets an extra point.
+
+gamerule.dk.joker.name=Joker
+gamerule.dk.joker.description=A diamond 9 (or king of diamonds) is replaced by a joker, one of the highest trumps.
+gamerule.dk.joker.opt.None=Deactivate rule
+gamerule.dk.joker.opt.over_h10=The joker beats the heart 10s
+gamerule.dk.joker.opt.over_pigs=The joker also beats the pigs
+gamerule.dk.joker.opt.over_superpigs=The joker also beats the superpigs
+
+gamerule.dk.hobgoblin.name=Hobgoblin
+gamerule.dk.hobgoblin.description=If a king of spades is caught with a queen of spades, the trick winning party gets an extra point.
+
+gamerule.dk.poverty.name=Poverty
+gamerule.dk.poverty.description=If a player has 3 or less trumps, he can call a poverty. Another player returns three of his own cards, announces, how many trumps are amongst them, and they play together.
+gamerule.dk.poverty.opt.None=Deactivate rule
+gamerule.dk.poverty.opt.sell=A player decides to accept the poverty and after that receives the 3 cards.
+gamerule.dk.poverty.opt.circulate=The player with the poverty passes around his cards until another player decides to accept the poverty
+gamerule.dk.poverty.opt.circulate_duty=The player with the poverty passes around his cards. If nobody wants to accept the poverty, the last player is obliged to do so.
+
+gamerule.dk.poverty_consequence.name=Consequences
+gamerule.dk.poverty_consequence.description=What happens if nobody accepts the poverty?
+gamerule.dk.poverty_consequence.opt.None=The reservations go on and if necessary, the round is played normally
+gamerule.dk.poverty_consequence.opt.redeal=The cards are reshuffled and dealt again
+gamerule.dk.poverty_consequence.opt.black_sow=The player winning the trick containing the second queen of spades has to play a solo that he must choose immediately
+gamerule.dk.poverty_consequence.opt.ramsch=The round is played normally, but in the end, the winners get the points subtracted while the losers gain them.
+
+gamerule.dk.throw.name=Throw
+gamerule.dk.throw.description=If a player has a very bad hand, the cards will be reshuffled.
+gamerule.dk.throw.opt.None=Deactivate rule
+gamerule.dk.throw.opt.reservation=Throwing must be called as a reservation, between solos and poverty
+gamerule.dk.throw.opt.throw=The player may throw his cards before the first reservation
+
+gamerule.dk.throw_cases.name=Causes for throwing
+gamerule.dk.throw_cases.description=A player may throw if his hand fulfills at least one of following cases
+gamerule.dk.throw_cases.opt.5_9=Five 9s
+gamerule.dk.throw_cases.opt.5_k=Five kings
+gamerule.dk.throw_cases.opt.4_9+4_k=Four 9s and four kings
+gamerule.dk.throw_cases.opt.9_all_c=A 9 of each color
+gamerule.dk.throw_cases.opt.k_all_c=A king of each color
+gamerule.dk.throw_cases.opt.7full=Seven fulls (10s and aces)
+gamerule.dk.throw_cases.opt.t<hj=No higher trumps than the jack of diamonds
+gamerule.dk.throw_cases.opt.t<dj=No higher trumps than the ace of diamonds
+
+gamerule.dk.coward.name=Cowardice
+gamerule.dk.coward.description=If a party wins with many eyes without calling anything, they lose the points they would have won otherwise.
+gamerule.dk.coward.opt.None=Deactivate rule
+gamerule.dk.coward.opt.210_no_re=The party is punished upon getting 210 eyes without calling re or kontra
+gamerule.dk.coward.opt.240_no_u90=The party is punished upon getting 240 eyes without calling less than 90
+
+gamerule.dk.wedding.name=Wedding
+gamerule.dk.wedding.description=If a player has both queens of clubs, he can call a wedding.
+gamerule.dk.wedding.opt.None=Deactivate rule (Two queens of clubs always cause a silent wedding)
+gamerule.dk.wedding.opt.3_trick=The first other player, that wins a trick, becomes the partner, unless more than 3 rounds have passed
+gamerule.dk.wedding.opt.wish_trick=The wedding player makes a trick wish. The player, who wins that trick within the first 3 rounds, will be the partner.
+
+gamerule.dk.repeat_game.name=Spiel wiederholen
+gamerule.dk.repeat_game.description=Wenn die Gewinnerpartei 0 oder weniger Punkte hat, wird das Spiel nicht gewertet und neu gemischt.
+
+gamerule.dk.re_kontra.name=Re and Kontra
+gamerule.dk.re_kontra.description=How do Re and Kontra affect the points?
+gamerule.dk.re_kontra.opt.+2=Re and Kontra add two points to the value of the game
+gamerule.dk.re_kontra.opt.*2=Re and Kontra double the value of the game except extra points
+gamerule.dk.re_kontra.opt.*2_extra=Re and Kontra double the value, including extra points
+
+gamerule.dk.buck_round.name=Buck rounds
+gamerule.dk.buck_round.description=After certain events, the points will be doubled for a few rounds.
+gamerule.dk.buck_round.opt.None=Deactivate rule
+gamerule.dk.buck_round.opt.succession=In case of multiple buck rounds, the additional buck rounds are appended to the amount.
+gamerule.dk.buck_round.opt.parallel=In case of multiple buck rounds, the rounds are played parallel, therefore the game value will be doubled multiple times
+
+gamerule.dk.buck_cause.name=Buck round events
+gamerule.dk.buck_cause.description=Events causing a buckround.
+gamerule.dk.buck_cause.opt.4hearts=In a game without 9s, the heart trick is not trumped
+gamerule.dk.buck_cause.opt.draw=Both parties get 120 eyes
+gamerule.dk.buck_cause.opt.0points=The winner party achieved 0 or less points
+gamerule.dk.buck_cause.opt.re_kontra_lost=The party, that called Re or Kontra, lost
+gamerule.dk.buck_cause.opt.solo_lost=A solo has been lost
+
+gamerule.dk.buck_amount.name=Amount of buck rounds
+gamerule.dk.buck_amount.description=In case of a buck round event, how many buck rounds are supposed to be played?
+gamerule.dk.buck_amount.opt.1=1
+gamerule.dk.buck_amount.opt.2=2
+gamerule.dk.buck_amount.opt.3=3
+gamerule.dk.buck_amount.opt.4=4
+
+gamerule.dk.solo_shift_h10.name=Solos change heart 10s
+gamerule.dk.solo_shift_h10.description=In a color solo, other 10s take the role of the heart 10s (Hearts solo -> Spade 10, Spades solo -> Club 10, Clubs solo -> Diamond 10)
+
+gamerule.dk.solist_begins.name=Solist begins
+gamerule.dk.solist_begins.description=In case of a solo, the solist begins.
+
+gamerule.dk.solo_prio.name=Solo priority
+gamerule.dk.solo_prio.description=If multiple players want to play a solo, which will be played?
+gamerule.dk.solo_prio.opt.first=The first solo, that is announced
+gamerule.dk.solo_prio.opt.prio=The solo with the highest value
+
+gamerule.dk.solos.name=Solos
+gamerule.dk.solos.description=Available solos
+gamerule.dk.solos.opt.solo_queen=Queens solo
+gamerule.dk.solos.opt.solo_jack=Jacks solo
+gamerule.dk.solos.opt.solo_clubs=Clubs solo
+gamerule.dk.solos.opt.solo_spades=Spades solo
+gamerule.dk.solos.opt.solo_hearts=Hearts solo
+gamerule.dk.solos.opt.solo_diamonds=Diamonds solo
+gamerule.dk.solos.opt.solo_fleshless=Fleshless solo
+gamerule.dk.solos.opt.solo_null=Null solo
+gamerule.dk.solos.opt.solo_boneless=Boneless solo
+gamerule.dk.solos.opt.solo_pure_clubs=Pure clubs solo
+gamerule.dk.solos.opt.solo_pure_spades=Pure spades solo
+gamerule.dk.solos.opt.solo_pure_hearts=Pure hearts solo
+gamerule.dk.solos.opt.solo_pure_diamonds=Pure diamonds solo
+gamerule.dk.solos.opt.solo_king=Kings solo
+gamerule.dk.solos.opt.solo_brothel=Jacks-Queens solo
+gamerule.dk.solos.opt.solo_noble_brothel=Queens-Kings solo
+gamerule.dk.solos.opt.solo_picture=Image solo
+gamerule.dk.solos.opt.solo_monastery=Jacks-Kings solo
+gamerule.dk.solos.opt.solo_aces=Aces solo
+gamerule.dk.solos.opt.solo_10s=Tens solo
+gamerule.dk.solos.opt.solo_9s=Nines solo
+
+gamerule.dk.open_cards.name=Open cards
+gamerule.dk.open_cards.description=Training mode: The cards are visible to all players
