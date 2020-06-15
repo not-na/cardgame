@@ -35,6 +35,7 @@ class ChangePacket(CGPacket):
         "game",
         "gamerules",
         "gamerule_validators",
+        "supported_bots",
     ]
 
     def receive(self, msg, cid=None):

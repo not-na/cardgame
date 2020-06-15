@@ -54,26 +54,4 @@ class ReadyPacket(CGPacket):
 
         self.cg.debug(f"Player {user.username} of lobby {user.lobby} changed readiness: {msg['ready']}")
 
-        ready = all([l.user_ready[u] for u in l.users]) and l.game is not None
-
-        ready = ready and self.cg.server.game_reg[l.game].check_playercount(len(l.users))
-
-        if ready:
-            self.cg.info(f"All players of lobby {user.lobby} are ready, starting game '{l.game}'")
-
-            self.cg.send_event("cg:lobby.ready", {"lobby": user.lobby})
-            self.cg.send_event(f"cg:lobby.ready.{l.game}", {"lobby": user.lobby})
-
-            if l.game_data is None:
-                g = self.cg.server.game_reg[l.game](self.cg, user.lobby)
-            else:
-                g = self.cg.server.game_reg[l.game].deserialize(self.cg, user.lobby, l.game_data)
-            self.cg.server.games[g.game_id] = g
-
-            l.started = True
-
-            for i in l.users:
-                l.user_ready[i] = False
-                self.cg.server.users_uuid[i].cur_game = g.game_id
-
-            g.start()
+        l.check_ready()

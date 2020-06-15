@@ -24,6 +24,7 @@
 from cg.constants import STATE_ACTIVE, STATE_GAME_DK, STATE_LOBBY, STATE_AUTH
 from cg.packet import CGPacket
 from cg.util import uuidify
+from .auth import USER_PATTERN
 
 
 class StatusUserPacket(CGPacket):
@@ -50,6 +51,9 @@ class StatusUserPacket(CGPacket):
             else:
                 if "username" in msg:
                     if msg["username"] in self.cg.server.users:
+                        self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.username_not_available")
+                        return
+                    elif USER_PATTERN.fullmatch(msg["username"]) or msg["username"].lower().startswith("bot"):
                         self.cg.server.send_status_message(u, "warn", "cg:msg.status.user.username_not_available")
                         return
                     else:

@@ -43,7 +43,8 @@ This is the data sent by the server to the client: ::
                },
       "gamerule_validators":{
                   ...
-      }
+      },
+      "supported_bots": ["dk_dumb", "dk_smart"],
    }
 
 ``userlist`` is a dictionary mapping the :term:`UUID`\ s of players to their metadata.
@@ -60,6 +61,8 @@ the seat order in the game.
 be sent.
 
 ``gamerule_validators`` is a dictionary containing the :term:`validator`\ s for the current game.
+
+``supported_bots`` is a list of supported :term:`bots <bot>` names.
 
 .. todo::
    Document the validator concept

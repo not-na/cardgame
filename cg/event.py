@@ -21,6 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import threading
 import traceback
 from typing import Callable, Dict, Mapping, Any, List, Tuple
 
@@ -75,6 +76,8 @@ class EventManager(object):
 
         self.event_list = set()
 
+        self.event_lock = threading.RLock()
+
         self.add_event_listener("cg:shutdown", self.handle_shutdown)
 
     def send_event(self, event: str, data=None) -> None:
@@ -117,41 +120,45 @@ class EventManager(object):
         if not isinstance(event, str):
             raise TypeError("Event types must always be strings")
 
-        if not (flags & F_SILENT)\
-                and self.cg.get_config_option("cg:debug.event.dump_file") != ""\
-                and event not in self.event_list:
-            self.cg.debug(f"Found event listener {event}")
-            self.event_list.add(event)
+        # Ensure that listeners are added sequentially
+        with self.event_lock:
+            if not (flags & F_SILENT)\
+                    and self.cg.get_config_option("cg:debug.event.dump_file") != ""\
+                    and event not in self.event_list:
+                self.cg.debug(f"Found event listener {event}")
+                self.event_list.add(event)
 
-        if event not in self.event_handlers:
-            self.event_handlers[event] = []
-        if group not in self.handler_groups:
-            self.handler_groups[group] = []
-        self.handler_groups[group].append((event, func))
-        self.handler_flags[(event, func)] = flags
-        self.event_handlers[event].append(func)
+            if event not in self.event_handlers:
+                self.event_handlers[event] = []
+            if group not in self.handler_groups:
+                self.handler_groups[group] = []
+            self.handler_groups[group].append((event, func))
+            self.handler_flags[(event, func)] = flags
+            self.event_handlers[event].append(func)
 
     def del_event_listener(self, event: str, func: Callable):
         if event not in self.event_handlers:
             raise NameError(f"No handlers exist for event {event}")
 
-        if func in self.event_handlers[event]:
-            del self.event_handlers[event][self.event_handlers[event].index(func)]
-            del self.handler_flags[(event, func)]
-        else:
-            raise NameError(f"This handler is not registered for event {event}")
+        with self.event_lock:
+            if func in self.event_handlers[event]:
+                del self.event_handlers[event][self.event_handlers[event].index(func)]
+                del self.handler_flags[(event, func)]
+            else:
+                raise NameError(f"This handler is not registered for event {event}")
 
-        if not self.event_handlers[event]:
-            # Clean up empty event handlers to prevent memory leaks
-            del self.event_handlers[event]
+            if not self.event_handlers[event]:
+                # Clean up empty event handlers to prevent memory leaks
+                del self.event_handlers[event]
 
     def del_group(self, group):
-        if group not in self.handler_groups:
-            return  # Prevent errors if the group did not exist
+        with self.event_lock:
+            if group not in self.handler_groups:
+                return  # Prevent errors if the group did not exist
 
-        for event, func in self.handler_groups[group]:
-            self.del_event_listener(event, func)
-        del self.handler_groups[group]
+            for event, func in self.handler_groups[group]:
+                self.del_event_listener(event, func)
+            del self.handler_groups[group]
 
     def handle_shutdown(self, event: str, data: dict):
         if self.cg.get_config_option("cg:debug.event.dump_file") != "":

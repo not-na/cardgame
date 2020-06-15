@@ -38,6 +38,7 @@ class ChangePacket(CGPacket):
         "game",
         "gamerules",
         "gamerule_validators",
+        "supported_bots",
     ]
 
     def receive(self, msg, cid=None):
@@ -162,4 +163,8 @@ class ChangePacket(CGPacket):
             self.cg.send_event("cg:lobby.admin.change", {
                 uuidify(k): v for k, v in msg["user_roles"].items()
             })
+
+        if "supported_bots" in msg:
+            self.cg.info(f"Supported bots: {msg['supported_bots']}")
+            # TODO: implement this
 

@@ -22,6 +22,7 @@
 #
 
 import os
+import queue
 import secrets
 import socket
 import sys
@@ -171,6 +172,12 @@ class DedicatedServer(object):
             "registrar": self.register_game,
         })
 
+        self.bot_reg: Dict[str, cgserver.game.bot.Bot] = {}
+
+        self.cg.send_event("cg:bot.register.do", {
+            "registrar": self.register_bot,
+        })
+
         self.secret: Optional[str] = None
 
         self.lobbies: Dict[uuid.UUID, cgserver.lobby.Lobby] = {}
@@ -188,6 +195,7 @@ class DedicatedServer(object):
         self.process_thread: Optional[threading.Thread] = None
 
         self.scheduled_events: List[_ScheduledFunction] = []
+        self.event_queue = queue.Queue()
         self.process_lock = threading.Lock()
 
     def start(self):
@@ -229,6 +237,14 @@ class DedicatedServer(object):
     def run_process(self):
         while self.server.run:
             self.server.process(wait=True, timeout=self.PROCESS_TIMEOUT)
+
+            if not self.event_queue.empty():
+                try:
+                    event, data = self.event_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                else:
+                    self.cg.send_event(event, data)
 
             sched_func = None
             with self.process_lock:
@@ -298,6 +314,8 @@ class DedicatedServer(object):
 
         users = {}
         for name, u in self.users.items():
+            if isinstance(u, cgserver.user.BotUser):
+                continue
             users[u.username] = u.serialize()
 
         fname = os.path.join(self.cg.get_instance_path(), "serverdat.csd")
@@ -313,7 +331,10 @@ class DedicatedServer(object):
     def register_game(self, name: str, cls: Type[cgserver.game.CGame]):
         self.game_reg[name] = cls
 
-    def send_user_data(self, user: Union[uuid.UUID, str], client: Union[int, uuid.UUID]):
+    def register_bot(self, name: str, cls: Type[cgserver.game.bot.Bot]):
+        self.bot_reg[name] = cls
+
+    def send_user_data(self, user: Union[uuid.UUID, str], client: Union[int, uuid.UUID, cgserver.user.User]):
         if isinstance(user, uuid.UUID):
             if user not in self.users_uuid:
                 self.cg.warn(f"Could not find user with UUID {user}")
@@ -325,36 +346,36 @@ class DedicatedServer(object):
                 return
             u = self.users[user]
 
-        if isinstance(client, uuid.UUID):
-            if client not in self.users_uuid:
-                self.cg.warn(f"Could not find client with UUID {client}")
-                return
-            if self.users_uuid[client].cid is None:
-                self.cg.warn(f"User {self.users_uuid[client].username} is not logged in, cannot send anything to them")
-                return
-            client = self.users_uuid[client].cid
-
-        self.server.send_message("cg:status.user", {
+        self.send_to_user(client, "cg:status.user", {
             "username": u.username,
             "uuid": u.uuid.hex,
             "profile_img": u.profile_img,
 
             "status": "offline",  # TODO: implement correctly
-        }, client)
+        })
 
-    def send_to_user(self, user: Union[uuid.UUID, cgserver.user.User], packet: str, data: dict):
+    def send_to_user(self, user: Union[uuid.UUID, cgserver.user.User, int], packet: str, data: dict):
         if isinstance(user, uuid.UUID):
             if user not in self.users_uuid:
                 self.cg.error(f"Could not send packet {packet} to user {user} because it does not exist")
                 return
             user = self.users_uuid[user]
+        elif isinstance(user, int):
+            return self.server.send_message(packet, data, user)
+
+        if isinstance(user, cgserver.user.BotUser):
+            self.cg.send_event(f"cg:bot.[{user.uuid.hex}].packet.recv", {"packet": packet, "data": data})
+            return
 
         if user.cid is None:
             self.cg.error(f"Could not send packet {packet} to user {user.username} because they are not connected")
 
         self.server.send_message(packet, data, user.cid)
 
-    def send_status_message(self, user: Union[uuid.UUID, cgserver.user.User], t: str, msg: str, data: Dict = {}):
+    def send_status_message(self, user: Union[uuid.UUID, cgserver.user.User], t: str, msg: str, data: Optional[Dict] = None):
+        if data is None:
+            data = {}
+
         self.cg.info(f"Send status message to {user} with type {t} and message {msg} ({data})")
         self.send_to_user(user, "cg:status.message", {
             "type": t,
@@ -371,6 +392,7 @@ class DedicatedServer(object):
         self.cg.add_event_listener("cg:network.client.login", self.handler_netclientlogin)
 
         self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
+        self.cg.add_event_listener("cg:bot.register.do", self.handler_dobotregister)
 
     def handler_commandstop(self, event: str, data: Dict):
         # Ensure that the server console loop exits if a stop command is issued via the network
@@ -392,3 +414,6 @@ class DedicatedServer(object):
 
     def handler_dogameregister(self, event: str, data: Dict):
         cgserver.game.register_games(data["registrar"])
+
+    def handler_dobotregister(self, event: str, data: Dict):
+        cgserver.game.bot.register_bots(data["registrar"])

@@ -30,7 +30,7 @@ import cg
 
 
 class User(object):
-    def __init__(self, server, c: cg.CardGame, user: str, udat: dict):
+    def __init__(self, server, c: cg.CardGame, user: str, udat: dict, auth=True):
         self.server = server
         self.cg = c
 
@@ -39,7 +39,7 @@ class User(object):
         if isinstance(self.pwd, str):
             self.pwd = self.pwd.encode()
         self.pwd_type: str = udat.get("pwd_type", "plaintext")
-        if "pwd_salt" not in udat:
+        if auth and "pwd_salt" not in udat:
             self.pwd_salt = secrets.token_bytes(self.cg.get_config_option("cg:server.secret_length"))
         else:
             self.pwd_salt = udat["pwd_salt"]
@@ -121,3 +121,11 @@ class User(object):
         # As of 2020, this should be "good enough"
         # TODO: dynamically increase this
         return 150000
+
+
+class BotUser(User):
+    def __init__(self, server, c: cg.CardGame, user: str, udat: dict):
+        super().__init__(server, c, user, udat, auth=False)
+
+        self.bot = None
+        self.profile_img = "default"  # TODO: add different icons for different bots

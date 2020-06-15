@@ -27,11 +27,11 @@ import uuid
 import cgserver
 
 import cg
-from cg.constants import ROLE_REMOVE, ROLE_CREATOR, ROLE_ADMIN
+from cg.constants import ROLE_REMOVE, ROLE_CREATOR, ROLE_ADMIN, ROLE_PLAYER
 
 
 class Lobby(object):
-    def __init__(self, c: cg.CardGame, u: Union[None, uuid.UUID] = None):
+    def __init__(self, c: cg.CardGame, u: Optional[uuid.UUID] = None):
         self.cg: cg.CardGame = c
 
         self.uuid: uuid.UUID = u if u is not None else uuid.uuid4()
@@ -135,7 +135,10 @@ class Lobby(object):
             },
             "game": self.game,
             "gamerules": self.gamerules,
-            "gamerule_validators": gamerule_validators
+            "gamerule_validators": gamerule_validators,
+            "supported_bots": [
+                key for key in self.cg.server.bot_reg if self.cg.server.bot_reg[key].supports_game(self.game)
+            ]
         })
 
         self.send_to_all("cg:lobby.change", {
@@ -145,6 +148,127 @@ class Lobby(object):
                 "index": self.users.index(user.uuid)
             }},
         }, user)
+
+    def add_bot(self, bot_type: str, from_user: cgserver.user.User):
+        if self.cg.server.game_reg[self.game].check_playercount(len(self.users), True):
+            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.lobby_full")
+            return
+
+        if bot_type not in self.cg.server.bot_reg:
+            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.unknown_type")
+            return
+
+        bot_cls = self.cg.server.bot_reg[bot_type]
+
+        if not bot_cls.supports_game(self.game):
+            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.invalid_type")
+            return
+
+        bot_id = uuid.uuid4()
+        u = cgserver.user.BotUser(self.cg.server,
+                                  self.cg,
+                                  bot_cls.generate_name(),
+                                  {"uuid": bot_id},
+                                  )
+        self.cg.server.users_uuid[bot_id] = u
+
+        self.add_user(u, ROLE_PLAYER)
+        self.user_ready[u.uuid] = True
+        self.check_ready()
+
+        bot = bot_cls(self.cg,
+                      bot_id,
+                      u.username,
+                      )
+
+        u.bot = bot
+
+    def restore_bot(self, data: Dict) -> bool:
+        if self.cg.server.game_reg[self.game].check_playercount(len(self.users), True):
+            self.cg.error(f"Could not restore bot because lobby was full")
+            return False
+
+        bot_type = data.get("type", None)
+
+        if bot_type not in self.cg.server.bot_reg:
+            self.cg.error(f"Could not restore bot because type is unknown")
+            return False
+
+        bot_cls = self.cg.server.bot_reg[bot_type]
+
+        if bot_cls.BOT_VERSION != data.get("version", None):
+            self.cg.error(f"Could not restore bot {data['type']} because version does not match")
+            return False
+
+        u = cgserver.user.BotUser(self.cg.server,
+                                  self.cg,
+                                  bot_cls.get("name", "<ERROR Bot>"),
+                                  data,  # Only UUID necessary, but its simpler this way
+                                  )
+        self.cg.server.users_uuid[u.uuid] = u
+
+        self.add_user(u, ROLE_PLAYER)
+
+        self.user_ready[u.uuid] = True
+        self.check_ready()
+
+        try:
+            bot = bot_cls.deserialize(cg, self, data)
+        except Exception:
+            self.cg.critical(f"Could not deserialize bot")
+            self.cg.exception(f"Exception while deserializing bot:")
+            return False
+
+        u.bot = bot
+
+        return True
+
+    def check_ready(self):
+        """
+        Checks if the lobby is ready and calls :py:meth:`ready()` if it is.
+
+        :return:
+        """
+        ready = all([self.user_ready[u] for u in self.users]) and self.game is not None
+
+        ready = ready and self.cg.server.game_reg[self.game].check_playercount(len(self.users))
+
+        if ready:
+            self.ready()
+
+        return ready
+
+    def ready(self):
+        """
+        Starts the game from the lobby.
+
+        Should only be called if all players are ready and the player count is correct.
+
+        Note that no checks of this are performed.
+
+        :return:
+        """
+        self.cg.info(f"All players of lobby {self.uuid} are ready, starting game '{self.game}'")
+
+        self.cg.send_event("cg:lobby.ready", {"lobby": self.uuid})
+        self.cg.send_event(f"cg:lobby.ready.{self.game}", {"lobby": self.uuid})
+
+        if self.game_data is None:
+            g = self.cg.server.game_reg[self.game](self.cg, self.uuid)
+        else:
+            g = self.cg.server.game_reg[self.game].deserialize(self.cg, self.uuid, self.game_data)
+        self.cg.server.games[g.game_id] = g
+
+        self.started = True
+
+        for i in self.users:
+            self.user_ready[i] = False
+            self.cg.server.users_uuid[i].cur_game = g.game_id
+
+            if isinstance(self.cg.server.users_uuid[i], cgserver.user.BotUser):
+                self.cg.send_event(f"cg:bot.[{i.hex}].gamerules", {"gamerules": self.gamerules})
+
+        g.start()
 
     def send_to_all(self, packet: str, data: dict, exclude=None):
         for u in self.users:
@@ -184,4 +308,3 @@ class Lobby(object):
 
     def set_variant(self, variant: str):
         self.cg.warn(f"Setting Variants is currently not implemented")
-

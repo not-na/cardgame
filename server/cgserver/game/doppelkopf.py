@@ -30,6 +30,8 @@ from cg.util import uuidify
 from . import CGame
 from .card import *
 
+from .. import user
+
 import cg
 import uuid
 
@@ -705,7 +707,10 @@ class DoppelkopfGame(CGame):
             "type": "dk",
             "version": self.GAME_VERSION,
             "creation_time": self.creation_time,
-            "players": [i.hex for i in self.players],
+            "players": [i.hex for i in self.players if not isinstance(self.cg.server.users_uuid[i], user.BotUser)],
+            "bots": [
+                self.cg.server.users_uuid[i].bot.serialize() for i in self.players if isinstance(self.cg.server.users_uuid[i], user.BotUser)
+            ],
             "gamerules": self.gamerules,
             "round_num": self.round_num,
             "buckrounds": self.buckrounds,
@@ -721,7 +726,7 @@ class DoppelkopfGame(CGame):
                         ) for v in r.moves.values()
                     ]
                 } for r in self.rounds
-            }
+            },
         }
 
         return data
@@ -748,6 +753,14 @@ class DoppelkopfGame(CGame):
         if ignore_devmode:
             return count == 4
         return cls.DEV_MODE or count == 4
+
+    def delete(self):
+        super().delete()
+
+        for r in self.rounds:
+            r.delete()
+        del self.rounds
+        self.rounds = []
 
 
 class DoppelkopfRound(object):
@@ -4221,3 +4234,6 @@ class DoppelkopfRound(object):
                     return
 
             time.sleep(1.5)
+
+    def delete(self):
+        self.game.cg.event_manager.del_group(self.round_id)

@@ -50,3 +50,7 @@ Glossary
 
    game
       A :term:`game` is made up of :term:`rounds <round>`\ . It is fully self-contained.
+
+   bot
+      A :term:`bot` is a computer-controlled player that can play one or more supported games.
+      Bots usually act autonomously and have access to the same information as a normal player.

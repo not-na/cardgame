@@ -30,6 +30,7 @@ import cgserver
 import jwt
 
 from . import card
+from . import bot
 
 import cg
 
@@ -117,6 +118,8 @@ class CGame(object, metaclass=abc.ABCMeta):
     def cancel_game(self, notify=True):
         for p in self.players:
             if self.DEV_MODE and p in self.fake_players:
+                continue
+            if isinstance(self.cg.server.users_uuid[p], cgserver.user.BotUser):
                 continue
 
             self.lobby.started = False
@@ -226,5 +229,16 @@ class CGame(object, metaclass=abc.ABCMeta):
         pass
 
     def delete(self):
+        # Delete all event handlers belonging to the game
         self.cg.event_manager.del_group(self.game_id)
+
+        # Delete all bot players and their corresponding threads
+        for pid in self.players:
+            p = self.cg.server.users_uuid[pid]
+            if isinstance(p, cgserver.user.BotUser):
+                # Stop and delete the bot
+                p.bot.stop()
+                p.bot.delete()
+                del self.cg.server.users_uuid[pid]
+
 

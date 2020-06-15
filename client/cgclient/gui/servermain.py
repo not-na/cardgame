@@ -1890,6 +1890,7 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         for p in self.players:
             if p == uuidify(data["uuid"]):
                 self.update_players()
+                break
 
 
 class _FakeUser:
