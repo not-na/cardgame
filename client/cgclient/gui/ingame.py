@@ -114,6 +114,9 @@ class GameLayer(peng3d.layer.Layer):
     NUM_SYNCS = 2
     MIN_COLORID = 1 / 30.
 
+    DRAG_BASE_MULT = -0.565  # Multiplied by window height
+    DRAG_MIN = 5  # Minimum drag distance before card becomes dragged / pulled-out
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -167,10 +170,10 @@ class GameLayer(peng3d.layer.Layer):
             self.peng.keybinds.add("lshift", "cg:crouch", self.on_crouch_down, False)
             self.peng.keybinds.add("space", "cg:jump", self.on_jump_down, False)
             self.peng.keybinds.add("escape", "cg:escape", self.on_escape, False)
-            self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
-            self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
-            self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
-            self.peng.registerEventHandler("on_mouse_release", self.on_mouse_release)
+        self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
+        self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
+        self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
+        self.peng.registerEventHandler("on_mouse_release", self.on_mouse_release)
 
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1 / 60.)
@@ -333,7 +336,7 @@ class GameLayer(peng3d.layer.Layer):
                         # Update mouse_color
                         self.mouse_color = o
 
-                        if self.is_card_clickable():
+                        if self.is_card_clickable() and self.clicked_card is None:
                             # Add hovered flag to new card
                             cid = self.get_card_at_mouse()
                             if cid is not None:
@@ -409,7 +412,53 @@ class GameLayer(peng3d.layer.Layer):
             x %= 360
             self.rot = x, y
 
-        # TODO: add card dragging support here
+        if self.clicked_card is not None:
+            # We are dragging a card, potentially update its position
+            start_drag = False
+            if not self.clicked_card.dragged and ((x-self.clicked_card.drag_start_pos[0])**2+(y-self.clicked_card.drag_start_pos[1])**2) >= self.DRAG_MIN**2:
+                start_drag = True
+                self.clicked_card.dragged = True
+                self.clicked_card.start_anim(self.game.own_hand, self.game.own_hand)
+
+            dx = x-self.window.width/2
+            dy = y-self.window.height*self.DRAG_BASE_MULT
+            angle = -math.degrees(math.atan2(dx, dy))
+
+            n_cards = len(self.game.slots[self.game.own_hand])
+            card_angle = cgclient.gui.card.CARD_ANGLE
+            total_angle = n_cards*card_angle  # Total angle occupied by cards
+            base_angle = 0
+
+            # Original equation:
+            # angle = base_angle + (index-count/2. + 0.5)*angle_per_card
+            # angle = base_angle + ridx*angle_per_card
+            # (angle-base_angle)/angle_per_card=ridx
+            # We are basically trying to figure out index
+            # ridx = index-count/2+0.5
+            # index=ridx-count/2+0.5
+            # This theoretical approach doesn't quite work, since the rendered perspective uses
+            # a different coordinate system than the mouse coordinates
+            # Results in base_angle=0 and flipped sign of angle
+            r_idx = (angle-base_angle)/card_angle  # Raw index, term in parentheses
+            nidx = int(r_idx+n_cards/2+0.5)  # Actual index
+
+            # Normalize index
+            idx = min(max(nidx, 0), n_cards-1)
+
+            own_hand = self.game.slots[self.game.own_hand]
+            cur_idx = own_hand.index(self.clicked_card)
+
+            # self.menu.cg.info(f"{angle=:.03} {r_idx=:.03} {n_cards=} {nidx=} {idx=} {cur_idx=}")
+
+            if idx != cur_idx:
+                # Index changed, swap card position
+                own_hand[cur_idx] = own_hand[idx]
+                own_hand[idx] = self.clicked_card
+
+                # Re-animate all cards in hand
+                for c in self.game.slots[self.game.own_hand]:
+                    if not start_drag or c != self.clicked_card:
+                        c.start_anim(self.game.own_hand, self.game.own_hand, 0.1)
 
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.is_card_clickable():
@@ -421,6 +470,7 @@ class GameLayer(peng3d.layer.Layer):
         co = self.game.cards[c]
         co.clicked = True
         co.start_anim(co.slot, co.slot)
+        co.drag_start_pos = x, y
         self.clicked_card = co
         self.menu.cg.info(f"Pressed Card {co.value} ({co.cardid})")
 
@@ -429,23 +479,15 @@ class GameLayer(peng3d.layer.Layer):
     def on_mouse_release(self, x, y, button, modifiers):
         if not self.is_card_clickable():
             return
-        c = self.get_card_at_mouse()
-        if c is None:
+
+        if self.clicked_card is None:
             return
 
-        co = self.game.cards[c]
-
-        if co != self.clicked_card:
-            return  # Not the clicked card, do nothing
-
+        co = self.clicked_card
         self.menu.cg.info(f"Released Card {co.value} ({co.cardid})")
-
         if not co.dragged:
             # Card has been selected
-            self.game.select_card(c)
-        else:
-            # TODO: implement card dragging
-            pass
+            self.game.select_card(co.cardid)
 
         co.clicked = False
         co.dragged = False

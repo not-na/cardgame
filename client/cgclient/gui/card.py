@@ -60,9 +60,12 @@ COUNTS = {
 # Standard cards - 6cm x 9cm
 CARD_SIZE_W = 0.6
 CARD_SIZE_H = 0.9
+CARD_ANGLE = 2  # In degrees
+
 HOVER_EXTENSION = 0.1
 CLICK_EXTENSION = 0.2
 SELECTED_EXTENSION = 0.3
+DRAGGED_EXTENSION = 0.9
 DEFAULT_ANIM_DURATION = 1.0
 
 ANIM_STATE_DONE = 0
@@ -147,6 +150,8 @@ class Card(object):
         self.anim_frompos = [0, 0, 0]
         self.anim_fromrot = [0, 0, 0]
         self.anim_duration: float = 1.0
+
+        self.drag_start_pos: Tuple[int, int] = 0, 0
 
         #self.anim_last = 0.0
 
@@ -326,28 +331,28 @@ class Card(object):
         elif slot == "poverty":
             self.cg.info(f"Poverty pos: {self.game.poverty_pos}")
             if self.game.poverty_pos == "self":
-                pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, 2, 180, 180, 4)
+                pos, r = self.get_radial_pos_rot([0, 0.1, 4.5], index, count, CARD_ANGLE, 180, 180, 4)
                 return pos, [0, 180, r]
             elif self.game.poverty_pos == "left":
-                pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 90, 180, 4)
+                pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 90, 180, 4)
                 return pos, [0, open_card, r]
             elif self.game.poverty_pos == "right":
-                pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 270, 180, 4)
+                pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 270, 180, 4)
                 return pos, [0, open_card, r]
             elif self.game.poverty_pos == "top":
-                pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, 2, 0, 180, 4)
+                pos, r = self.get_radial_pos_rot([0, 0.1, -4.5], index, count, CARD_ANGLE, 0, 180, 4)
                 return pos, [0, open_card, r]
         elif slot == "player_self":
-            pos, r = self.get_radial_pos_rot([0, 0.1, 4.3], index, count, 2, 180, 180, 3)
+            pos, r = self.get_radial_pos_rot([0, 0.1, 4.3], index, count, CARD_ANGLE, 180, 180, 3)
             return pos, [0, 180, r]
         elif slot == "player_left":
-            pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 90, 180, 3)
+            pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 90, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "player_right":
-            pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, 2, 270, 180, 3)
+            pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 270, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "player_top":
-            pos, r = self.get_radial_pos_rot([0, 0.1, -4.3], index, count, 2, 0, 180, 3)
+            pos, r = self.get_radial_pos_rot([0, 0.1, -4.3], index, count, CARD_ANGLE, 0, 180, 3)
             return pos, [0, OPEN_CARDS, r]
         elif slot == "ptrick_self":
             if DEBUG_CARDS:
@@ -393,7 +398,9 @@ class Card(object):
                            max_angle: float,
                            radius: float,
                            ) -> Tuple[List[float], float]:
-        if self.selected:
+        if self.dragged:
+            radius += DRAGGED_EXTENSION
+        elif self.selected:
             radius += SELECTED_EXTENSION
         elif self.clicked:
             radius += CLICK_EXTENSION

@@ -234,9 +234,9 @@ class CGame(object, metaclass=abc.ABCMeta):
 
         # Delete all bot players and their corresponding threads
         for pid in self.players:
-            p = self.cg.server.users_uuid[pid]
-            if p in self.fake_players:
+            if pid in self.fake_players:
                 continue
+            p = self.cg.server.users_uuid[pid]
             if isinstance(p, cgserver.user.BotUser):
                 # Stop and delete the bot
                 p.bot.stop()
