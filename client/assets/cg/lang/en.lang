@@ -303,7 +303,7 @@ gui.menu.smain.profile.pwd_cancel.label=Cancel
 
 gui.menu.smain.lobby.invitebtn.label=Invite player
 gui.menu.smain.lobby.leavebtn.label=Leave lobby
-gui.menu.smain.lobby.gamebtn.label=Change game
+gui.menu.smain.lobby.botbtn.label=Add bot
 gui.menu.smain.lobby.gamerulebtn.label=Change game rules
 gui.menu.smain.lobby.readybtn.label=Ready to play
 gui.menu.smain.lobby.loadgamebtn.label=Load adjourned games

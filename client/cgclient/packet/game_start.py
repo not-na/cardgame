@@ -35,12 +35,14 @@ class GameStartPacket(CGPacket):
         "game_id",
         "player_list",
         "game_summaries",
+        "gamerules",
     ]
     allowed_keys = [
         "game_type",
         "game_id",
         "player_list",
         "game_summaries",
+        "gamerules",
     ]
 
     def receive(self, msg, cid=None):

@@ -36,10 +36,9 @@ class DumbDoppelkopfBot(DoppelkopfBot):
     # Required for serialization and deserialization
     BOT_NAME = "dk_dumb"
 
-    def do_turn(self) -> None:
-        # Dumb bot just plays the very first card that is valid
-        # Just assume that there is always a valid card to play...
-        self.play_card(self.get_valid_moves()[0])
+    def select_move(self):
+        super().select_move()
+        return self.get_valid_moves()[0]
 
     def serialize(self) -> Dict[str, Any]:
         sdat = super().serialize()

@@ -305,7 +305,7 @@ gui.menu.smain.profile.pwd_cancel.label=Abbrechen
 
 gui.menu.smain.lobby.invitebtn.label=Spieler einladen
 gui.menu.smain.lobby.leavebtn.label=Lobby verlassen
-gui.menu.smain.lobby.gamebtn.label=Spiel ändern
+gui.menu.smain.lobby.botbtn.label=Bot hinzufügen
 gui.menu.smain.lobby.gamerulebtn.label=Spielregeln ändern
 gui.menu.smain.lobby.readybtn.label=Bereit zum Spielen
 gui.menu.smain.lobby.loadgamebtn.label=Vertagtes Spiel laden

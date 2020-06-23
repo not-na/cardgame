@@ -444,7 +444,8 @@ class DoppelkopfGame(CGame):
             "game_type": "doppelkopf",
             "game_id": self.game_id.hex,
             "player_list": [p.hex for p in self.players],
-            "game_summaries": self.game_summaries
+            "game_summaries": self.game_summaries,
+            "gamerules": self.gamerules
         })
 
         self.start_round(self.round_num)
@@ -1672,6 +1673,10 @@ class DoppelkopfRound(object):
         # Handle question for pigs
         if not pigs_handled:
             if self.game_type in ["solo_clubs", "solo_spades", "solo_hearts", "solo_diamonds", "solo_null"]:
+                self.game.send_to_all("cg:game.round.change", {
+                    "game_type": self.game_type
+                })
+
                 self.current_player = self.players[0]
                 self.reserv_state = "pigs_solo"
                 self.game.send_to_all("cg:game.dk.question", {
@@ -2883,7 +2888,8 @@ class DoppelkopfRound(object):
             trumps = []
             player_hand = [self.cards[i] for i in self.hands[self.current_player]]
             for c in player_hand:
-                if c.color == "d" or c.value in ["j", "q"] or c.card_value == "h10":
+                if c.color == "d" or c.value in ["j", "q"] or c.color == "j" or (
+                        c.card_value == "h10" and self.game.gamerules.get("dk.heart10")):
                     trumps.append(c)
             legal_poverty = len(trumps) <= 3
 
@@ -3506,7 +3512,9 @@ class DoppelkopfRound(object):
 
                             self.wedding_find_trick = self.trick_num
 
-                            # TODO Inform the players on the found wedding
+                            self.game.send_to_all("cg:game.dk.round.change", {
+                                "wedding_find_trick": self.trick_num
+                            })
 
                         self.game.cg.info(f"obvious parties: {self.obvious_parties}")
 
@@ -3538,6 +3546,10 @@ class DoppelkopfRound(object):
                         })
 
                         self.wedding_find_trick = self.trick_num
+
+                        self.game.send_to_all("cg:game.dk.round.change", {
+                            "wedding_find_trick": self.trick_num
+                        })
 
         # Check for extra tricks
         if self.game_type in ["normal", "wedding", "ramsch", "poverty"]:

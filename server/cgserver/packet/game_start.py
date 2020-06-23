@@ -34,16 +34,15 @@ class GameStartPacket(CGPacket):
         "game_type",
         "game_id",
         "player_list",
+        "game_summaries",
+        "gamerules"
     ]
 
     def send(self, msg, cid=None):
         self.peer.clients[cid].state = STATE_GAME_DK
 
-    def receive(self,msg,cid=None):
+    def receive(self, msg, cid=None):
         print("READY_TO_DEAL")
         self.cg.send_event("cg:game.dk.ready_to_deal", {
             "player": self.peer.clients[cid].user.uuid.hex
         })
-
-
-

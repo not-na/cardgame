@@ -31,7 +31,19 @@ class Card(object):
 
         self.color = color
         self.value = value
-        self.card_value: str = color + value
+
+    @property
+    def card_value(self) -> str:
+        return self.color + self.value
+
+    @card_value.setter
+    def card_value(self, value):
+        if value == "":
+            self.color = ""
+            self.value = ""
+        else:
+            self.color = value[0]
+            self.value = value[1:]
 
 
 def create_dk_deck(with9: int = 8, joker: bool = False):

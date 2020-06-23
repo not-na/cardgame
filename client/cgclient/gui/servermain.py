@@ -705,20 +705,20 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         self.leavebtn.addAction("click", f)
 
         # Game Button
-        self.gamebtn = cgclient.gui.CGButton(
+        self.botbtn = cgclient.gui.CGButton(
             "gamebtn", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 0], [3, 2]),
-            label=self.peng.tl("cg:gui.menu.smain.lobby.gamebtn.label")
+            label=self.peng.tl("cg:gui.menu.smain.lobby.botbtn.label")
         )
-        self.gamebtn.enabled = False
-        self.addWidget(self.gamebtn)
+        self.botbtn.enabled = False
+        self.addWidget(self.botbtn)
 
-        # TODO Implement changing games
+        # TODO Implement adding bots
 
         def f():
             pass
 
-        self.gamebtn.addAction("click", f)
+        self.botbtn.addAction("click", f)
 
         # Gamerule Button
         self.gamerulebtn = cgclient.gui.CGButton(
