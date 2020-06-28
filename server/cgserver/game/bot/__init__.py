@@ -153,13 +153,13 @@ class Bot(object, metaclass=abc.ABCMeta):
 
             with self.lock:
                 if t == "event":
-                    event, data = dat
+                    event, data = dat[0]
                     if event in self._event_handlers:
                         for handler in self._event_handlers[event]:
                             try:
                                 handler(event, data)
                             except Exception:
-                                self.cg.exception("Exception while handling bot event: ")
+                                self.cg.exception(f"Exception while handling bot event for bot {self.bot_id}: ")
                 elif t == "stop":
                     reason = dat[0]
                     self.cg.info(f"Bot thread for bot {self.bot_id} stopping because {reason}")
@@ -238,7 +238,7 @@ class Bot(object, metaclass=abc.ABCMeta):
         pass
 
     @classmethod
-    def generate_name(cls) -> str:
+    def generate_name(cls, blacklist=None) -> str:
         """
         Generate a new name for this bot.
 
@@ -246,7 +246,11 @@ class Bot(object, metaclass=abc.ABCMeta):
 
         :return: User-friendly name
         """
-        return random.choice(cls.NAME_POOL)
+        if blacklist is None or len(blacklist) == 0:
+            return random.choice(cls.NAME_POOL)
+        else:
+            # TODO: find a more time and memory efficient approach
+            return random.choice([n for n in cls.NAME_POOL if n not in blacklist])
 
     @classmethod
     @abc.abstractmethod

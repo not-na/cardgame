@@ -29,8 +29,10 @@ from . import serializer
 from . import time
 
 
-def uuidify(uuid_in: Union[str, uuid.UUID]):
-    if isinstance(uuid_in, str):
+def uuidify(uuid_in: Union[str, uuid.UUID, List[Union[str, uuid.UUID]]]):
+    if isinstance(uuid_in, list):
+        return list([uuidify(u) for u in uuid_in])
+    elif isinstance(uuid_in, str):
         return uuid.UUID(uuid_in)
     elif isinstance(uuid_in, uuid.UUID):
         return uuid_in

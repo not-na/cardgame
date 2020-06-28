@@ -45,15 +45,16 @@ class InvitePacket(CGPacket):
             self.cg.error("cg:lobby.invite packet can only be sent while in a lobby!")
             return
 
-        if msg["username"].lower().beginswith("bot_"):
+        if msg["username"].lower().startswith("bot_"):
             # Add the corresponding bot
             if self.cg.server.game_reg[lobby.game].check_playercount(len(lobby.users), True):
                 self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.invite.lobby_full")
                 return
 
-            lobby.add_bot(msg["username"][4:], u)
+            result = lobby.add_bot(msg["username"][4:], u)
 
-            self.cg.server.send_status_message(u, "notice", "cg:msg.lobby.add_bot.success")
+            if result:
+                self.cg.server.send_status_message(u, "notice", "cg:msg.lobby.add_bot.success")
             return
 
         user = self.cg.server.users.get(msg["username"], None)

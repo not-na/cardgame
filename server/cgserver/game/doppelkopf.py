@@ -2256,12 +2256,21 @@ class DoppelkopfRound(object):
         if self.game_state != "":
             raise GameStateError(f"Game state for ready handling must be '', not {self.game_state}!")
 
+        # Add the player to the loaded set
         self.players_loaded.add(data["player"])
         self.game.cg.info(f"Player {data['player']} is done loading")
+
         if self.game.DEV_MODE:
             self.game.cg.info(f"Added fake players to ready list: {self.game.fake_players}")
             for p in self.game.fake_players:
                 self.players_loaded.add(p)
+
+        # Add all bots to ready list
+        # Does not work if only bots play
+        for p in self.game.players:
+            if p not in self.game.fake_players and isinstance(self.game.cg.server.users_uuid[p], user.BotUser):
+                self.players_loaded.add(p)
+
         if len(self.players_loaded) == 4:
             self.game.cg.info(f"All players have loaded, dealing cards")
             # Deal the cards
@@ -3357,7 +3366,11 @@ class DoppelkopfRound(object):
         # Check if card is in the players hand
         card = uuidify(data["card"])
         if card not in self.hands[self.current_player]:
-            raise InvalidMoveError(f"The played card is not available in the current player's hand")
+            if card in self.cards:
+                c = self.cards[card].card_value
+            else:
+                c = f"ERR-NOTEXIST: {card}"
+            raise InvalidMoveError(f"The played card {c} is not available in the current player's hand")
 
         # Check if the card may be played considering the cards that were already played
         legal_move = False

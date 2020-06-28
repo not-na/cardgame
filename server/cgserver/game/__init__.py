@@ -241,4 +241,4 @@ class CGame(object, metaclass=abc.ABCMeta):
                 # Stop and delete the bot
                 p.bot.stop()
                 p.bot.delete()
-                del self.cg.server.users_uuid[pid]
+                # del self.cg.server.users_uuid[pid]

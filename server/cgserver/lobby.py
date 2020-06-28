@@ -101,6 +101,7 @@ class Lobby(object):
     def add_user(self, user: cgserver.user.User, role: int):
         if user.uuid in self.users:
             self.cg.error(f"Tried to add user {user.username} to lobby {self.uuid}, but they are already a member")
+            return
 
         self.game_data = None
 
@@ -149,32 +150,34 @@ class Lobby(object):
             }},
         }, user)
 
-    def add_bot(self, bot_type: str, from_user: cgserver.user.User):
+        self.cg.info(f"Added user with name {user.username} to lobby {self.uuid} with role {role}")
+
+    def add_bot(self, bot_type: str, from_user: cgserver.user.User) -> bool:
         if self.cg.server.game_reg[self.game].check_playercount(len(self.users), True):
             self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.lobby_full")
-            return
+            return False
 
         if bot_type not in self.cg.server.bot_reg:
             self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.unknown_type")
-            return
+            return False
 
         bot_cls = self.cg.server.bot_reg[bot_type]
 
         if not bot_cls.supports_game(self.game):
             self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.invalid_type")
-            return
+            return False
 
         bot_id = uuid.uuid4()
         u = cgserver.user.BotUser(self.cg.server,
                                   self.cg,
-                                  bot_cls.generate_name(),
+                                  bot_cls.generate_name(
+                                      blacklist=list(
+                                          [self.cg.server.users_uuid[uid].username for uid in self.users]
+                                      )
+                                  ),
                                   {"uuid": bot_id},
                                   )
         self.cg.server.users_uuid[bot_id] = u
-
-        self.add_user(u, ROLE_PLAYER)
-        self.user_ready[u.uuid] = True
-        self.check_ready()
 
         bot = bot_cls(self.cg,
                       bot_id,
@@ -182,6 +185,21 @@ class Lobby(object):
                       )
 
         u.bot = bot
+
+        self.add_user(u, ROLE_PLAYER)
+        self.user_ready[u.uuid] = True
+
+        # Update ready state immediately
+        self.send_to_all("cg:lobby.change", {
+            "users": {u.uuid.hex: {"ready": True}},
+        })
+
+        bot.start()
+
+        self.cg.info(f"Successfully added bot of type '{bot_type}' to lobby {self.uuid}")
+        self.check_ready()
+
+        return True
 
     def restore_bot(self, data: Dict) -> bool:
         if self.cg.server.game_reg[self.game].check_playercount(len(self.users), True):
@@ -210,6 +228,12 @@ class Lobby(object):
         self.add_user(u, ROLE_PLAYER)
 
         self.user_ready[u.uuid] = True
+
+        # Update ready state immediately
+        self.send_to_all("cg:lobby.change", {
+            "users": {u.uuid.hex: {"ready": True}},
+        })
+
         self.check_ready()
 
         try:
@@ -220,6 +244,7 @@ class Lobby(object):
             return False
 
         u.bot = bot
+        bot.start()
 
         return True
 

@@ -24,13 +24,25 @@ import hashlib
 import hmac
 import secrets
 import uuid
-from typing import Union, Optional
+from typing import Union, Optional, Dict, Any
 
 import cg
 
 
 class User(object):
     def __init__(self, server, c: cg.CardGame, user: str, udat: dict, auth=True):
+        """
+        User object representing a single user on the server.
+
+        Note that not all users are humans, some may be bots. This can be best checked
+        using ```instanceof(user, BotUser)```\\ .
+
+        :param server: server object the user belongs to
+        :param c: cg Singleton
+        :param user: username as a string
+        :param udat: saved user data as a dictionary, all keys optional
+        :param auth: whether this user supports authentication
+        """
         self.server = server
         self.cg = c
 
@@ -39,14 +51,16 @@ class User(object):
         if isinstance(self.pwd, str):
             self.pwd = self.pwd.encode()
         self.pwd_type: str = udat.get("pwd_type", "plaintext")
-        if auth and "pwd_salt" not in udat:
+        if not auth:
+            self.pwd_salt = None
+        elif "pwd_salt" not in udat:
             self.pwd_salt = secrets.token_bytes(self.cg.get_config_option("cg:server.secret_length"))
         else:
             self.pwd_salt = udat["pwd_salt"]
-        self.pwd_iterations: int = udat.get("pwd_iterations", self.get_pwd_iterations())
+        self.pwd_iterations: int = udat.get("pwd_iterations", self.get_pwd_iterations()) if auth else -1
 
         # Auto-upgrade plaintext passwords
-        if self.pwd_type == "plaintext":
+        if auth and self.pwd_type == "plaintext":
             self.set_pwd(self.pwd)
 
         self.uuid: uuid.UUID = cg.util.uuidify(udat.get("uuid", uuid.uuid4()))
@@ -60,7 +74,7 @@ class User(object):
 
         # TODO: add more user data here
 
-    def serialize(self):
+    def serialize(self) -> Dict[str, Any]:
         return {
             "pwd": self.pwd,
             "pwd_type": self.pwd_type,
@@ -71,7 +85,7 @@ class User(object):
         }
 
     @property
-    def state(self):
+    def state(self) -> str:
         return self.server.server.clients[self.cid].state
 
     def check_password(self, password: bytes, update=True) -> bool:
@@ -129,3 +143,17 @@ class BotUser(User):
 
         self.bot = None
         self.profile_img = "default"  # TODO: add different icons for different bots
+
+    def check_password(self, password: bytes, update=True) -> bool:
+        # Just in case, prevent anybody from logging in as a bot
+        return False
+
+    @property
+    def state(self):
+        return "bot"
+
+    def set_pwd(self, password):
+        raise RuntimeError("Cannot set password on bot user")
+
+    def serialize(self):
+        raise RuntimeError("Cannot serialize a bot user")

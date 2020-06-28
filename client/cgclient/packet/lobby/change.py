@@ -43,7 +43,7 @@ class ChangePacket(CGPacket):
 
     def receive(self, msg, cid=None):
         if self.cg.client.lobby is None:
-            self.cg.fatal(f"Not in lobby, but received lobby change packet")
+            self.cg.critical(f"Not in lobby, but received lobby change packet")
             self.cg.crash("Received lobby change packet while not in lobby")
 
         if "users" in msg:

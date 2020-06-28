@@ -31,14 +31,21 @@ class DumbDoppelkopfBot(DoppelkopfBot):
         # "BotGLaDOS",
         # "Somebody (Bot)",
         # TODO: add more names
+        "botA",
+        "botB",
+        "botC",
+        "botD",
     ]
 
     # Required for serialization and deserialization
     BOT_NAME = "dk_dumb"
 
     def select_move(self):
-        super().select_move()
-        return self.get_valid_moves()[0]
+        #super().select_move()
+        if self.state in ["tricks"]:
+            return self.get_valid_moves(allowed_types=["play_card"])[0]
+        else:
+            return self.get_valid_moves()[0]
 
     def serialize(self) -> Dict[str, Any]:
         sdat = super().serialize()

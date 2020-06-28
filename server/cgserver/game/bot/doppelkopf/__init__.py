@@ -22,12 +22,32 @@
 #
 import abc
 import itertools
+import random
 import uuid
 from typing import Dict, List, Any, Union, Set, Optional
 
 import cg
 from cg.util import uuidify
 from .. import Bot
+
+
+RANDOMIZE_DELAYS = True
+
+
+def gen_delay(base: float, var: float) -> float:
+    """
+    Randomizes delays slightly to appear more natural.
+
+    Can be turned off globally by setting :py:data:`RANDOMIZE_DELAYS` to ``False``\\ .
+
+    :param base: Base delay, equivalent to the mean
+    :param var: Variation, equivalent to the standard deviation
+    :return:
+    """
+    if RANDOMIZE_DELAYS:
+        return max(0, random.gauss(base, var))
+    else:
+        return base
 
 
 class Card(object):
@@ -74,6 +94,11 @@ class DoppelkopfBot(Bot):
 
     BOT_VERSION: int = 1
 
+    CARD_PLAY_DELAY: float = 1.0
+    CARD_PLAY_DELAY_VAR: float = 0.3
+    ANNOUNCE_DELAY: float = 0.2
+    ANNOUNCE_DELAY_VAR: float = 0.1
+
     round_num: int
 
     players: List[uuid.UUID]
@@ -99,6 +124,23 @@ class DoppelkopfBot(Bot):
 
     def __init__(self, c: cg.CardGame, bot_id: uuid.UUID, name: str):
         super().__init__(c, bot_id, name)
+
+        self.round_num = 0
+        self.players = []
+        self.player_index = 0
+
+        self.moves = []
+        self.state = "loading"
+        self.game_type = "normal"
+
+        self.slots = {}
+
+        self.current_re = ""
+
+        self.parties = {"re": set(), "kontra": set()}
+        self.modifiers = {"re": [], "kontra": []}
+
+        self.party = None
 
         self.cache = {}
 
@@ -324,15 +366,18 @@ class DoppelkopfBot(Bot):
                     if p not in self.parties["kontra"]:
                         self.parties["re"].add(player)
 
+    @abc.abstractmethod
     def select_move(self) -> Optional[Dict[str, Dict]]:
-        moves = self.get_valid_moves()
-        if len(moves) == 0:
-            return
+        pass
+        # moves = self.get_valid_moves()
+        # if len(moves) == 0:
+        #     return
 
     def do_move(self) -> None:
         move = self.select_move()
         if move is None:
             return
+        self.cg.info(f"Do move: {move} for bot {self.bot_id}")
 
         if move["type"] == "announcement":
             data = None if "data" not in move["data"] else move["data"]["data"]
@@ -345,6 +390,8 @@ class DoppelkopfBot(Bot):
             self.play_poverty_cards(move["data"]["cards"], move["data"]["type"])
 
     def announce(self, t: str, data: Any = None):
+        self.cg.info(f"Announcing type {t} with data {data}")
+        # TODO: randomize announces
         if t in ["continue_yes", "continue_no",
                  "adjourn_yes", "adjourn_no",
                  "cancel_yes", "cancel_no",
@@ -361,7 +408,7 @@ class DoppelkopfBot(Bot):
 
         elif t in ["solo_yes", "solo_no"]:
             if t == "solo_yes":
-                if "data" is None:
+                if data is None:
                     raise KeyError(f"cg:game.dk.announce packet with type 'solo_yes' must contain the key 'data'!")
                 elif "type" not in data:
                     raise KeyError(
@@ -404,7 +451,7 @@ class DoppelkopfBot(Bot):
             })
 
         elif t == "poverty_return":
-            if "data" is None:
+            if data is None:
                 raise KeyError(f"cg:game.dk.announce packet with type 'poverty_return' must contain the key 'data'!")
             elif "amount" not in data:
                 raise KeyError(
@@ -423,7 +470,7 @@ class DoppelkopfBot(Bot):
             })
 
         elif t == "wedding_clarification_trick":
-            if "data" is None:
+            if data is None:
                 raise KeyError(
                     f"cg:game.dk.announce packet with type 'wedding_clarification_trick' must contain the key 'data'!")
             elif "trick" not in data:
@@ -461,7 +508,7 @@ class DoppelkopfBot(Bot):
             })
 
         elif t == "black_sow_solo":
-            if "data" is None:
+            if data is None:
                 raise KeyError(f"cg:game.dk.announce packet with type 'solo_yes' must contain the key 'data'!")
             elif "type" not in data:
                 raise KeyError(
@@ -497,9 +544,19 @@ class DoppelkopfBot(Bot):
         :param card: Card to be played, must be in correct slot
         :return: None
         """
-        self.send_event("cg:game.dk.play_card", {
-            "player": self.bot_id.hex,
-            "card": card.card_id.hex
+        self.cg.info(f"Bot playing card {card.card_id} with value {card.card_value}")
+
+        if card not in self.own_hand:
+            self.cg.error(f"Bot trying to play card not in own hand")
+            # Still try, just in case it is legal
+
+        self.send_event("cg:event.delay", {
+            "event": "cg:game.dk.play_card",
+            "delay": gen_delay(self.CARD_PLAY_DELAY, self.CARD_PLAY_DELAY_VAR),
+            "data": {
+                "player": self.bot_id.hex,
+                "card": card.card_id.hex
+            },
         })
 
     def play_poverty_cards(self, cards: List[Card], t: str) -> None:
@@ -523,12 +580,15 @@ class DoppelkopfBot(Bot):
     def init_game(self, data: Dict[str, Any]) -> None:
         self.gamerules = data["gamerules"]
 
+        self.players = uuidify(data["player_list"])
+
         self.max_tricks = 12 if self.gamerules["dk.without9"] == "with_all" else \
             11 if self.gamerules["dk.without9"] == "with_four" else \
                 10 if self.gamerules["dk.without9"] == "without" else 0
 
     def init_round(self, data: Dict[str, Any]):
-        self.player_index = data["player_list"].index(self.bot_id)
+        self.players = uuidify(data["player_list"])
+        self.player_index = self.players.index(self.bot_id)
 
         self.slots = {
             "stack": [],
@@ -557,7 +617,7 @@ class DoppelkopfBot(Bot):
 
         self.cache.clear()
 
-    def get_valid_moves(self) -> List[Dict[str, Dict]]:
+    def get_valid_moves(self, allowed_types=None) -> List[Dict[str, Dict]]:
         """
         Returns a list of cards that could be played.
 
@@ -566,12 +626,15 @@ class DoppelkopfBot(Bot):
         moves = []
 
         if self.state == "w_for_ready":
-            moves.append(
-                {
-                    "type": "announcement",
-                    "data": {"type": "ready"}
-                }
-            )
+            if all([(u in self.cg.server.users_uuid) for u in self.players]):
+                # Only announce readiness if there are no fake players
+                # Hangs on /dev r otherwise
+                moves.append(
+                    {
+                        "type": "announcement",
+                        "data": {"type": "ready"}
+                    }
+                )
 
             if self.gamerules.get("dk.throw", False):
                 legal_throw = False
@@ -1162,6 +1225,9 @@ class DoppelkopfBot(Bot):
             if list(map(lambda x: x["type"], moves)).count("play_card") == 0:
                 moves.insert(0, None)
 
+        if allowed_types is not None:
+            moves = list(filter(lambda m: m["type"] in allowed_types, moves))
+
         return moves
 
     def add_move(self, player: str, type: str, data: Any, datadata: Any = None):
@@ -1181,6 +1247,8 @@ class DoppelkopfBot(Bot):
         # Update any internal state that is changed by the packet
         # Similar to a real client
         # Then call the appropriate handler with the packet data
+        if packet != "cg:game.dk.card.transfer":
+            self.cg.info(f"Received packet {packet} with data {data} on {self.bot_id}")
 
         if packet == "cg:game.start":
             self.initialize(data)
@@ -1232,7 +1300,7 @@ class DoppelkopfBot(Bot):
 
     @classmethod
     def supports_game(cls, game: str) -> bool:
-        return game == "dk"
+        return game == "doppelkopf"
 
     # The event handlers below are not marked as abstract, since that would require all
     # subclasses to implement them, even if they are unneccessary for the bot
@@ -1313,7 +1381,11 @@ class DoppelkopfBot(Bot):
             if data["card_value"] != "":
                 card.card_value = data["card_value"]
 
-        self.slots[data["from_slot"]].remove(card)
+            self.slots[data["from_slot"]].remove(card)
+
+        if data["to_slot"] not in self.slots:
+            self.slots[data["to_slot"]] = []
+
         self.slots[data["to_slot"]].append(card)
 
         self.cache["pigs_call_self"] = self.cache["superpigs_call_self"] = False
@@ -1359,4 +1431,4 @@ class DoppelkopfBot(Bot):
             self.cache["wedding_find_trick"] = data["wedding_find_trick"]
 
     def on_status_message(self, data: Dict) -> None:
-        pass
+        self.cg.warn(f"Bot got status message {data['message']} of type {data['type']} with data {data.get('data', None)}")

@@ -386,6 +386,7 @@ class DedicatedServer(object):
     # Event Handlers
     def register_event_handlers(self):
         self.cg.add_event_listener("cg:command.stop.do", self.handler_commandstop)
+        self.cg.add_event_listener("cg:event.delay", self.handler_eventdelay)
         self.cg.add_event_listener("cg:console.stdin.recvline", self.handler_consolerecvline)
 
         self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister)
@@ -398,6 +399,16 @@ class DedicatedServer(object):
         # Ensure that the server console loop exits if a stop command is issued via the network
         self.run_console = False
         # TODO: actually interrupt the console loop
+
+    def handler_eventdelay(self, event: str, data: Dict):
+        # Schedule event to be run later
+        self.schedule_function(
+            self._send_event,
+            data["delay"],
+            0,
+            event=data["event"],
+            data=data["data"],
+        )
 
     def handler_consolerecvline(self, event: str, data: Dict):
         if data["data"].startswith("/"):
@@ -417,3 +428,6 @@ class DedicatedServer(object):
 
     def handler_dobotregister(self, event: str, data: Dict):
         cgserver.game.bot.register_bots(data["registrar"])
+
+    def _send_event(self, dt, event, data):
+        self.cg.send_event(event, data)
