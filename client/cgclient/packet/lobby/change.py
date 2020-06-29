@@ -166,5 +166,17 @@ class ChangePacket(CGPacket):
 
         if "supported_bots" in msg:
             self.cg.info(f"Supported bots: {msg['supported_bots']}")
-            # TODO: implement this
-
+            if len(msg["supported_bots"]) > 4:
+                self.cg.warn(f"Only 4 bot types are supported, but {len(msg['supported_bots'])} were found!")
+            for btn in self.cg.client.gui.servermain.s_lobby.c_add_bot.btns.copy():
+                btn.label = ""
+                btn.enabled = False
+                btn.bot_type = None
+            for i, bot_type in enumerate(msg["supported_bots"]):
+                if i >= 4:
+                    break
+                bot_name = self.cg.client.gui.peng.tl(f"cg:gui.menu.smain.lobby.bot_name.{bot_type}")
+                self.cg.client.gui.servermain.s_lobby.c_add_bot.btns[i].enabled = True
+                self.cg.client.gui.servermain.s_lobby.c_add_bot.btns[i].label = \
+                    self.cg.client.gui.peng.tl(f"cg:gui.menu.smain.lobby.add_bot.label", {"bot_name": bot_name})
+                self.cg.client.gui.servermain.s_lobby.c_add_bot.btns[i].bot_type = f"bot_{bot_type}"

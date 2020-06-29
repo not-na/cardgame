@@ -27,6 +27,7 @@ import uuid
 from typing import Dict, List, Any, Union, Set, Optional
 
 import cg
+from cg import CardGame
 from cg.util import uuidify
 from .. import Bot
 
@@ -125,7 +126,7 @@ class DoppelkopfBot(Bot):
     def __init__(self, c: cg.CardGame, bot_id: uuid.UUID, name: str):
         super().__init__(c, bot_id, name)
 
-        self.round_num = 0
+        self.round_num = 1
         self.players = []
         self.player_index = 0
 
@@ -687,13 +688,13 @@ class DoppelkopfBot(Bot):
             moves.append(
                 {
                     "type": "announcement",
-                    "data": {"type": "reservation_yes"}
+                    "data": {"type": "reservation_no"}
                 }
             )
             moves.append(
                 {
                     "type": "announcement",
-                    "data": {"type": "reservation_no"}
+                    "data": {"type": "reservation_yes"}
                 }
             )
 
@@ -1230,8 +1231,8 @@ class DoppelkopfBot(Bot):
 
         return moves
 
-    def add_move(self, player: str, type: str, data: Any, datadata: Any = None):
-        self.moves.append({uuidify(player): {type: data}})
+    def add_move(self, player: uuid.UUID, type: str, data: Any, datadata: Any = None):
+        self.moves.append({player: {type: data}})
         if datadata is not None:
             self.moves[-1][uuidify(player)]["data"] = datadata
 
@@ -1264,6 +1265,8 @@ class DoppelkopfBot(Bot):
             self.on_scoreboard(data)
         elif packet == "cg:game.dk.round.change":
             self.on_round_change(data)
+        elif packet == "cg:game.dk.announce":
+            self.on_announce(data)
         elif packet == "cg:status.message":
             # TODO: do some error logging if an error occured
             # TODO: figure out what to do if a bot tries to play an invalid card
@@ -1278,21 +1281,24 @@ class DoppelkopfBot(Bot):
             "uuid": self.bot_id.hex,
             "name": self.name,
             "type": self.BOT_NAME,
+            "version": self.BOT_VERSION,
 
             # Game state data
             # TODO: implement game state saving
         }
 
     @classmethod
-    def deserialize(cls, cg, lobby, data) -> "DoppelkopfBot":
+    def deserialize(cls, c: CardGame, lobby, data) -> "DoppelkopfBot":
         if data["type"] != cls.BOT_NAME:
             # Sanity check
             raise TypeError(f"Tried to deserialize '{data['type']}' bot as a '{cls.BOT_NAME}' bot")
         if data["version"] != cls.BOT_VERSION:
             raise TypeError(
                 f"Tried to deserialize '{data['type']}' bot of version {data['version']}, but we are at version {cls.BOT_VERSION}!")
+        if not isinstance(data["uuid"], uuid.UUID):
+            data["uuid"] = uuidify(data["uuid"])
 
-        bot = cls(cg, data["uuid"], data["name"])
+        bot = cls(c, data["uuid"], data["name"])
 
         # TODO: implement game state restoration
 
@@ -1357,7 +1363,7 @@ class DoppelkopfBot(Bot):
                 self.cache["superpigs_call_self"] = self.gamerules["dk.superpigs"] == "on_play"
                 self.do_move()
 
-        elif data["type"] in ["continue_yes", "adjourn_yes", "cancel_yes", "end_yes"]:
+        if data["type"] in ["continue_yes", "adjourn_yes", "cancel_yes", "end_yes"]:
             if self.cache.get("continue_choice", "") != data["type"]:
                 if self.cache.get("continue_choice", "") != "":
                     self.announce(self.cache["continue_choice"][:-4] + "_no")
@@ -1371,10 +1377,15 @@ class DoppelkopfBot(Bot):
             else:
                 color, value = data["card_value"][0], data["card_value"][1:]
             card = Card(uuidify(data["card_id"]), data["to_slot"], color, value)
+
+            if len(self.slots["stack"]) == self.max_tricks * 4 - 1:
+                self.send_event("cg:game.dk.ready_to_deal", {
+                    "player": self.bot_id.hex
+                })
         else:
             card = self.get_card(uuidify(data["card_id"]))
             if data["to_slot"] == "table":
-                self.add_move(data["player"], "card", card)
+                self.add_move(self.current_player, "card", card)
                 if self.game_type in ["normal", "ramsch"]:
                     if card.card_value == "cq":
                         self.update_party(self.current_player, "re")

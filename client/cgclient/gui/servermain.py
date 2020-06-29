@@ -684,6 +684,8 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.c_invite.visible = True
+            self.c_add_bot.visible = False
+            self.c_kick.visible = False
 
         self.invitebtn.addAction("click", f)
 
@@ -704,19 +706,18 @@ class LobbySubMenu(peng3d.gui.SubMenu):
 
         self.leavebtn.addAction("click", f)
 
-        # Game Button
+        # Bot Button
         self.botbtn = cgclient.gui.CGButton(
             "gamebtn", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 0], [3, 2]),
             label=self.peng.tl("cg:gui.menu.smain.lobby.botbtn.label")
         )
-        self.botbtn.enabled = False
         self.addWidget(self.botbtn)
 
-        # TODO Implement adding bots
-
         def f():
-            pass
+            self.c_add_bot.visible = not self.c_add_bot.visible
+            self.c_kick.visible = False
+            self.c_invite.visible = False
 
         self.botbtn.addAction("click", f)
 
@@ -788,6 +789,13 @@ class LobbySubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.c_invite)
 
+        self.c_add_bot = AddBotDialog(
+            "c_add_bot", self, self.window, self.peng,
+            pos=self.grid.get_cell([2, 5], [5, 9]),
+            size=None
+        )
+        self.addWidget(self.c_add_bot)
+
         self.c_kick = KickDialog(
             "c_kick", self, self.window, self.peng,
             pos=self.grid.get_cell([3, 6], [3, 6]),
@@ -804,6 +812,11 @@ class LobbySubMenu(peng3d.gui.SubMenu):
             "cg:gui.menu.smain.gamerule.heading",
             {"game": self.peng.tl(f"cg:game.{data['game']}")}
         )
+
+    def on_exit(self, new):
+        self.c_invite.visible = False
+        self.c_add_bot.visible = False
+        self.c_kick.visible = False
 
 
 class GameruleSubMenu(peng3d.gui.SubMenu):
@@ -1033,9 +1046,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         def f():
             if self.chosen_game is None:
                 return
-            #self.peng.cg.client.send_message("cg:lobby.change", {
-            #    "gamerules": self.save_games[self.chosen_game]["gamerules"]
-            #})
+
             self.peng.cg.client.send_message("cg:game.load", {
                 "game_id": self.chosen_game,
                 "data": self.save_games[self.chosen_game]["data"],
@@ -1081,7 +1092,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
             for j in range(2):
                 btn = AdjournGameButton(
                     f"button{j}:{i}", self, self.window, self.peng,
-                    pos=self.grid.get_cell([j * 4, 3 - i * 2], [4, 2]),
+                    pos=self.grid.get_cell([i * 4, 3 - j * 2], [4, 2]),
                 )
                 self.addWidget(btn)
                 self.save_btns.append(btn)
@@ -1925,7 +1936,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         self.addLayer(self.bg_layer)
 
         def f():
-            if self._player is not None and not self.submenu.c_invite.visible:
+            if self._player is not None and not self.submenu.c_invite.visible and not self.submenu.c_add_bot.visible \
+                    and not self.submenu.c_kick.visible:
                 self.bg_layer.switchImage("hover")
 
         self.addAction("hover_start", f)
@@ -1936,12 +1948,16 @@ class PlayerButton(peng3d.gui.LayeredWidget):
         self.addAction("hover_end", f)
 
         def f():
-            self.bg_layer.switchImage("press")
+            if not self.submenu.c_invite.visible and not self.submenu.c_add_bot.visible \
+                    and not self.submenu.c_kick.visible:
+                self.bg_layer.switchImage("press")
 
         self.addAction("press", f)
 
         def f():
-            self.bg_layer.switchImage("hover")
+            if not self.submenu.c_invite.visible and not self.submenu.c_add_bot.visible \
+                    and not self.submenu.c_kick.visible:
+                self.bg_layer.switchImage("hover")
 
         self.addAction("click", f)
 
@@ -2038,7 +2054,8 @@ class PlayerButton(peng3d.gui.LayeredWidget):
 
     @property
     def clickable(self):
-        return super().clickable and self._player is not None and not self.submenu.c_invite.visible
+        return super().clickable and self._player is not None and not self.submenu.c_invite.visible and not \
+            self.submenu.c_add_bot.visible and not self.submenu.c_kick.visible
 
     @property
     def player(self):
@@ -2138,7 +2155,10 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                     self.kickbtn.pressed:
                 self.submenu.c_kick.init_kick(self.player)
                 self.submenu.c_kick.visible = True
+                self.submenu.c_invite.visible = False
+                self.submenu.c_add_bot.visible = False
                 self.kickbtn.pressed = False
+                self.bg_layer.switchImage("idle")
                 return
             self.kickbtn.pressed = False
 
@@ -2309,6 +2329,46 @@ class InviteDialog(peng3d.gui.Container):
             self.input_field.text = ""
 
         self.cancelbtn.addAction("click", f)
+
+
+class AddBotDialog(peng3d.gui.Container):
+    def __init__(self, name, submenu, window, peng, pos, size):
+        super().__init__(name, submenu, window, peng, pos, size)
+
+        self.visible = False
+
+        self.bg_widget = peng3d.gui.Widget("bot_bg", self, self.window, self.peng,
+                                           pos=(0, 0),
+                                           size=(lambda sw, sh: (sw, sh)))
+        self.bg_widget.setBackground(peng3d.gui.button.FramedImageBackground(
+            self.bg_widget,
+            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+        self.bg_widget.clickable = False
+        self.addWidget(self.bg_widget)
+
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [1, 4], [60, 30])
+
+        self.btns = []
+        for i in range(4):
+            btn = cgclient.gui.CGButton(
+                f"btn{i}", self, self.window, self.peng,
+                pos=self.grid.get_cell([0, 3-i], [1, 1]),
+                label=self.peng.tl("cg:gui.menu.smain.lobby.add_bot.label")
+            )
+            self.addWidget(btn)
+
+            def f(button):
+                self.peng.cg.client.send_message("cg:lobby.invite", {
+                    "username": button.bot_type
+                })
+                self.visible = False
+            btn.addAction("click", f, btn)
+
+            self.btns.append(btn)
 
 
 class KickDialog(peng3d.gui.Container):

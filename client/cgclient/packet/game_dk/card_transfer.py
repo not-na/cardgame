@@ -82,6 +82,7 @@ class CardTransferPacket(CGPacket):
 
             # Get the card
             card: cgclient.gui.card.Card = self.cg.client.game.cards[card_id]
+            card.value = msg["card_value"]
 
             # Check for sanity of supplied data
             if card not in self.cg.client.game.slots[msg["from_slot"]]:

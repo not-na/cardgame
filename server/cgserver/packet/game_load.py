@@ -91,7 +91,7 @@ class GameLoadPacket(CGPacket):
 
         # Check for and load bot players
         if "bots" in data:
-            for bot in data:
+            for bot in data["bots"]:
                 lobby.restore_bot(bot)
 
         lobby.update_gamerules(data["gamerules"])

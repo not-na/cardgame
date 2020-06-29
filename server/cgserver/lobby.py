@@ -152,19 +152,22 @@ class Lobby(object):
 
         self.cg.info(f"Added user with name {user.username} to lobby {self.uuid} with role {role}")
 
-    def add_bot(self, bot_type: str, from_user: cgserver.user.User) -> bool:
+    def add_bot(self, bot_type: str, from_user: cgserver.user.User = None) -> bool:
         if self.cg.server.game_reg[self.game].check_playercount(len(self.users), True):
-            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.lobby_full")
+            if from_user is not None:
+                self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.lobby_full")
             return False
 
         if bot_type not in self.cg.server.bot_reg:
-            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.unknown_type")
+            if from_user is not None:
+                self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.unknown_type")
             return False
 
         bot_cls = self.cg.server.bot_reg[bot_type]
 
         if not bot_cls.supports_game(self.game):
-            self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.invalid_type")
+            if from_user is not None:
+                self.cg.server.send_status_message(from_user, "warning", "cg:msg.lobby.add_bot.invalid_type")
             return False
 
         bot_id = uuid.uuid4()
@@ -197,7 +200,8 @@ class Lobby(object):
         bot.start()
 
         self.cg.info(f"Successfully added bot of type '{bot_type}' to lobby {self.uuid}")
-        self.check_ready()
+        if from_user is not None:  # If the bot isn't added by the server while filling up the lobby
+            self.check_ready()
 
         return True
 
@@ -220,7 +224,7 @@ class Lobby(object):
 
         u = cgserver.user.BotUser(self.cg.server,
                                   self.cg,
-                                  bot_cls.get("name", "<ERROR Bot>"),
+                                  data.get("name", "<ERROR Bot>"),
                                   data,  # Only UUID necessary, but its simpler this way
                                   )
         self.cg.server.users_uuid[u.uuid] = u
@@ -237,7 +241,7 @@ class Lobby(object):
         self.check_ready()
 
         try:
-            bot = bot_cls.deserialize(cg, self, data)
+            bot = bot_cls.deserialize(self.cg, self, data)
         except Exception:
             self.cg.critical(f"Could not deserialize bot")
             self.cg.exception(f"Exception while deserializing bot:")
@@ -277,6 +281,10 @@ class Lobby(object):
 
         self.cg.send_event("cg:lobby.ready", {"lobby": self.uuid})
         self.cg.send_event(f"cg:lobby.ready.{self.game}", {"lobby": self.uuid})
+
+        if self.game == "doppelkopf":
+            while not self.cg.server.game_reg[self.game].check_playercount(len(self.users), ignore_devmode=True):
+                self.add_bot("dk_dumb")
 
         if self.game_data is None:
             g = self.cg.server.game_reg[self.game](self.cg, self.uuid)

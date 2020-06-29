@@ -407,14 +407,6 @@ class DoppelkopfGame(CGame):
     def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
         super().__init__(c, lobby)
 
-        self.fake_players: List[uuid.UUID] = []
-
-        if self.DEV_MODE:
-            while len(self.players) < 4:
-                pid = uuid.uuid4()
-                self.players.append(pid)
-                self.fake_players.append(pid)
-
         self.player_decisions: Dict[str, Set[uuid.UUID]] = {
             "continue": set(),
             "adjourn": set(),
@@ -423,7 +415,7 @@ class DoppelkopfGame(CGame):
         }
 
         self.rounds: List[DoppelkopfRound] = []
-        self.round_num: int = 0
+        self.round_num: int = 1
         self.current_round: Optional[DoppelkopfRound] = None
 
         self.game_summaries = []
@@ -451,7 +443,7 @@ class DoppelkopfGame(CGame):
         self.start_round(self.round_num)
 
     def start_round(self, round_num: int):
-        players = self.players[round_num % 4:] + self.players[:round_num % 4]  # Each round, another player begins
+        players = self.players[(round_num - 1) % 4:] + self.players[:(round_num - 1) % 4]  # Each round, another player begins
 
         self.current_round = DoppelkopfRound(self, players)
         self.rounds.append(self.current_round)
@@ -465,12 +457,15 @@ class DoppelkopfGame(CGame):
         self.current_round.start()
 
     def collect_statistics(self):
+        botgame = False
+        for i in self.players:
+            botgame |= isinstance(self.cg.server.users_uuid[i], user.BotUser)
         data = {
             "game_id": self.game_id,
             "game_data": {
                 "creation_time": self.creation_time,
                 "rounds": {},
-                "botgame": len(self.fake_players) == 0
+                "botgame": botgame
             },
             "players": []
         }
@@ -487,8 +482,7 @@ class DoppelkopfGame(CGame):
         else:
             data["game_data"]["rounds"] = self.move_history
         for p in self.players:
-            if p not in self.fake_players:
-                data["players"].append(p.hex)
+            data["players"].append(p.hex)
 
         self.cg.send_event("cg:stats.game.new", data)
 
@@ -588,7 +582,7 @@ class DoppelkopfGame(CGame):
             elif self.gamerules["dk.buck_round"] == "parallel":
                 self.buckrounds.extend(data["buckround_events"] * [int(self.gamerules["dk.buck_amount"])])
 
-            self.round_num += 1  # Only increase round_num if the game wasn't cancelled
+            self.round_num += 1
         else:
             self.scores.append([0, 0, 0, 0])
 
@@ -600,9 +594,6 @@ class DoppelkopfGame(CGame):
     # Button Handling
     def handle_continue_play(self, event: str, data: Dict):
         self.player_decisions["continue"].add(data["player"])
-        if self.DEV_MODE:
-            for p in self.fake_players:
-                self.player_decisions["continue"].add(p)
         self.send_to_all("cg:game.dk.announce", {
             "announcer": data["player"],
             "type": "continue_yes"
@@ -625,9 +616,6 @@ class DoppelkopfGame(CGame):
 
     def handle_cancel_play(self, event: str, data: Dict):
         self.player_decisions["cancel"].add(data["player"])
-        if self.DEV_MODE:
-            for p in self.fake_players:
-                self.player_decisions["cancel"].add(p)
         self.send_to_all("cg:game.dk.announce", {
             "announcer": data["player"],
             "type": "cancel_yes"
@@ -650,9 +638,6 @@ class DoppelkopfGame(CGame):
 
     def handle_end_play(self, event: str, data: Dict):
         self.player_decisions["end"].add(data["player"])
-        if self.DEV_MODE:
-            for p in self.fake_players:
-                self.player_decisions["end"].add(p)
         self.send_to_all("cg:game.dk.announce", {
             "announcer": data["player"],
             "type": "end_yes"
@@ -676,9 +661,6 @@ class DoppelkopfGame(CGame):
 
     def handle_adjourn_play(self, event: str, data: Dict):
         self.player_decisions["adjourn"].add(data["player"])
-        if self.DEV_MODE:
-            for p in self.fake_players:
-                self.player_decisions["adjourn"].add(p)
         self.send_to_all("cg:game.dk.announce", {
             "announcer": data["player"],
             "type": "adjourn_yes"
@@ -712,6 +694,7 @@ class DoppelkopfGame(CGame):
             "bots": [
                 self.cg.server.users_uuid[i].bot.serialize() for i in self.players if isinstance(self.cg.server.users_uuid[i], user.BotUser)
             ],
+            "player_order": [i.hex for i in self.players],
             "gamerules": self.gamerules,
             "round_num": self.round_num,
             "buckrounds": self.buckrounds,
@@ -737,7 +720,7 @@ class DoppelkopfGame(CGame):
         game = cls(cg, lobby)
         game.game_id = uuidify(data["id"])
         game.creation_time = data["creation_time"]
-        game.players = [uuidify(p) for p in data["players"]]
+        game.players = uuidify(data["player_order"])
         game.gamerules = data["gamerules"]
         game.round_num = data["round_num"]
         game.buckrounds = data["buckrounds"]
@@ -938,18 +921,18 @@ class DoppelkopfRound(object):
         elif from_slot == "stack":
             if "hand" in to_slot:
                 receiver = self.players[int(to_slot.strip("hand"))]
-                self.game.send_to_user(receiver, "cg:game.dk.card.transfer", {
-                    "card_id": card.card_id.hex,
-                    "card_value": card.card_value,
-                    "from_slot": from_slot,
-                    "to_slot": to_slot
-                })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
                     "card_value": "",
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[receiver])
+                self.game.send_to_user(receiver, "cg:game.dk.card.transfer", {
+                    "card_id": card.card_id.hex,
+                    "card_value": card.card_value,
+                    "from_slot": from_slot,
+                    "to_slot": to_slot
+                })
             else:
                 raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
 
@@ -2248,8 +2231,7 @@ class DoppelkopfRound(object):
 
     def handle_deal(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             self.game.cg.warn(f"Ignored ready to deal due to invalid player")
             self.game.cg.warn(f"Player: {data['player']}")
             return
@@ -2259,17 +2241,6 @@ class DoppelkopfRound(object):
         # Add the player to the loaded set
         self.players_loaded.add(data["player"])
         self.game.cg.info(f"Player {data['player']} is done loading")
-
-        if self.game.DEV_MODE:
-            self.game.cg.info(f"Added fake players to ready list: {self.game.fake_players}")
-            for p in self.game.fake_players:
-                self.players_loaded.add(p)
-
-        # Add all bots to ready list
-        # Does not work if only bots play
-        for p in self.game.players:
-            if p not in self.game.fake_players and isinstance(self.game.cg.server.users_uuid[p], user.BotUser):
-                self.players_loaded.add(p)
 
         if len(self.players_loaded) == 4:
             self.game.cg.info(f"All players have loaded, dealing cards")
@@ -2283,8 +2254,7 @@ class DoppelkopfRound(object):
 
     def handle_ready(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "w_for_ready":
             raise GameStateError(f"Game state for ready handling must be 'w_for_ready', not {self.game_state}!")
@@ -2319,8 +2289,7 @@ class DoppelkopfRound(object):
 
     def handle_throw(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "w_for_ready":
             raise GameStateError(f"Game state for throw handling must be 'w_for_ready', not {self.game_state}!")
@@ -2394,8 +2363,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation(self, event: str, data: Dict):
         # Check for correct states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for reservation handling must be 'reservations', not {self.game_state}!")
@@ -2444,8 +2412,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_solo(self, event: str, data: Dict):
         # Check for correct states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for solo handling must be 'reservations', not {self.game_state}!")
@@ -2542,8 +2509,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_throw(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for throw handling must be 'reservations', not {self.game_state}!")
@@ -2672,8 +2638,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_pigs(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for pigs handling must be 'reservations', not {self.game_state}!")
@@ -2782,8 +2747,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_superpigs(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for superpigs handling must be 'reservations', not {self.game_state}!")
@@ -2879,8 +2843,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for poverty handling must be 'reservations', not {self.game_state}!")
@@ -2972,8 +2935,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty_pass_card(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(
@@ -3063,8 +3025,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_poverty_accept(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(
@@ -3251,8 +3212,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_wedding(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for wedding handling must be 'reservations', not {self.game_state}!")
@@ -3326,8 +3286,7 @@ class DoppelkopfRound(object):
 
     def handle_reservation_wedding_clarification_trick(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "reservations":
             raise GameStateError(f"Game state for wedding clarification trick handling must be 'reservations', not"
@@ -3351,8 +3310,7 @@ class DoppelkopfRound(object):
 
     def handle_play_card(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "tricks":
             self.game.cg.server.send_status_message(uuidify(data["player"]), "warn", "cg:msg.game.dk.pc_wrong_phase")
@@ -3714,8 +3672,7 @@ class DoppelkopfRound(object):
 
     def handle_call_pigs(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
@@ -3805,8 +3762,7 @@ class DoppelkopfRound(object):
 
     def handle_call_superpigs(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_type not in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                                   "ramsch", "ramsch_sw", "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs",
@@ -3873,8 +3829,7 @@ class DoppelkopfRound(object):
 
     def handle_call_re(self, event: str, data: Dict):  # Also for Kontra
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "tricks":
             raise GameStateError(
@@ -3975,8 +3930,7 @@ class DoppelkopfRound(object):
 
     def handle_call_denial(self, event: str, data: Dict):  # Also for Kontra
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "tricks":
             raise GameStateError(
@@ -4058,8 +4012,7 @@ class DoppelkopfRound(object):
 
     def handle_black_sow_solo(self, event: str, data: Dict):
         # Check for valid states
-        if uuidify(data["player"]) not in self.game.fake_players and \
-                self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
+        if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
         if self.game_state != "black_sow_solo":
             raise GameStateError(
@@ -4112,6 +4065,7 @@ class DoppelkopfRound(object):
         })
 
     def handle_command(self, event: str, data: Dict):
+        return
         packet = f"cg:game.dk.{data['packet']}"
 
         try:
@@ -4242,6 +4196,7 @@ class DoppelkopfRound(object):
             })
 
     def do_autoplay(self):
+        return
         for i in range(12):
             players = self.players[self.players.index(self.current_player):] + \
                       self.players[:self.players.index(self.current_player)]

@@ -1446,6 +1446,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         self.separation_bars = [[], [], [], [], []]
 
     def init_game(self, player_list: List[uuid.UUID]):
+        self.reset()
+
         self.player_list = player_list
         for i, uid in enumerate(self.player_list):
             self.player_labels[i].label = self.peng.cg.client.get_user(uid).username
@@ -1556,6 +1558,40 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         # Update total scores
         for i, j in enumerate(self.score_labels):
             j.label = points[i]
+
+    def reset(self):
+        self.continuebtn.pressed = False
+        self.continuebtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.continuebtn.label")
+
+        self.adjournbtn.pressed = False
+        self.adjournbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.adjournbtn.label")
+
+        self.quitbtn.pressed = False
+        self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label")
+
+        self.cancelbtn.pressed = False
+        self.cancelbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.cancelbtn.label")
+
+        for i in self.separation_bars:
+            for bar in i:
+                bar.visible = False
+        self.separation_bars = [[], [], [], [], []]
+
+        for i in self.score_labels:
+            i.visible = False
+        self.score_labels = []
+
+        self.container.size = (lambda sw, sh: (sw, 0))
+        self.container._scrollbar.visible = False
+
+        for i in self.player_scores:
+            for s in i:
+                s.visible = False
+        self.player_scores = [[], [], [], []]
+
+        for i in self.game_summaries:
+            i.visible = False
+        self.game_summaries = []
 
     def _lambda_score_pos(self, i, y):
         return lambda sw, sh, ww, wh: (sw / 5 * i, y - 3)

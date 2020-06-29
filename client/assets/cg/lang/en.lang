@@ -11,7 +11,33 @@ game.doppelkopf=Doppelkopf
 
 game.doppelkopf.game_type.None=Game type NONE
 game.doppelkopf.game_type.normal=Normal game
+game.doppelkopf.game_type.wedding=Wedding
 game.doppelkopf.game_type.silent_wedding=Silent wedding
+game.doppelkopf.game_type.poverty=Poverty
+game.doppelkopf.game_type.ramsch=Ramsch
+game.doppelkopf.game_type.ramsch_sw=Ramsch (Silent wedding)
+game.doppelkopf.game_type.black_sow=Black Sow
+game.doppelkopf.game_type.solo_queen=Queens solo
+game.doppelkopf.game_type.solo_jack=Jacks solo
+game.doppelkopf.game_type.solo_clubs=Clubs solo
+game.doppelkopf.game_type.solo_spades=Spades solo
+game.doppelkopf.game_type.solo_hearts=Hearts solo
+game.doppelkopf.game_type.solo_diamonds=Diamonds solo
+game.doppelkopf.game_type.solo_fleshless=Fleshless solo
+game.doppelkopf.game_type.solo_null=Null solo
+game.doppelkopf.game_type.solo_boneless=Boneless solo
+game.doppelkopf.game_type.solo_pure_clubs=Pure clubs solo
+game.doppelkopf.game_type.solo_pure_spades=Pure spades solo
+game.doppelkopf.game_type.solo_pure_hearts=Pure hearts solo
+game.doppelkopf.game_type.solo_pure_diamonds=Pure diamonds solo
+game.doppelkopf.game_type.solo_king=Kings solo
+game.doppelkopf.game_type.solo_brothel=Jacks-Queens solo
+game.doppelkopf.game_type.solo_noble_brothel=Queens-Kings solo
+game.doppelkopf.game_type.solo_picture=Image solo
+game.doppelkopf.game_type.solo_monastery=Jacks-Kings solo
+game.doppelkopf.game_type.solo_aces=Aces solo
+game.doppelkopf.game_type.solo_10s=Tens solo
+game.doppelkopf.game_type.solo_9s=Nines solo
 
 game.doppelkopf.extra.re_win=Re wins
 game.doppelkopf.extra.kontra_win=Kontra wins
@@ -103,6 +129,11 @@ msg.lobby.invite.accept.not_invited=You have never been invited to this lobby!
 msg.lobby.invite.accept.lobby_started_game=This lobby has already started a game!
 msg.lobby.invite.accept.lobby_full=The lobby is already full!
 msg.lobby.invite.decline=The user {username} has declined your invitation!
+
+msg.lobby.add_bot.success=Bot added successfully!
+msg.lobby.add_bot.lobby_full=The lobby is already full!
+msg.lobby.add_bot.unknown_type=Unknown bot type!
+msg.lobby.add_bot.invalid_type=The bot type is invalid for this game!
 
 msg.lobby.kick.user_not_exist=The user with the UUID {uuid} does not exist!
 msg.lobby.kick.user_not_in_lobby=The user {username} is not in this lobby!
@@ -214,6 +245,8 @@ announce.no60.kontra=less than 60 (Kontra)
 announce.no30.kontra=less than 30 (Kontra)
 announce.black.kontra=black (Kontra)
 
+gui.menu.status_msg.okbtn.label=Ok
+
 gui.menu.load.progress.loading=Loading...
 
 gui.menu.serverselect.title.playbtn.label=Play
@@ -316,6 +349,13 @@ gui.menu.smain.lobby.invite_heading=Enter username:
 gui.menu.smain.lobby.invite_okbtn.label=Invite
 gui.menu.smain.lobby.invite_cancelbtn.label=Cancel
 
+gui.menu.smain.lobby.add_bot.label=Add {bot_name}
+
+gui.menu.smain.lobby.bot_name.dk_dumb=easy bot
+gui.menu.smain.lobby.bot_name.dk_random=medium bot
+gui.menu.smain.lobby.bot_name.dk_hard=hard bot
+gui.menu.smain.lobby.bot_name.dk_ki=very hard bot
+
 gui.menu.smain.lobby_inv.label_main=You have been invited by {username} into a lobby. Do you want to accept the invitation?
 gui.menu.smain.lobby_inv.confirm=Accept
 gui.menu.smain.lobby_inv.cancel=Decline
@@ -339,6 +379,8 @@ gui.menu.smain.template.deletebtn.label=Delete template
 gui.menu.smain.adjourn.heading=Load adjourned game
 gui.menu.smain.adjourn.backbtn.label=Back
 gui.menu.smain.adjourn.loadbtn.label=Load game
+gui.menu.smain.adjourn.nextbtn.label=Next page
+gui.menu.smain.adjourn.prevbtn.label=Previous page
 
 gui.menu.ingame.ingamegui.readybtn.label=Ready!
 gui.menu.ingame.ingamegui.throwbtn.label=Throw!
@@ -363,6 +405,7 @@ gui.menu.ingame.scoreboard.cancelbtn.label=Cancel game
 gui.menu.ingame.scoreboard.cancelbtn.label2=Cancel game ({amount})
 
 gui.menu.settings.exitbtn.label=Back
+
 
 question.unknown.text=Question?
 question.unknown.choice1=Perhaps

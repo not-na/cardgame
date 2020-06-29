@@ -10,8 +10,34 @@ window.caption=Card Game
 game.doppelkopf=Doppelkopf
 
 game.doppelkopf.game_type.None=Spieltyp NONE
-game.doppelkopf.game_type.normal=Normales Spiel
+game.doppelkopf.game_type.normal=Normal
+game.doppelkopf.game_type.wedding=Hochzeit
 game.doppelkopf.game_type.silent_wedding=Stille Hochzeit
+game.doppelkopf.game_type.poverty=Armut
+game.doppelkopf.game_type.ramsch=Ramsch
+game.doppelkopf.game_type.ramsch_sw=Ramsch (Stille Hochzeit)
+game.doppelkopf.game_type.black_sow=Schwarze Sau
+game.doppelkopf.game_type.solo_queen=Damensolo
+game.doppelkopf.game_type.solo_jack=Bubensolo
+game.doppelkopf.game_type.solo_clubs=Kreuzsolo
+game.doppelkopf.game_type.solo_spades=Piksolo
+game.doppelkopf.game_type.solo_hearts=Herzsolo
+game.doppelkopf.game_type.solo_diamonds=Karosolo
+game.doppelkopf.game_type.solo_fleshless=Fleischloses Solo
+game.doppelkopf.game_type.solo_null=Nullsolo
+game.doppelkopf.game_type.solo_boneless=Knochenloses Solo
+game.doppelkopf.game_type.solo_pure_clubs=Reines Kreuzsolo
+game.doppelkopf.game_type.solo_pure_spades=Reines Piksolo
+game.doppelkopf.game_type.solo_pure_hearts=Reines Herzsolo
+game.doppelkopf.game_type.solo_pure_diamonds=Reines Karosolo
+game.doppelkopf.game_type.solo_king=Königssolo
+game.doppelkopf.game_type.solo_brothel=Buben-Damensolo
+game.doppelkopf.game_type.solo_noble_brothel=Damen-Königssolo
+game.doppelkopf.game_type.solo_picture=Bildersolo
+game.doppelkopf.game_type.solo_monastery=Buben-Königssolo
+game.doppelkopf.game_type.solo_aces=Assesolo
+game.doppelkopf.game_type.solo_10s=Zehnensolo
+game.doppelkopf.game_type.solo_9s=Neunensolo
 
 game.doppelkopf.extra.re_win=Re gewinnt
 game.doppelkopf.extra.kontra_win=Kontra gewinnt
@@ -103,6 +129,11 @@ msg.lobby.invite.accept.not_invited=Du wurdest nie in diese Lobby eingeladen!
 msg.lobby.invite.accept.lobby_started_game=Die Lobby hat bereits ein Spiel angefangen!
 msg.lobby.invite.accept.lobby_full=Die Lobby ist bereits voll!
 msg.lobby.invite.decline=Der Benutzer {username} hat deine Einladung abgelehnt!
+
+msg.lobby.add_bot.success=Bot erfolgreich hinzugefügt!
+msg.lobby.add_bot.lobby_full=Die Lobby ist bereits voll!
+msg.lobby.add_bot.unknown_type=Unbekannter Bottyp!
+msg.lobby.add_bot.invalid_type=Der Bottyp ist für dieses Spiel ungültig!
 
 msg.lobby.kick.user_not_exist=Der Benutzer mit der UUID {uuid} existiert nicht!
 msg.lobby.kick.user_not_in_lobby=Der Benutzer {username} ist nicht in dieser Lobby!
@@ -318,6 +349,13 @@ gui.menu.smain.lobby.invite_heading=Benutzername eingeben:
 gui.menu.smain.lobby.invite_okbtn.label=Einladen
 gui.menu.smain.lobby.invite_cancelbtn.label=Abbrechen
 
+gui.menu.smain.lobby.add_bot.label={bot_name} hinzufügen
+
+gui.menu.smain.lobby.bot_name.dk_dumb=Einfachen Bot
+gui.menu.smain.lobby.bot_name.dk_random=Mittleren Bot
+gui.menu.smain.lobby.bot_name.dk_hard=Schwierigen Bot
+gui.menu.smain.lobby.bot_name.dk_ki=Sehr schwierigen Bot
+
 gui.menu.smain.lobby_inv.label_main=Du wurdest von {username} in eine Lobby eingeladen. Möchtest du die Einladung annehmen?
 gui.menu.smain.lobby_inv.confirm=Annehmen
 gui.menu.smain.lobby_inv.cancel=Ablehnen
@@ -366,8 +404,8 @@ gui.menu.ingame.scoreboard.quitbtn.label3=Spiel verlassen (noch {rounds} Runden)
 gui.menu.ingame.scoreboard.cancelbtn.label=Spiel abbrechen
 gui.menu.ingame.scoreboard.cancelbtn.label2=Spiel abbrechen ({amount})
 
-
 gui.menu.settings.exitbtn.label=Zurück
+
 
 question.unknown.text=Frage?
 question.unknown.choice1=Jain
@@ -449,14 +487,9 @@ question.wedding_clarification_trick.choice7=Erster Karostich
 
 question.black_sow_solo.heading=Welches Solo möchtest du spielen?
 
+
 gamerule.opt.true=Spielregel aktivieren
 gamerule.opt.false=Spielregel deaktivieren
-
-gamerule.general.wrongmove.name=Handhabung ungültiger Spielzüge
-gamerule.general.wrongmove.description=Was passiert im Falle eines ungültigen Spielzugs?
-gamerule.general.wrongmove.opt.prohibit=Falsche Spielzüge sind nicht möglich
-gamerule.general.wrongmove.opt.allow_points=Falsche Spielzüge sind möglich und werden mit Strafpunkten geahndet
-gamerule.general.wrongmove.opt.allow_stopgame=Falsche Spielzüge sind möglich und werden mit einem Spielabbruch beantwortet
 
 gamerule.dk.heart10.name=Spiel mit den Dullen
 gamerule.dk.heart10.description=Die Herz-10 ist der höchste Trumpf im Spiel.

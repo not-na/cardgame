@@ -53,7 +53,7 @@ class DoppelkopfGame(CGame):
 
     def __init__(self, c: CardGame, game_id: uuid.UUID, player_list: List[uuid.UUID], lobby: cgclient.lobby.Lobby):
         super().__init__(c, game_id, player_list, lobby)
-        self.round_num = 0
+        self.round_num = 1
 
         self.scoreboard_data = {
             "receives": 0,

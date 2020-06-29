@@ -41,7 +41,7 @@ def register_games(reg: Callable):
 
 
 class CGame(object, metaclass=abc.ABCMeta):
-    DEV_MODE = True
+    DEV_MODE = False
     GAMERULES: Dict[str, Dict[str, Any]] = {}
     """
     Dictionary defining all valid gamerules for the given game.
@@ -93,7 +93,6 @@ class CGame(object, metaclass=abc.ABCMeta):
         self.lobby: cgserver.lobby.Lobby = self.cg.server.lobbies[self.lobby_id]
 
         self.players: List[uuid.UUID] = self.lobby.users.copy()
-        self.fake_players = []
 
         self.register_event_handlers()
 
@@ -117,8 +116,6 @@ class CGame(object, metaclass=abc.ABCMeta):
 
     def cancel_game(self, notify=True):
         for p in self.players:
-            if self.DEV_MODE and p in self.fake_players:
-                continue
             if isinstance(self.cg.server.users_uuid[p], cgserver.user.BotUser):
                 continue
 
@@ -143,11 +140,8 @@ class CGame(object, metaclass=abc.ABCMeta):
                 self.send_to_user(u, packet, data)
 
     def send_to_user(self, user: uuid.UUID, packet: str, data: dict):
-        if user not in self.fake_players:
-            self.cg.server.send_to_user(user, packet, data)
+        self.cg.server.send_to_user(user, packet, data)
 
-        if user in self.fake_players:
-            user = "fake_player_" + str(self.fake_players.index(user))
         if packet != "cg:game.dk.card.transfer":
             self.cg.info(f"sent packet {packet} with content {data} to user {user}")
 
@@ -234,8 +228,6 @@ class CGame(object, metaclass=abc.ABCMeta):
 
         # Delete all bot players and their corresponding threads
         for pid in self.players:
-            if pid in self.fake_players:
-                continue
             p = self.cg.server.users_uuid[pid]
             if isinstance(p, cgserver.user.BotUser):
                 # Stop and delete the bot

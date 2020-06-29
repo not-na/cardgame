@@ -55,7 +55,7 @@ class ScoreboardPacket(CGPacket):
 
             if self.cg.client.game.scoreboard_data["receives"] == 4:
                 self.cg.client.gui.ingame.gui_layer.s_scoreboard.add_round(
-                    self.cg.client.game.round_num + 1,
+                    self.cg.client.game.round_num,
                     self.cg.client.game.scoreboard_data["winner"],
                     self.cg.client.game.scoreboard_data["game_type"],
                     self.cg.client.game.scoreboard_data["eyes"],
