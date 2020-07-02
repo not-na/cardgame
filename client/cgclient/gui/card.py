@@ -23,9 +23,10 @@
 import math
 import time
 import uuid
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import peng3d
+from pyglet.graphics import Group
 from vectormath import Vector3
 
 import cg
@@ -71,7 +72,6 @@ DEFAULT_ANIM_DURATION = 1.0
 ANIM_STATE_DONE = 0
 ANIM_STATE_ACTIVE = 1
 
-
 DEBUG_CARDS = False
 
 OPEN_CARDS = 0  # 0, if normal, 180 if all open
@@ -96,7 +96,7 @@ def rotation_matrix(axis, theta):
 
 def lin_interpolate(src: float, target: float, p: float):
     # Just a simple linear interpolation
-    return src+(target-src)*p
+    return src + (target - src) * p
 
 
 def multi_interpolate(src: List[float], target: List[float], p: float):
@@ -110,21 +110,28 @@ def multi_interpolate(src: List[float], target: List[float], p: float):
     return out
 
 
-class _FakeTexture(object):
-    def __init__(self, card):
+class _CardTextureGroup(Group):
+    def __init__(self, card, parent=None):
+        super().__init__(parent)
         self.card = card
 
-    @property
-    def target(self):
-        return self.card.texf[0]
+    def set_state(self):
+        glEnable(self.card.texf[0])
+        glBindTexture(self.card.texf[0], self.card.texf[1])
 
-    @property
-    def id(self):
-        return self.card.texf[1]
+    def unset_state(self):
+        glDisable(self.card.texf[0])
 
-    @property
-    def tex_coords(self):
-        return self.card.texf[2]
+    def __hash__(self):
+        return hash((self.card, self.parent))
+
+    def __eq__(self, other):
+        return (self.__class__ is other.__class__ and
+                self.card == other.card and
+                self.parent == other.parent)
+
+    def __repr__(self):
+        return '%s(id=%d)' % (self.__class__.__name__, self.card.texf[1])
 
 
 class Card(object):
@@ -142,7 +149,8 @@ class Card(object):
 
         self.slot: str = slot
         self.cardid: uuid.UUID = cardid
-        self.value: value = value
+        self.value: str = value
+        self.new_value: Optional[str] = None
 
         self.anim_fromslot: str = slot
         self.anim_stime: float = 0.0
@@ -153,7 +161,7 @@ class Card(object):
 
         self.drag_start_pos: Tuple[int, int] = 0, 0
 
-        #self.anim_last = 0.0
+        # self.anim_last = 0.0
 
         self.color_id = self.layer.gen_color_id(self)
 
@@ -166,25 +174,27 @@ class Card(object):
         # 4 vertices front, 4 vertices back
         self.vlist_back = self.layer.batch.add(4, GL_QUADS,
                                                pyglet.graphics.TextureGroup(
-                                                   peng3d.gui.button._FakeTexture(*self.layer.peng.resourceMgr.getTex(self.layer.get_backname(), "card")),
+                                                   peng3d.gui.button._FakeTexture(
+                                                       *self.layer.peng.resourceMgr.getTex(self.layer.get_backname(),
+                                                                                           "card")),
                                                    parent=pyglet.graphics.OrderedGroup(1)
                                                ),
                                                "v3f",
                                                "t3f/static",
                                                )
         self.vlist_front = self.layer.batch.add(4, GL_QUADS,
-                                               pyglet.graphics.TextureGroup(
-                                                   _FakeTexture(self),
-                                                   parent=pyglet.graphics.OrderedGroup(1),
-                                               ),
-                                               "v3f",
-                                               "t3f/static",
-                                               )
+                                                _CardTextureGroup(
+                                                    self,
+                                                    parent=pyglet.graphics.OrderedGroup(1),
+                                                ),
+                                                "v3f",
+                                                "t3f/static",
+                                                )
 
         self.vlist_pick = self.layer.batch_pick.add(4, GL_QUADS,
                                                     None,
                                                     "v3f",
-                                                    ("c3B/static", self.color_id*4),
+                                                    ("c3B/static", self.color_id * 4),
                                                     )
 
         self.should_redraw: bool = True
@@ -198,7 +208,7 @@ class Card(object):
 
     def start_anim(self, from_slot: str, to_slot: str, duration=DEFAULT_ANIM_DURATION):
         # Uncomment this to debug erroneous calls to this method causing visual jerking
-        #if self.anim_state == ANIM_STATE_ACTIVE:
+        # if self.anim_state == ANIM_STATE_ACTIVE:
         #    self.cg.error(f"START ACTIVE: {''.join(self.value)} {from_slot=} {to_slot=}")
 
         self.anim_state = ANIM_STATE_ACTIVE
@@ -207,7 +217,7 @@ class Card(object):
         self.anim_frompos = self.pos
         self.anim_fromrot = self.rot
         self.anim_duration = duration
-        #self.anim_last = time.time()
+        # self.anim_last = time.time()
         self.slot = to_slot
 
         self.redraw()
@@ -219,15 +229,15 @@ class Card(object):
         idx = self.game.slots[self.slot].index(self)
         tpos, trot = self.get_card_pos_rot(self.slot, idx, len(self.game.slots[self.slot]))
 
-        t = time.time()-self.anim_stime  # Time since start of animation
-        p = t/self.anim_duration  # Percentage of animation completed
+        t = time.time() - self.anim_stime  # Time since start of animation
+        p = t / self.anim_duration  # Percentage of animation completed
 
-        #dt = time.time()-self.anim_last
-        #dt *= 1000
-        #self.anim_last = time.time()
-        #pc = p*100
-        #T = t*1000
-        #self.cg.info(f"{''.join(self.value)} {pc=:.1f}% {T=:.3f}ms {dt=:.3f}ms")
+        # dt = time.time()-self.anim_last
+        # dt *= 1000
+        # self.anim_last = time.time()
+        # pc = p*100
+        # T = t*1000
+        # self.cg.info(f"{''.join(self.value)} {pc=:.1f}% {T=:.3f}ms {dt=:.3f}ms")
 
         if p >= 1:
             # We are done with the animation, no need for further calculations
@@ -235,11 +245,15 @@ class Card(object):
             self.pos = tpos
             self.rot = trot
 
+            if self.new_value is not None:
+                self.value = self.new_value
+                self.new_value = None
+
             self.redraw()
             return
 
         # Smoothstep copied from Wikipedia - https://en.wikipedia.org/wiki/Smoothstep
-        p = p*p*(3-2*p)
+        p = p * p * (3 - 2 * p)
 
         # Do a linear interpolation of all components of position and rotation
         self.pos = multi_interpolate(self.anim_frompos, tpos, p)
@@ -251,7 +265,7 @@ class Card(object):
         self.redraw()
 
     def redraw(self):
-        #self.layer.redraw()
+        # self.layer.redraw()
         self.should_redraw = True
 
     def draw(self):
@@ -264,6 +278,17 @@ class Card(object):
             self.should_redraw = False
 
     def on_redraw(self):
+        if self == self.layer.clicked_card and self.slot != self.game.own_hand:
+            self.layer.clicked_card = None
+            self.hovered = False
+            self.clicked = False
+            self.dragged = False
+            self.selected = False
+
+        if self.value == "" and self.rot[1] != 0:
+            self.cg.warn(f"Valueless Card is visible, {self.value=}")
+        elif self.value != "" and self.rot[1] == 0:
+            self.cg.warn(f"Known-value Card is not visible, {self.value=}")
 
         # First, set the texture coordinates
         self.texf = self.layer.peng.resourceMgr.getTex(self.get_texname(), "card")
@@ -273,7 +298,7 @@ class Card(object):
         self.vlist_front.tex_coords = tf
         self.vlist_back.tex_coords = tb
 
-        #if texf[1] != texb[1]:
+        # if texf[1] != texb[1]:
         #    self.cg.warn(f"Front and back texture IDs for card {self.cardid} with value {self.value} do not match!")
 
         # Then, generate and set the vertices
@@ -285,47 +310,47 @@ class Card(object):
         self.vlist_back.vertices = vb
 
     def get_card_pos_rot(self, slot: str, index: int, count: int = 1):
-        open_card = self.game.lobby.gamerules.get("dk.open_cards", False)*180 or OPEN_CARDS
+        open_card = self.game.lobby.gamerules.get("dk.open_cards", False) * 180 or OPEN_CARDS
 
-        ar = self.cg.client.gui.window.width/self.cg.client.gui.window.height
+        ar = self.cg.client.gui.window.width / self.cg.client.gui.window.height
 
         # First, map virtual slots to physical slots
         slot = self.layer.norm_card_slot(slot)
 
         if slot == "stack":
             # TODO: Implement properly
-            #return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
+            # return [(index-count/2)*0.1, 0.01*index+0.2, 0.1], [0, 180, 0]
             return [
-                [0, 0.01*index, 0],
+                [0, 0.01 * index, 0],
                 [0, 0, 0],
             ]
         elif slot == "table":
             # Apply the table shift
             # Causes cards to be aligned with whomever played it
-            oidx = index+1
-            index = (index+self.game.table_index_shift) % 4
+            oidx = index + 1
+            index = (index + self.game.table_index_shift) % 4
             if index == 0:
                 # Left
                 return [
-                    [-0.4, 0.01*oidx, -0.1],
+                    [-0.4, 0.01 * oidx, -0.1],
                     [0, 180, 0],
                 ]
             elif index == 1:
                 # Top
                 return [
-                    [0.15, 0.01*oidx, -0.35],
+                    [0.15, 0.01 * oidx, -0.35],
                     [0, 180, 0],
                 ]
             elif index == 2:
                 # Right
                 return [
-                    [0.5, 0.01*oidx, 0.1],
+                    [0.5, 0.01 * oidx, 0.1],
                     [0, 180, 0],
                 ]
             elif index == 3:
                 # Bottom
                 return [
-                    [-0.05, 0.01*oidx, 0.2],
+                    [-0.05, 0.01 * oidx, 0.2],
                     [0, 180, 0],
                 ]
         elif slot == "poverty":
@@ -356,7 +381,7 @@ class Card(object):
             return pos, [0, OPEN_CARDS, r]
         elif slot == "ptrick_self":
             if DEBUG_CARDS:
-                return [-2.5-0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+                return [-2.5 - 0.1 * index, 0.5 + 0.001 * index, 0], [0, 180, 0]
             else:
                 return [
                     [(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
@@ -364,7 +389,7 @@ class Card(object):
                 ]
         elif slot == "ptrick_left":
             if DEBUG_CARDS:
-                return [-2.5-0.1*index, 0.5+0.001*index, -1], [0, 180, 0]
+                return [-2.5 - 0.1 * index, 0.5 + 0.001 * index, -1], [0, 180, 0]
             else:
                 return [
                     [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
@@ -372,7 +397,7 @@ class Card(object):
                 ]
         elif slot == "ptrick_right":
             if DEBUG_CARDS:
-                return [-2.5-0.1*index, 0.5+0.001*index, 1], [0, 180, 0]
+                return [-2.5 - 0.1 * index, 0.5 + 0.001 * index, 1], [0, 180, 0]
             else:
                 return [
                     [(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
@@ -380,7 +405,7 @@ class Card(object):
                 ]
         elif slot == "ptrick_top":
             if DEBUG_CARDS:
-                return [3.5+0.1*index, 0.5+0.001*index, 0], [0, 180, 0]
+                return [3.5 + 0.1 * index, 0.5 + 0.001 * index, 0], [0, 180, 0]
             else:
                 return [
                     [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
@@ -407,22 +432,22 @@ class Card(object):
         elif self.hovered:
             radius += HOVER_EXTENSION
 
-        #if angle_per_card*count > max_angle:
-            # Limits the "spread" of cards to a maximum angle
-            # This prevents large amounts of cards from visually overflowing
+        # if angle_per_card*count > max_angle:
+        # Limits the "spread" of cards to a maximum angle
+        # This prevents large amounts of cards from visually overflowing
         #    angle_per_card = max_angle/count
 
         # Calculate the effective angle of the card
         # Cards are arranged symmetrically around the base angle
-        angle = base_angle + (index-count/2. + 0.5)*angle_per_card
+        angle = base_angle + (index - count / 2. + 0.5) * angle_per_card
         rangle = math.radians(angle)
 
-        #self.cg.info(f"Count: {count} Index: {index} Angle: {angle}")
+        # self.cg.info(f"Count: {count} Index: {index} Angle: {angle}")
 
         pos = [
-            math.sin(rangle)*radius+base[0],
-            base[1]+index*0.001,  # TODO: make this adjustable
-            math.cos(rangle)*radius+base[2],
+            math.sin(rangle) * radius + base[0],
+            base[1] + index * 0.001,  # TODO: make this adjustable
+            math.cos(rangle) * radius + base[2],
         ]
 
         return pos, angle
@@ -445,13 +470,14 @@ class Card(object):
         center = Vector3(*self.pos)
 
         # First, generate vectors for x and y of card
-        vcw = Vector3(CARD_SIZE_W/2, 0, 0)  # Vector pointing along the width (short side) of the card
-        vch = Vector3(0, 0, CARD_SIZE_H/2)  # Vector pointing along the height (long side) of the card
+        vcw = Vector3(CARD_SIZE_W / 2, 0, 0)  # Vector pointing along the width (short side) of the card
+        vch = Vector3(0, 0, CARD_SIZE_H / 2)  # Vector pointing along the height (long side) of the card
         vcp = Vector3(0, offset, 0)  # Vector pointing "out" of the card, perpendicular
 
-        #a_s = math.radians(self.rot[0])  # Angle along short axis in radians,
+        # a_s = math.radians(self.rot[0])  # Angle along short axis in radians,
         if self.rot[0] != 0:
-            self.cg.error(f"Card {self.cardid} with value {self.value} has non-zero short axis rotation of {self.rot[0]}")
+            self.cg.error(
+                f"Card {self.cardid} with value {self.value} has non-zero short axis rotation of {self.rot[0]}")
         a_l = math.radians(self.rot[1])  # Angle along long axis in radians
         a_y = math.radians(self.rot[2])  # Angle along y axis in radians
 
@@ -476,10 +502,10 @@ class Card(object):
         vcp = Vector3(np.dot(ml, vcp))
 
         # Generate the four corners of the card
-        c1 = -vcw-vch  # Bottom left
-        c2 = +vcw-vch  # Bottom right
-        c3 = +vcw+vch  # Top right
-        c4 = -vcw+vch  # Top left
+        c1 = -vcw - vch  # Bottom left
+        c2 = +vcw - vch  # Bottom right
+        c3 = +vcw + vch  # Top right
+        c4 = -vcw + vch  # Top left
 
         # Add a multiple of the direction vector and offset
         vcp += center

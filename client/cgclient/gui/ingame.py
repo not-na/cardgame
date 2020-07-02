@@ -170,6 +170,7 @@ class GameLayer(peng3d.layer.Layer):
             self.peng.keybinds.add("lshift", "cg:crouch", self.on_crouch_down, False)
             self.peng.keybinds.add("space", "cg:jump", self.on_jump_down, False)
             self.peng.keybinds.add("escape", "cg:escape", self.on_escape, False)
+        self.peng.keybinds.add("f3", "cg:debug", self.on_debug, False)
         self.peng.registerEventHandler("on_mouse_motion", self.on_mouse_motion)
         self.peng.registerEventHandler("on_mouse_drag", self.on_mouse_drag)
         self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
@@ -468,6 +469,10 @@ class GameLayer(peng3d.layer.Layer):
             return
 
         co = self.game.cards[c]
+
+        if co.slot != self.game.own_hand:
+            return
+
         co.clicked = True
         co.start_anim(co.slot, co.slot)
         co.drag_start_pos = x, y
@@ -497,6 +502,24 @@ class GameLayer(peng3d.layer.Layer):
 
     def on_redraw(self):
         pass
+
+    def on_menu_enter(self,old):
+        super().on_menu_enter(old)
+
+        for suit in card.SUITES.values():
+            for val in card.COUNTS.values():
+                self.peng.resourceMgr.getTex(f"cg:card.{suit}_{val}", "card")
+
+    def on_debug(self, symbol, modifiers, release):
+        if release:
+            return
+
+        c = self.get_card_at_mouse()
+        if c not in self.game.cards:
+            self.menu.cg.warn(f"CARD {c} not in cards!")
+            return
+        co = self.game.cards[c]
+        self.menu.cg.info(f"DEBUG: {co.value=} {co.slot=} {co.rot=} {co.texf[1]}/{co.texb[1]}")
 
     def clean_up(self):
         # Delete all cards and reset to beginning

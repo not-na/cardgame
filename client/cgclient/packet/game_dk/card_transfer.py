@@ -82,7 +82,17 @@ class CardTransferPacket(CGPacket):
 
             # Get the card
             card: cgclient.gui.card.Card = self.cg.client.game.cards[card_id]
-            card.value = msg["card_value"]
+
+            if msg["to_slot"] == "table":
+                self.cg.info(f"TT: {card.value=}->{msg['card_value']} from={msg['from_slot']}")
+
+            # Only immediately update if changing to a real value
+            # Keep old value if new value is blank until animation ends
+            if card.value == "" or msg["card_value"] != "":
+                card.value = msg["card_value"]
+                card.new_value = None
+            else:
+                card.new_value = msg["card_value"]
 
             # Check for sanity of supplied data
             if card not in self.cg.client.game.slots[msg["from_slot"]]:
@@ -99,7 +109,7 @@ class CardTransferPacket(CGPacket):
             # Redraw all cards in from and target slots to prevent visual holes
             # Only redraw cards that are not already "flying"
             for c in self.cg.client.game.slots[from_slot]:
-                if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE:
+                if c != card and c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE:
                     c.start_anim(from_slot, from_slot)
             for c in self.cg.client.game.slots[msg["to_slot"]]:
                 if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE and c is not card:

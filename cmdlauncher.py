@@ -325,7 +325,7 @@ class ClientSubProcess(PopenSubProcess):
         if not profile:
             cmdline = [PYTHON_BINARY, "-u", "-O", MAIN_FILE_CLIENT]
         else:
-            cmdline = [PYTHON_BINARY, "-u", "-O", "-m", "cProfile", "-o", "cardgame_profile.txt", "-s", "cumtime", MAIN_FILE_CLIENT, "--client"]
+            cmdline = [PYTHON_BINARY, "-u", "-O", "-m", "cProfile", "-o", "cardgame_profile.txt", "-s", "cumtime", MAIN_FILE_CLIENT]
 
         # Add authentication token if there is an associated account
         if self.account is not None:

@@ -53,8 +53,8 @@ class InvitePacket(CGPacket):
 
             result = lobby.add_bot(msg["username"][4:], u)
 
-            if result:
-                self.cg.server.send_status_message(u, "notice", "cg:msg.lobby.add_bot.success")
+            #if result:
+            #    self.cg.server.send_status_message(u, "notice", "cg:msg.lobby.add_bot.success")
             return
 
         user = self.cg.server.users.get(msg["username"], None)

@@ -65,6 +65,8 @@ GAME_TO_NAME = {
     "cn": "canasta",
 }
 
+USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]{2,15}")
+
 
 class ServerMainMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
@@ -2080,7 +2082,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                 self.kickbtn.switchImage("default")
 
                 # Make Admin button
-                if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) < ROLE_ADMIN:
+                if self.peng.cg.client.lobby.user_roles.get(self.player.uuid, 0) < ROLE_ADMIN and not self.is_bot:
                     self.make_admin_btn.switchImage("default")
 
             # Admin Icon
@@ -2093,6 +2095,10 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             self.make_admin_btn.switchImage("transparent")
 
         self.icon_layer.switchImage(self.player.profile_img)
+
+    @property
+    def is_bot(self) -> bool:
+        return not USER_PATTERN.fullmatch(self.player.username)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         super().on_mouse_drag(x, y, dx, dy, button, modifiers)
