@@ -22,6 +22,7 @@
 #
 
 import logging as _logging
+import os
 
 from typing import Callable, Optional
 
@@ -32,8 +33,15 @@ class CardGame(object):
     client: Optional["cgclient.client.Client"]
     server: Optional["cgserver.server.DedicatedServer"]
 
-    def __init__(self, instance_path):
+    def __init__(self, instance_path, settings_path=None):
         self.instance_path = instance_path
+        if settings_path is None:
+            self.settings_path = cg.config.get_settings_path("cardgame")
+        else:
+            self.settings_path = settings_path
+        # Ensure that the settings directory exists
+        self.settings_path = os.path.abspath(self.settings_path)
+        os.makedirs(self.settings_path, exist_ok=True)
 
         global c
         c = self
@@ -64,6 +72,7 @@ class CardGame(object):
 
         self.debug("Calling core initialization callbacks")
         self.send_event("cg:core.initialized", {"cg": self})
+        self.info(f"Settings path: {self.settings_path}")
         self.info("CG Core initialized")
 
     def get_config_option(self, key: str):
@@ -98,6 +107,12 @@ class CardGame(object):
 
     def get_instance_path(self):
         return self.instance_path
+
+    def get_settings_path(self, fname=None) -> str:
+        if fname is None:
+            return self.settings_path
+        else:
+            return os.path.join(self.settings_path, fname)
 
     def init_client(self, username=None, pwd=None, default_server=None):
         import cgclient

@@ -20,6 +20,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os
 import threading
 import time
 import uuid
@@ -34,6 +35,7 @@ import cgclient
 import cgclient.gui
 
 from cg.constants import STATE_AUTH, MODE_CG
+from cg.util.serializer import json
 
 
 class CGClient(peng3dnet.net.Client):
@@ -107,11 +109,15 @@ class Client(object):
         self._pingcount = 1
         self._pinglock = threading.Lock()
 
+        self.settings = {}
+
         self.register_event_handlers()
 
         self.cg.send_event("cg:game.register.do", {
             "registrar": self.register_game,
         })
+
+        self.load_settings()
 
     def init_gui(self):
         self.gui = cgclient.gui.PengGUI(self, self.cg)
@@ -249,6 +255,37 @@ class Client(object):
 
             t.daemon = True
             t.start()
+
+    def load_settings(self):
+        fname = self.cg.get_settings_path("client_settings.json")
+
+        # First, check if the data file exists and is a file
+        if not (os.path.exists(fname) and os.path.isfile(fname)):
+            self.cg.warn("Generating new settings because client_settings.json was not found")
+            self.settings = {}
+            self.save_settings()
+            return
+
+        # Try to open it safely
+        try:
+            with open(fname, "r") as f:
+                data = json.load(f)
+        except Exception:
+            self.cg.error("Could not load settings from file, probably broken")
+            self.cg.exception("Exception during settings load:")
+            self.settings = {}
+            return
+
+        self.settings = data
+        self.cg.info(f"Successfully loaded settings")
+
+    def save_settings(self):
+        self.cg.info(f"Saving settings")
+
+        fname = self.cg.get_settings_path("client_settings.json")
+
+        with open(fname, "w") as f:
+            json.dump(self.settings, f)
 
     # Event Handlers
 

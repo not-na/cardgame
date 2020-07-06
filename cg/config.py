@@ -68,7 +68,7 @@ class ConfigManager(object):
         return self.cache.get_by_key(key)
 
     def set_config_option(self, key: str, value):
-        self.cg.warn("set_config_option currently does not save")
+        self.cg.warn("set_config_option does not save values, use a custom format instead")
         self.cache.set_by_key(key, value)
 
     def load_key(self, key: str):

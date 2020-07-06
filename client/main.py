@@ -57,12 +57,18 @@ class CardgameApp(cli.Application):
                          help="Sets the pre-filled password",
                          )
 
+    settingsdir = cli.SwitchAttr(["-s", "--settings-dir"],
+                                 argtype=str,
+                                 default=None,
+                                 help="Sets the settings directory",
+                                 )
+
     def main(self):
         print("Client starting...")
         sys.stdout.flush()
 
         #print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
-        c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)))
+        c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)), self.settingsdir)
 
         c.info("Successfully created CG")
 

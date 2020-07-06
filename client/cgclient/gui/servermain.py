@@ -24,6 +24,7 @@ import glob
 import math
 import os
 import re
+import shutil
 import time
 import datetime
 import uuid
@@ -39,7 +40,7 @@ from pyglet.window.mouse import LEFT
 import cg
 from cg.constants import ROLE_ADMIN
 from cg.util import uuidify
-from cg.util.serializer import msgpack
+from cg.util.serializer import msgpack, json
 
 GAMES = [
     "sk",  # Skat
@@ -1220,6 +1221,9 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
 
         self.chosen_save = ""
 
+        self._save_opts = {}
+        self.load_data()
+
         self.exit_mode = "back"
 
         self.setBackground(peng3d.gui.FramedImageBackground(
@@ -1363,26 +1367,67 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
 
                 btn.addAction("press_up", f)
 
+    def load_data(self):
+        fname = self.menu.cg.get_settings_path("templates.json")
+
+        # First, check if the data file exists and is a file
+        if not (os.path.exists(fname) and os.path.isfile(fname)):
+            self.menu.cg.warn("Generating new blank templates file because file does not exist")
+            self._save_opts = {}
+            self.save_data()
+            return
+
+        # Try to open it safely
+        try:
+            with open(fname, "r") as f:
+                data = json.load(f)
+        except Exception:
+            self.menu.cg.error("Could not load template file, probably broken")
+            self.menu.cg.warn("Broken file will be backed up and replaced with empty data")
+            self.menu.cg.exception("Exception during template file load:")
+
+            shutil.copy(fname, self.menu.cg.get_settings_path("templates_backup.json"))
+            self._save_opts = {}
+            self.save_data()
+            return
+
+        self._save_opts = data
+        
+        self.menu.cg.info("Successfully loaded template data")
+
+    def save_data(self):
+        fname = self.menu.cg.get_settings_path("templates.json")
+        with open(fname, "w") as f:
+            json.dump(self._save_opts, f)
+
     @property
     def save_opts(self):
-        return self.peng.cg.config_manager.get_config_option("cg:templates.options")
+        #return self.peng.cg.config_manager.get_config_option("cg:templates.options")
+        # This property can probably be removed, since it only returns the keys
+        # Artifact from storing in the config
+        return sorted(list(self._save_opts.keys()))
 
     @save_opts.setter
     def save_opts(self, value):
-        self.peng.cg.config_manager.set_config_option("cg:templates.options", value)
+        #self.peng.cg.config_manager.set_config_option("cg:templates.options", value)
+        return
 
     @property
     def saves(self):
-        return {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts}
+        #return {opt: self.peng.cg.config_manager.get_config_option(f"cg:templates.{opt}") for opt in self.save_opts}
+        return self._save_opts
 
     @saves.setter
     def saves(self, value):
-        for key, data in value.items():
-            self.peng.cg.config_manager.set_config_option(f"cg:templates.{key}", data)
+        #for key, data in value.items():
+        #    self.peng.cg.config_manager.set_config_option(f"cg:templates.{key}", data)
+        self._save_opts = value
+        self.save_data()
 
     def on_enter(self, old):
+        self.menu.cg.info(f"ON ENTER: {self.saves=} {self.save_opts=}")
         for i, btn in enumerate(self.save_btns):
-            if i < len(self.save_opts):
+            if i < len(self.saves):
                 self.save_btns[i].label = self.save_opts[i]
                 self.save_btns[i].visible = True
                 self.save_btns[i].pressed = False
@@ -2503,7 +2548,7 @@ class TemplateSaveDialog(peng3d.gui.Container):
         self.save_heading.clickable = False
         self.addWidget(self.save_heading)
 
-        # Input field for username
+        # Input field for template name
         self.input_field = cgclient.gui.CGTextInput(
             "save_input", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 1], [2, 1]),
@@ -2534,13 +2579,15 @@ class TemplateSaveDialog(peng3d.gui.Container):
                     self.peng.cg.client.lobby.gamerules.items()
                 }
 
-                _saves = self.s_template.saves
-                _saves[self.input_field.text] = gamerule_copy
-                self.s_template.saves = _saves
-
-                _save_opts = self.s_template.save_opts
-                _save_opts.append(self.input_field.text)
-                self.s_template.save_opts = _save_opts
+                # _saves = self.s_template.saves
+                # _saves[self.input_field.text] = gamerule_copy
+                # self.s_template.saves = _saves
+                #
+                # _save_opts = self.s_template.save_opts
+                # _save_opts.append(self.input_field.text)
+                # self.s_template.save_opts = _save_opts
+                self.s_template.saves[self.input_field.text] = gamerule_copy
+                self.s_template.save_data()
 
                 self.visible = False
                 self.input_field.text = ""

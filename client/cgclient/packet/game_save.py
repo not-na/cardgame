@@ -44,7 +44,8 @@ class GameSavePacket(CGPacket):
     side = SIDE_CLIENT
 
     def receive(self,msg,cid=None):
-        base_dir = os.path.join(cg.config.get_settings_path("cardgame"), "adjourned-games")
+        #base_dir = os.path.join(cg.config.get_settings_path("cardgame"), "adjourned-games")
+        base_dir = self.cg.get_settings_path("adjourned-games")
 
         # Ensure the directory exists
         os.makedirs(base_dir, exist_ok=True)

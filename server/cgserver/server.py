@@ -264,7 +264,7 @@ class DedicatedServer(object):
             heapq.heappush(self.scheduled_events, sched_func)
 
     def load_server_data(self):
-        fname = os.path.join(self.cg.get_instance_path(), "serverdat.csd")
+        fname = self.cg.get_settings_path("serverdat.csd")
 
         # First, check if the data file exists and is a file
         if not (os.path.exists(fname) and os.path.isfile(fname)):
@@ -318,7 +318,7 @@ class DedicatedServer(object):
                 continue
             users[u.username] = u.serialize()
 
-        fname = os.path.join(self.cg.get_instance_path(), "serverdat.csd")
+        fname = self.cg.get_settings_path("serverdat.csd")
         data = {
             "serverid": self.serverid.hex,
             "secret": self.secret,

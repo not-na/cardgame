@@ -382,7 +382,7 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
     def save_server_list(self):
         with self.server_lock:
             try:
-                with open(os.path.join(self.menu.cg.get_instance_path(), "servers.rol"), "wb") as f:
+                with open(self.menu.cg.get_settings_path("serverlist.csl"), "wb") as f:
                     msgpack.dump({"serverlist": self.server_data}, f)
                     self.menu.cg.info(f"Successfully saved server list with {len(self.server_data)} items")
             except Exception:
@@ -410,7 +410,7 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
 
         # Load the server list
         try:
-            with open(os.path.join(self.menu.cg.get_instance_path(), "servers.rol"), "rb") as f:
+            with open(self.menu.cg.get_settings_path("serverlist.csl"), "rb") as f:
                 d = msgpack.load(f)
                 self.menu.cg.debug(f"Successfully deserialized server list, raw data: {d}")
         except FileNotFoundError:

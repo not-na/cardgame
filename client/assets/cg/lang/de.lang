@@ -170,6 +170,8 @@ msg.game.dk.pc_called_superpigs=Nachdem du Superschweine angesagt hast, musst du
 msg.game.dk.re_no_party=Ansagen können erst gemacht werden, wenn die Parteien feststehen!
 msg.game.dk.re_too_late=Diese Ansage hätte früher getätigt werden müssen!
 
+announce.default=<ERROR>
+
 announce.reservation_yes=Vorbehalt
 announce.reservation_no=Kein Vorbehalt
 announce.solo_yes.key=cg:announce.solo.{type}
