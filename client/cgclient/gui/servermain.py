@@ -1028,7 +1028,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         # Back Button
         self.backbtn = cgclient.gui.CGButton(
             "backbtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 0], [6, 1]),
+            pos=self.grid.get_cell([0, 0], [3, 1]),
             label=self.peng.tl("cg:gui.menu.smain.adjourn.backbtn.label"),
         )
         self.addWidget(self.backbtn)
@@ -1041,7 +1041,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         # Load Button
         self.loadbtn = cgclient.gui.CGButton(
             "loadbtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([6, 0], [6, 1]),
+            pos=self.grid.get_cell([3, 0], [6, 1]),
             label=self.peng.tl("cg:gui.menu.smain.adjourn.loadbtn.label"),
         )
         self.addWidget(self.loadbtn)
@@ -1057,6 +1057,30 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
             self.menu.changeSubMenu("lobby")
 
         self.loadbtn.addAction("click", f)
+
+        # Delete Button
+        self.delbtn = cgclient.gui.CGButton(
+            "delbtn", self, self.window, self.peng,
+            pos=self.grid.get_cell([9, 0], [3, 1]),
+            label=self.peng.tl("cg:gui.menu.smain.adjourn.delbtn.label"),
+        )
+        self.addWidget(self.delbtn)
+
+        def f():
+            if self.chosen_game is None:
+                return
+
+            self.peng.cg.info(f"Deleting adjourned game {self.save_games[self.chosen_game]['id']}")
+
+            # Just remove the file and reload everything
+            if os.path.exists(self.save_games[self.chosen_game]["fname"]):
+                os.remove(self.save_games[self.chosen_game]["fname"])
+            else:
+                self.peng.cg.error(f"Could not delete adjourned game {self.save_games[self.chosen_game]['id']} because the file is missing")
+            self.load_save_games()
+            self.redraw_gamebtns()
+
+        self.delbtn.addAction("click", f)
 
         # Prev Page Button
         self.prevbtn = cgclient.gui.CGButton(
@@ -1101,24 +1125,26 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                 self.save_btns.append(btn)
                 btn.visible = False
 
-                def f(button):
-                    for b in self.save_btns:
-                        if b != button:
-                            b.pressed = False
-                            b.redraw()
-                    self.chosen_game = button.game_id
-                    self.loadbtn.enabled = True
-
-                btn.addAction("press_down", f, btn)
-
-                def f():
-                    self.chosen_game = None
-                    self.loadbtn.enabled = False
-
-                btn.addAction("press_up", f)
+                btn.addAction("press_down", self.on_btn_down, btn)
+                btn.addAction("press_up", self.on_btn_up, btn)
 
         self.save_games = {}
         self.save_offset = 0
+
+    def on_btn_down(self, button):
+        for b in self.save_btns:
+            if b != button:
+                b.pressed = False
+                b.doAction("statechanged")
+        self.chosen_game = button.game_id
+        self.loadbtn.enabled = button.match
+        self.delbtn.enabled = True
+
+
+    def on_btn_up(self, button):
+        self.chosen_game = None
+        self.loadbtn.enabled = False
+        self.delbtn.enabled = False
 
     def load_save_games(self):
         data = {}
@@ -1139,6 +1165,8 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
 
                         # Extract the server ID from the Issuer claim
                         d["server"] = uuidify(jwt.decode(d["data"], verify=False)["iss"])
+                        # Store the file name to be used when deleting games
+                        d["fname"] = fname
 
                     if "id" not in d:
                         self.menu.cg.error(f"Missing key id while loading savegame")
@@ -1164,8 +1192,9 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                 return data[k]["creation_time"]
 
             player_match = sorted(map(uuidify, data[k]["players"])) == sorted(self.peng.cg.client.lobby.users)
+            server_match = data[k]["server"] == self.menu.cg.client.server_id
 
-            if player_match:
+            if player_match and server_match:
                 # Negate time to ensure it is less than all other games
                 return -data[k]["creation_time"]
             else:
@@ -1203,16 +1232,18 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                     users_match = sorted(map(uuidify, sg["players"])) == sorted(self.peng.cg.client.lobby.users)
                     server_match = sg["server"] == self.menu.cg.client.server_id
 
-                    if not (users_match and server_match):
-                        self.save_btns[i].enabled = False
-                        self.save_btns[i].bg_layer.switchImage("disabled")
-                        self.save_btns[i].redraw()
+                    self.save_btns[i].match = users_match and server_match
+                    # if not (users_match and server_match):
+                    #     self.save_btns[i].enabled = False
+                    #     self.save_btns[i].bg_layer.switchImage("disabled")
+                    #     self.save_btns[i].redraw()
                 except Exception:
                     self.menu.cg.exception(f"Exception while rendering saved game")
             else:
                 btn.visible = False
                 btn.pressed = False
         self.loadbtn.enabled = False
+        self.delbtn.enabled = False
 
 
 class TemplateSubMenu(peng3d.gui.SubMenu):
@@ -1425,7 +1456,6 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
         self.save_data()
 
     def on_enter(self, old):
-        self.menu.cg.info(f"ON ENTER: {self.saves=} {self.save_opts=}")
         for i, btn in enumerate(self.save_btns):
             if i < len(self.saves):
                 self.save_btns[i].label = self.save_opts[i]
@@ -1909,7 +1939,39 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.player_layer)
 
+        # Match icon
+        def b(bx, by, bw, bh):
+            # We want to be sized 0.1*bh
+            # Since the icon is square, the border is a bit weird
+            return [
+                (bw-(0.1*bh))/2,
+                (bh-(0.1*bh))/2
+            ]
+
+        def o(bx, by, bw, bh):
+            return [
+                -(bw-(0.1*bh))/2+10,
+                (bh-(0.1*bh))/2-10
+            ]
+
+        self.matchicon = peng3d.gui.DynImageWidgetLayer(
+            "matchicon", self,
+            z_index=3,
+            # We want a square in the top-left corner
+            border=b,
+            offset=o,
+            imgs={
+                # TODO: use proper icons instead of the kick and ready icons
+                "nomatch": ("cg:img.btn.kick", "gui"),
+                "match": ("cg:img.btn.ok", "gui")
+            },
+        )
+        self.matchicon.switchImage("nomatch")
+        self.addLayer(self.matchicon)
+
         self.players = []
+
+        self._match = False
 
         self.submenu.menu.cg.add_event_listener("cg:user.update", self.handle_user_update, cg.event.F_RAISE_ERRORS)
 
@@ -1925,6 +1987,18 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
             players += username + "\n"
         players = players.strip("\n")
         self.player_layer.label = players
+
+    @property
+    def match(self):
+        return self._match
+
+    @match.setter
+    def match(self, value):
+        self._match = value
+        if value:
+            self.matchicon.switchImage("match")
+        else:
+            self.matchicon.switchImage("nomatch")
 
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.clickable:
@@ -2295,7 +2369,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                 self.readybtn.switchImage("transparent")
 
     def handle_user_leave(self, event: str, data: dict):
-        print(data, self.player.uuid)
+        #print(data, self.player.uuid)
         if data["user"] == self.player.uuid:
             self.readybtn.switchImage("transparent")
             self.admin_icon.switchImage("transparent")

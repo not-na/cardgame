@@ -381,6 +381,7 @@ gui.menu.smain.template.deletebtn.label=Vorlage löschen
 gui.menu.smain.adjourn.heading=Vertagtes Spiel Laden
 gui.menu.smain.adjourn.backbtn.label=Zurück
 gui.menu.smain.adjourn.loadbtn.label=Spiel laden
+gui.menu.smain.adjourn.delbtn.label=Spiel Löschen
 gui.menu.smain.adjourn.nextbtn.label=Nächste Seite
 gui.menu.smain.adjourn.prevbtn.label=Vorherige Seite
 

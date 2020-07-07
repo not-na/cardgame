@@ -379,6 +379,7 @@ gui.menu.smain.template.deletebtn.label=Delete template
 gui.menu.smain.adjourn.heading=Load adjourned game
 gui.menu.smain.adjourn.backbtn.label=Back
 gui.menu.smain.adjourn.loadbtn.label=Load game
+gui.menu.smain.adjourn.delbtn.label=Delete game
 gui.menu.smain.adjourn.nextbtn.label=Next page
 gui.menu.smain.adjourn.prevbtn.label=Previous page
 

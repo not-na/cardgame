@@ -184,9 +184,9 @@ class CrashReporter(object):
         out = CRASH_TEMPLATE.format(**data)
 
         # Store the crash report in a file
-        fname = os.path.join(self.cg.get_instance_path(), "crash_reports", f"crash_report-pid{os.getpid()}.txt")
-        if not os.path.exists(os.path.join(self.cg.get_instance_path(), "crash_reports")):
-            os.mkdir(os.path.join(self.cg.get_instance_path(), "crash_reports"))
+        fname = os.path.join(self.cg.get_settings_path(), "crash_reports", f"crash_report-pid{os.getpid()}.txt")
+        if not os.path.exists(os.path.join(self.cg.get_settings_path(), "crash_reports")):
+            os.mkdir(os.path.join(self.cg.get_settings_path(), "crash_reports"))
         with open(fname, "w") as f:
             f.write(out)
         self.cg.critical(f"Crash Report saved as {fname}, please check it for details about this crash")
@@ -330,7 +330,7 @@ class CGLogger(logging.Logger):
 
         self.formatter_file = logging.Formatter(cg.c.get_config_option("cg:logging.format.file"))
         self.handler_file = RestartRotateFileHandler(
-            os.path.join(cg.c.get_instance_path(), cg.c.get_config_option("cg:logging.basefilename")),
+            os.path.join(cg.c.get_settings_path(), cg.c.get_config_option("cg:logging.basefilename")),
             backupCount=cg.c.get_config_option("cg:logging.backupcount"),
         )
         self.handler_file.setFormatter(self.formatter_file)
