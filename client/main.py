@@ -70,6 +70,7 @@ class CardgameApp(cli.Application):
         #print(f"--address={self.addr} --username={self.username} --pwd={self.pwd}")
         c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)), self.settingsdir)
 
+        c.info("Client is running")
         c.info("Successfully created CG")
 
         c.init_client(username=self.username, pwd=self.pwd, default_server=self.addr)

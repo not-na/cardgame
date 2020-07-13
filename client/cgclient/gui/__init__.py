@@ -45,6 +45,9 @@ from . import settings
 from . import ingame
 
 
+DEFAULT_LANGUAGE = "de"
+
+
 CGTextInput = functools.partial(peng3d.gui.TextInput,
                                 parent_bgcls=peng3d.gui.button.FramedImageBackground,
                                 bg_idle=("cg:img.btn.fld_idle", "gui"),
@@ -120,7 +123,8 @@ class PengGUI(object):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(self.CG_APPID)
         self.window.maximize()
 
-        self.peng.i18n.setLang("de")
+        #self.peng.i18n.setLang("de")
+        self.peng.i18n.setLang(self.client.settings.get("language", DEFAULT_LANGUAGE))
 
         self.peng.keybinds.add("f12", "cg:set_fullscreen", self.toggle_fullscreen)
 
@@ -142,14 +146,11 @@ class PengGUI(object):
 
         self.peng.resourceMgr.categoriesSettings["gui"]["minfilter"] = GL_NEAREST
 
-        self.peng.resourceMgr.loadTex("cg:img.cursor.cursor20p", "gui")
-        self.window.set_mouse_cursor(pyglet.window.ImageMouseCursor(
-            self.peng.resourceMgr.categories["gui"]["cg:img.cursor.cursor20p"], 0, 20
-        )
-        )
+        self.update_cursor()
 
         #pyglet.clock.set_fps_limit(self.cg.get_config_option("cg:graphics.fps"))
-        pyglet.clock.schedule_interval(self.update, 1 / 60)
+        # TODO: implement custom FPS limits
+        pyglet.clock.schedule_interval(self.update, 1 / self.client.settings.get("target_fps", 60))
 
         self.t = self.peng.t
         self.tl = self.peng.tl
@@ -222,6 +223,32 @@ class PengGUI(object):
     def toggle_fullscreen(self, symbol, modifiers, release):
         if release:
             self.window.set_fullscreen(not self.window.fullscreen)
+
+    def update_cursor(self):
+        cursor = self.client.settings.get("cursor", "spades")
+
+        if cursor == "spades":
+            # Ensure that the cursor texture has been loaded
+            self.peng.resourceMgr.getTex("cg:img.cursor.cursor20p", "gui")
+            # TODO: add getTexReg() to resource manager to replace the direct access
+            self.window.set_mouse_cursor(pyglet.window.ImageMouseCursor(
+                self.peng.resourceMgr.categories["gui"]["cg:img.cursor.cursor20p"], 0, 20
+            )
+            )
+        elif cursor == "system_default":
+            # Default System cursor
+            self.window.set_mouse_cursor(
+                self.window.get_system_mouse_cursor(
+                    pyglet.window.Window.CURSOR_DEFAULT
+                )
+            )
+        else:
+            self.cg.error(f"Unknown mouse cursor type {cursor}")
+            self.window.set_mouse_cursor(
+                self.window.get_system_mouse_cursor(
+                    pyglet.window.Window.CURSOR_DEFAULT
+                )
+            )
 
     # Event Handlers
 

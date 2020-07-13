@@ -57,6 +57,7 @@ class CardgameApp(cli.Application):
         #print(f"--address={self.addr}")
         c = cg.CardGame(os.path.dirname(os.path.realpath(__file__)), self.settingsdir)
 
+        c.info("Server is running")
         c.info("Successfully created CG")
 
         c.init_server(addr=self.addr)

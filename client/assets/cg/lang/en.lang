@@ -170,6 +170,8 @@ msg.game.dk.pc_called_superpigs=After calling superpigs, you have to play them!
 msg.game.dk.re_no_party=Announcements can only be made when the parties are decided!
 msg.game.dk.re_too_late=You had to make this announcement earlier!
 
+announce.default=<ERROR>
+
 announce.reservation_yes=Reservation
 announce.reservation_no=No reservation
 announce.solo_yes.key=cg:announce.solo.{type}
@@ -405,7 +407,11 @@ gui.menu.ingame.scoreboard.quitbtn.label3=Leave game (noch {rounds} Runden)
 gui.menu.ingame.scoreboard.cancelbtn.label=Cancel game
 gui.menu.ingame.scoreboard.cancelbtn.label2=Cancel game ({amount})
 
+gui.menu.settings.label=Settings
 gui.menu.settings.exitbtn.label=Back
+gui.menu.settings.lang.label=Language:
+gui.menu.settings.lang.prevbtn=<
+gui.menu.settings.lang.nextbtn=>
 
 
 question.unknown.text=Question?

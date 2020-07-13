@@ -277,10 +277,15 @@ class Client(object):
             return
 
         self.settings = data
+
+        self.cg.send_event("cg:settings.load", {"settings": self.settings})
+
         self.cg.info(f"Successfully loaded settings")
 
     def save_settings(self):
         self.cg.info(f"Saving settings")
+
+        self.cg.send_event("cg:settings.save", {"settings": self.settings})
 
         fname = self.cg.get_settings_path("client_settings.json")
 
@@ -295,11 +300,16 @@ class Client(object):
         self.cg.add_event_listener("cg:network.packets.register.do", self.handler_dopacketregister)
         self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
 
-    def handler_connestablish(self, event: str, data: dict):
+        self.cg.add_event_listener("cg:settings.load", self.handler_settingsload)
+
+    def handler_connestablish(self, event: str, data: Dict):
         self.cg.info(f"Connection established after {(time.time() - data['peer'].start_time) * 1000:.2f}ms!")
 
-    def handler_dopacketregister(self, event: str, data: dict):
+    def handler_dopacketregister(self, event: str, data: Dict):
         cgclient.packet.register_default_packets(data["reg"], data["peer"], self.cg, data["registrar"])
 
     def handler_dogameregister(self, event: str, data: Dict):
         cgclient.game.register_games(data["registrar"])
+
+    def handler_settingsload(self, event: str, data: Dict):
+        pass

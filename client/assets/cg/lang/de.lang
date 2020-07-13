@@ -407,7 +407,11 @@ gui.menu.ingame.scoreboard.quitbtn.label3=Spiel verlassen (noch {rounds} Runden)
 gui.menu.ingame.scoreboard.cancelbtn.label=Spiel abbrechen
 gui.menu.ingame.scoreboard.cancelbtn.label2=Spiel abbrechen ({amount})
 
+gui.menu.settings.label=Einstellungen
 gui.menu.settings.exitbtn.label=Zurück
+gui.menu.settings.lang.label=Sprache:
+gui.menu.settings.lang.prevbtn=<
+gui.menu.settings.lang.nextbtn=>
 
 
 question.unknown.text=Frage?

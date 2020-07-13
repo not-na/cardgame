@@ -59,26 +59,109 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
     menu: SettingsMenu
 
     def __init__(self, name, menu, window, peng):
-        super().__init__(name, menu, window, peng)
+        super().__init__(name, menu, window, peng, font_size=30)
 
-        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [3, 10], [10, 10])
+        self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [8, 10], [20, 20])
 
         self.label = peng3d.gui.Label(
             "label", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 6], [1, 1]),
-            label="Settings here",
+            # TODO: fix alignment of this
+            pos=self.grid.get_cell([0, 9], [8, 1], anchor_y="bottom"),
+            label=self.peng.tl("cg:gui.menu.settings.label"),
             anchor_x="center",
             anchor_y="center",
+            font_size=40,
             )
         self.addWidget(self.label)
 
         self.exitbtn = cgclient.gui.CGButton(
             "exitbtn", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 4], [1, 1]),
+            pos=self.grid.get_cell([0, 9], [2, 1]),
             label=self.peng.tl("cg:gui.menu.settings.exitbtn.label"),
             )
         self.addWidget(self.exitbtn)
 
         def f():
+            self.peng.cg.client.save_settings()
             self.window.changeMenu(self.menu.prev_menu)
         self.exitbtn.addAction("click", f)
+
+        # Language Selector
+        self.langlabel = peng3d.gui.Label(
+            "langlabel", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 7], [2, 1], anchor_x="left"),
+            # size=[0,0],
+            label=self.peng.tl("cg:gui.menu.settings.lang.label"),
+            anchor_x="center",
+        )
+        self.addWidget(self.langlabel)
+
+        self.langgrid = peng3d.gui.layout.GridLayout(
+            self.peng,
+            self.grid.get_cell([3, 7], [4, 1], border=0),
+            [5, 1], [20, 20]
+        )
+        self.langlist = []
+
+        self.langprevbtn = cgclient.gui.CGButton(
+            "langprevbtn", self, self.window, self.peng,
+            pos=self.langgrid.get_cell([0, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.lang.prevbtn"),
+            font_size=35,
+        )
+        self.addWidget(self.langprevbtn)
+
+        def f():
+            curlang = self.peng.i18n.lang
+            if curlang not in self.langlist:
+                self.peng.cg.error(f"Current language {curlang} not in available languages!")
+                return
+            curidx = self.langlist.index(curlang)
+            idx = (curidx-1) % len(self.langlist)
+            newlang = self.langlist[idx]
+
+            self.peng.cg.info(f"Switching language to {newlang}")
+            self.peng.i18n.setLang(newlang)
+
+            self.peng.cg.client.settings["language"] = newlang
+        self.langprevbtn.addAction("click", f)
+
+        self.langnextbtn = cgclient.gui.CGButton(
+            "langnextbtn", self, self.window, self.peng,
+            pos=self.langgrid.get_cell([4, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.lang.nextbtn"),
+            font_size=35,
+        )
+        self.addWidget(self.langnextbtn)
+
+        def f():
+            curlang = self.peng.i18n.lang
+            if curlang not in self.langlist:
+                self.peng.cg.error(f"Current language {curlang} not in available languages!")
+                return
+            curidx = self.langlist.index(curlang)
+            idx = (curidx + 1) % len(self.langlist)
+            newlang = self.langlist[idx]
+
+            self.peng.cg.info(f"Switching language to {newlang}")
+            self.peng.i18n.setLang(newlang)
+
+            self.peng.cg.client.settings["language"] = newlang
+        self.langnextbtn.addAction("click", f)
+
+        self.langcurlabel = peng3d.gui.Label(
+            "langcurlabel", self, self.window, self.peng,
+            pos=self.langgrid.get_cell([1, 0], [3, 1]),
+            label=self.peng.tl("cg:meta.name.native"),
+            font_size=35,
+        )
+        self.addWidget(self.langcurlabel)
+
+        # TODO: maybe add UI for cursor type
+        # TODO: add UI + logic for FPS limit / vsync
+
+    def on_enter(self, old):
+        self.langlist = self.peng.i18n.discoverLangs()
+
+        self.peng.cg.info(f"Found {len(self.langlist)} languages")
+        self.peng.cg.debug(f"Available languages: {self.langlist}")
