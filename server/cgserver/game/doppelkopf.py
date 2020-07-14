@@ -457,17 +457,31 @@ class DoppelkopfGame(CGame):
         self.current_round.start()
 
     def collect_statistics(self):
-        botgame = False
-        for i in self.players:
-            botgame |= isinstance(self.cg.server.users_uuid[i], user.BotUser)
+        self.cg.info(f"Collecting statistics for game {self.game_id}")
+
+        #for i in self.players:
+        #    botgame |= isinstance(self.cg.server.users_uuid[i], user.BotUser)
+        botgame = any(map(lambda pid: isinstance(self.cg.server.users_uuid[pid], user.BotUser), self.players))
         data = {
-            "game_id": self.game_id,
+            "game_id": self.game_id.hex,
+            "game_type": "doppelkopf",
             "game_data": {
                 "creation_time": self.creation_time,
                 "rounds": {},
                 "botgame": botgame
             },
-            "players": []
+            "players": [],
+            "bots":
+                list(
+                    {
+                        "id": pid.hex,
+                        "serdat": self.cg.server.users_uuid[pid].bot.serialize(),
+                    }
+                    for pid in filter(
+                        lambda pid: isinstance(self.cg.server.users_uuid[pid], user.BotUser),
+                        self.players
+                    )
+                )
         }
         if self.move_history == {}:
             for r in self.rounds:
@@ -650,7 +664,7 @@ class DoppelkopfGame(CGame):
                 "end": set()
             }
             self.collect_statistics()
-            self.cancel_game()
+            self.cancel_game(notify=False)
 
     def handle_not_end_play(self, event: str, data: Dict):
         self.player_decisions["end"].discard(data["player"])

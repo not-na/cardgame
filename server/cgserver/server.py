@@ -395,6 +395,8 @@ class DedicatedServer(object):
         self.cg.add_event_listener("cg:game.register.do", self.handler_dogameregister)
         self.cg.add_event_listener("cg:bot.register.do", self.handler_dobotregister)
 
+        self.cg.add_event_listener("cg:stats.game.new", self.handler_statsnew)
+
     def handler_commandstop(self, event: str, data: Dict):
         # Ensure that the server console loop exits if a stop command is issued via the network
         self.run_console = False
@@ -428,6 +430,23 @@ class DedicatedServer(object):
 
     def handler_dobotregister(self, event: str, data: Dict):
         cgserver.game.bot.register_bots(data["registrar"])
+
+    def handler_statsnew(self, event: str, data: Dict):
+        statdir = self.cg.get_settings_path("gamestats")
+        statdir = os.path.join(statdir, data["game_type"])
+
+        # Ensure directory exists
+        os.makedirs(statdir, exist_ok=True)
+
+        fname = os.path.join(statdir, f"{data['game_id']}.cgs")
+
+        self.cg.info(f"Saving statistics for game {data['game_id']}")
+
+        if os.path.exists(fname):
+            self.cg.warn(f"Overwriting old statistics for game {data['game_id']}")
+
+        with open(fname, "wb") as f:
+            msgpack.dump(data, f)
 
     def _send_event(self, dt, event, data):
         self.cg.send_event(event, data)

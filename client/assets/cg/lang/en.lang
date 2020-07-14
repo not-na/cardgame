@@ -403,7 +403,8 @@ gui.menu.ingame.scoreboard.adjournbtn.label=Adjourn game
 gui.menu.ingame.scoreboard.adjournbtn.label2=Adjourn game ({amount})
 gui.menu.ingame.scoreboard.quitbtn.label=Leave game
 gui.menu.ingame.scoreboard.quitbtn.label2=Leave game ({amount})
-gui.menu.ingame.scoreboard.quitbtn.label3=Leave game (noch {rounds} Runden)
+gui.menu.ingame.scoreboard.quitbtn.label3=Leave game ({rounds} rounds remain)
+gui.menu.ingame.scoreboard.quitbtn.label4=Leave game (One round remains)
 gui.menu.ingame.scoreboard.cancelbtn.label=Cancel game
 gui.menu.ingame.scoreboard.cancelbtn.label2=Cancel game ({amount})
 

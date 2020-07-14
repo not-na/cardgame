@@ -112,7 +112,7 @@ class EventManager(object):
                     raise
                 elif not (flags & F_SILENT):
                     self.cg.info(f"Ignored error raised by event handler {handler} of event {event}")
-                    traceback.print_exc()
+                    self.cg.exception("Error while handling event:")
                 elif flags & F_REMOVE_ONERROR:
                     self.del_event_listener(event, handler)
 

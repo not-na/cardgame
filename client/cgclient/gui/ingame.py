@@ -1371,7 +1371,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": "quit_yes",
+                "type": "end_yes",
                 "announcer": self.peng.cg.client.user_id.hex
             })
 
@@ -1380,7 +1380,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.peng.cg.client.send_message("cg:game.dk.announce", {
-                "type": "quit_no",
+                "type": "end_no",
                 "announcer": self.peng.cg.client.user_id.hex
             })
 
@@ -1486,6 +1486,10 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             self.quitbtn.enabled = True
             self.quitbtn._label.font_size = 25
             self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label")
+        elif round_num % 4 == 1:
+            self.quitbtn.enabled = True
+            self.quitbtn._label.font_size = 16
+            self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label4")
         else:
             self.quitbtn.enabled = False
             self.quitbtn._label.font_size = 16
@@ -1671,5 +1675,10 @@ class StatusLayer(peng3d.gui.GUILayer):
         # Empty menu
         self.s_empty = peng3d.gui.SubMenu("empty", self, self.window, self.peng)
         self.addSubMenu(self.s_empty)
+
+        def f():
+            if self.activeSubMenu == "status_msg":
+                self.d_status_message.exitDialog()
+        self.peng.keybinds.add("enter", "cg:statusmsg.exit.ingame", f)
 
         self.changeSubMenu("empty")

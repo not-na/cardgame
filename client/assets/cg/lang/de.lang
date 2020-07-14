@@ -404,6 +404,7 @@ gui.menu.ingame.scoreboard.adjournbtn.label2=Spiel vertagen ({amount})
 gui.menu.ingame.scoreboard.quitbtn.label=Spiel verlassen
 gui.menu.ingame.scoreboard.quitbtn.label2=Spiel verlassen ({amount})
 gui.menu.ingame.scoreboard.quitbtn.label3=Spiel verlassen (noch {rounds} Runden)
+gui.menu.ingame.scoreboard.quitbtn.label4=Spiel verlassen (noch eine Runde)
 gui.menu.ingame.scoreboard.cancelbtn.label=Spiel abbrechen
 gui.menu.ingame.scoreboard.cancelbtn.label2=Spiel abbrechen ({amount})
 
