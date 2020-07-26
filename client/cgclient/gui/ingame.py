@@ -1118,7 +1118,23 @@ class LoadingScreenGUISubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
-        self.setBackground([242, 241, 240])
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
+            frame=[[10, 1, 10], [10, 1, 10]],
+            scale=(.3, .3),
+        )
+        )
+
+        self.w_label = peng3d.gui.Label(
+            "label", self, self.window, self.peng,
+            # Its not perfectly centered, but the loading screen shouldn't be visible for long anyway
+            pos=(lambda sw, sh, bw, bh: (sw/2, sh/2)),
+            size=(lambda sw, sh: (0, 0)),
+            label=self.peng.tl("cg:gui.menu.ingame.loadingscreen.label"),
+            font_size=40,
+        )
+        self.addWidget(self.w_label)
 
 
 class IngameGUISubMenu(peng3d.gui.SubMenu):
@@ -1132,7 +1148,7 @@ class IngameGUISubMenu(peng3d.gui.SubMenu):
         self.readybtn = cgclient.gui.CGButton(
             "readybtn", self, self.window, self.peng,
             pos=self.grid.get_cell([4, 4], [4, 2]),
-            label=self.peng.tl("cg:gui.menu.ingame.ingamegui.readybtn.label")
+            label=self.peng.tl("cg:gui.menu.ingame.ingamegui.readybtn.label"),
         )
         self.readybtn.visible = False
         self.addWidget(self.readybtn)

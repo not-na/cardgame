@@ -44,10 +44,11 @@ from . import servermain
 from . import settings
 from . import ingame
 
+SHOW_FPS = True
 
 DEFAULT_LANGUAGE = "de"
 
-
+# Some partial class substitutions to allow easy creation of standardised buttons and text inputs
 CGTextInput = functools.partial(peng3d.gui.TextInput,
                                 parent_bgcls=peng3d.gui.button.FramedImageBackground,
                                 bg_idle=("cg:img.btn.fld_idle", "gui"),
@@ -87,6 +88,8 @@ CGButtonBG = functools.partial(peng3d.gui.FramedImageBackground,  # Button like 
 class PengGUI(object):
     CG_APPID = "cg.cg.cardgame.1"
 
+    # Types are hinted here to allow for better autocompletion elsewhere
+    # Since the menus are not created in the constructor
     loadingscreen: loadingscreen.LoadingScreenMenu
     serverselect: serverselect.ServerSelectMenu
     servermain: servermain.ServerMainMenu
@@ -99,15 +102,31 @@ class PengGUI(object):
 
         self.run = False
 
+        # Initialize our Peng singleton
         self.peng = peng3d.Peng()
         self.peng.cg = self.cg
 
+        # TODO: add dynamic max texture size
         self.peng.cfg["rsrc.maxtexsize"] = 4096
+        # Set the clear color to a easily recognizable color to ensure we see it if it leaks through somewhere
         self.peng.cfg["graphics.clearColor"] = (1.0, 0.0, 1.0, 1.0)
 
+        # Get the primary display size
+        # Used when creating the window to speed up initial resizing
+        display = pyglet.canvas.get_display()
+        screens = display.get_screens()
+        w, h = screens[0].width, screens[0].height
+
+        # Output some debug information about screen sizes and positions
+        self.cg.debug(f"Found {len(screens)} screens:")
+        for n, screen in enumerate(screens):
+            self.cg.debug(f"#{n}: {screen.width}x{screen.height}, offset {screen.x}, {screen.y}")
+
+        # Create the main window
         self.window = self.peng.createWindow(
-            width=self.cg.get_config_option("cg:graphics.resolution.width"),
-            height=self.cg.get_config_option("cg:graphics.resolution.height"),
+            #width=self.cg.get_config_option("cg:graphics.resolution.width"),
+            #height=self.cg.get_config_option("cg:graphics.resolution.height"),
+            width=w, height=h,
             #caption_t="cg:window.caption",
             caption="Card Game",
             resizable=True,
@@ -115,16 +134,26 @@ class PengGUI(object):
             fullscreen=self.cg.get_config_option("cg:graphics.fullscreen"),
         )
 
+        # Set Icons, may not work everywhere
         self.window.setIcons("cg:icon.icon_{size}")
         if platform.system() == "Linux":
+            # set_minimum_size currently crashes under windows
+            # not strictly necessary, so not fixed yet
+            # TODO: make this work under windows
             self.window.set_minimum_size(640, 480)
         # Based on https://stackoverflow.com/a/1552105
         if platform.system() in "Windows":
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(self.CG_APPID)
         self.window.maximize()
 
-        #self.peng.i18n.setLang("de")
+        # Set Language before loading everything
+        # Avoids having to redraw every label due to a language change
         self.peng.i18n.setLang(self.client.settings.get("language", DEFAULT_LANGUAGE))
+
+        if SHOW_FPS:
+            self.fps_display = pyglet.window.FPSDisplay(self.window)
+
+            self.window.registerEventHandler("on_draw", self.fps_display.draw)
 
         self.peng.keybinds.add("f12", "cg:set_fullscreen", self.toggle_fullscreen)
 
@@ -158,14 +187,19 @@ class PengGUI(object):
         self.register_event_handlers()
 
     def init(self):
-        self.register_menus()
-
-    def register_menus(self):
         self.loadingscreen = loadingscreen.LoadingScreenMenu(
             "loadingscreen",
             self.window, self.peng, self,
         )
         self.window.addMenu(self.loadingscreen)
+
+        # Change to loadingscreen as soon as possible
+        self.window.changeMenu("loadingscreen")
+
+        self.cg.debug("Initialized loading screen, waiting for other menus")
+
+    def register_menus(self, dt=None):
+        self.cg.debug("Initializing remaining menus")
 
         self.serverselect = serverselect.ServerSelectMenu(
             "serverselect",
@@ -191,12 +225,11 @@ class PengGUI(object):
         )
         self.window.addMenu(self.ingame)
 
-        # Change to loadingscreen after everything is initialized
-        self.window.changeMenu("loadingscreen")
+        self.window.changeMenu("serverselect")
 
     def update(self, dt=None):
-        if self.window.menu.name == "loadingscreen":
-            self.window.changeMenu("serverselect")
+        if self.window.activeMenu == "loadingscreen":
+            self.loadingscreen.s_loadingscreen.w_label.label = self.peng.tl("cg:gui.menu.load.progress.load_menus")
 
         if self.client._client is not None:
             self.client._client.process()

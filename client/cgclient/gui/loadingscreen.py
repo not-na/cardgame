@@ -44,23 +44,35 @@ class LoadingScreenSubMenu(peng3d.gui.SubMenu):
         super().__init__(name, menu, window, peng)
 
         self.setBackground(peng3d.gui.button.FramedImageBackground(
-            self,
-            bg_idle=("cg:img.bg.bg_brown", "gui"),
+            peng3d.gui.FakeWidget(self),
+            bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(1, 1),
-            )
+            scale=(.3, .3),
         )
-        self.bg.vlist_layer = -1
+        )
 
-        self.label = peng3d.gui.Label("progress_label", self, self.window, self.peng,
-                                      pos=(lambda sw, sh, bw, bh: (sw/2, sh/2)),
-                                      size=[0, 0],  #(lambda sw, sh: (sw, sh)),
-                                      label=self.peng.tl("cg:gui.menu.load.progress.loading"),
-                                      #font_size=20,
-                                      anchor_x="center",
-                                      anchor_y="center",
-                                      font="Times New Roman",
-                                      font_size=20,
-                                      font_color=[255, 255, 255, 100]
-                                      )
-        self.addWidget(self.label)
+        self.w_label = peng3d.gui.Label(
+            "label", self, self.window, self.peng,
+            # Its not perfectly centered, but the loading screen shouldn't be visible for long anyway
+            pos=(lambda sw, sh, bw, bh: (sw / 2, sh / 2)),
+            size=[0, 0],
+            label=self.peng.tl("cg:gui.menu.load.progress.init"),
+            anchor_x="center",
+            anchor_y="center",
+            font="Times New Roman",
+            font_color=[255, 255, 255, 100],
+            font_size=40,
+        )
+        self.addWidget(self.w_label)
+
+        self.has_drawn = False
+
+    def draw(self):
+        super().draw()
+
+        # Initialize menus if we have been drawn at least once
+        # Ensures that the loading screen is visible
+        if self.has_drawn:
+            self.peng.cg.client.gui.register_menus()
+        else:
+            self.has_drawn = True

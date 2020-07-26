@@ -67,6 +67,7 @@ class GameStartPacket(CGPacket):
 
             # Switch the menu
             self.cg.client.gui.window.changeMenu("ingame")
+            self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
 
             self.cg.client.gui.servermain.s_lobby.readybtn.pressed = False
             self.cg.client.gui.servermain.s_lobby.readybtn.redraw()

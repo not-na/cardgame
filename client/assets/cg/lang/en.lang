@@ -249,7 +249,8 @@ announce.black.kontra=black (Kontra)
 
 gui.menu.status_msg.okbtn.label=Ok
 
-gui.menu.load.progress.loading=Loading...
+gui.menu.load.progress.init=Initializing...
+gui.menu.load.progress.load_menus=Loading User Interface...
 
 gui.menu.serverselect.title.playbtn.label=Play
 gui.menu.serverselect.title.settingsbtn.label=Settings
@@ -384,6 +385,8 @@ gui.menu.smain.adjourn.loadbtn.label=Load game
 gui.menu.smain.adjourn.delbtn.label=Delete game
 gui.menu.smain.adjourn.nextbtn.label=Next page
 gui.menu.smain.adjourn.prevbtn.label=Previous page
+
+gui.menu.ingame.loadingscreen.label=Loading...
 
 gui.menu.ingame.ingamegui.readybtn.label=Ready!
 gui.menu.ingame.ingamegui.throwbtn.label=Throw!
