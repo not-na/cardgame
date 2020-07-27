@@ -81,13 +81,14 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
 
         self.register_event_handlers()
 
-        self.setBackground(peng3d.gui.button.FramedImageBackground(
+        self.bg_brown = peng3d.gui.button.FramedImageBackground(
             peng3d.gui.FakeWidget(self),
             bg_idle=("cg:img.bg.bg_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3),
         )
-        )
+
+        self.setBackground(self.bg_brown)
         self.bg.vlist_layer = -1
 
         # Loading Screen
@@ -105,24 +106,14 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             label_cancel=self.peng.tl("cg:gui.menu.smain.create_acc.cancel"),
             label_main=self.peng.tl("cg:gui.menu.smain.create_acc.label_main"),
         )
-        self.d_create_acc.wbtn_confirm.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_create_acc.wbtn_confirm.setBackground(cgclient.gui.CGButtonBG(
             self.d_create_acc.wbtn_confirm,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
-        self.d_create_acc.wbtn_cancel.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_create_acc.wbtn_cancel.setBackground(cgclient.gui.CGButtonBG(
             self.d_create_acc.wbtn_cancel,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
         self.d_create_acc.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw / 2 - bw - 5, sh / 2 - bh * 2)
@@ -151,15 +142,9 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             label_main=self.peng.tl("cg:gui.menu.smain.loginerr.unknown"),
             label_ok=self.peng.tl("cg:gui.menu.smain.loginerr.ok"),
         )
-        self.d_login_err.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_login_err.wbtn_ok.setBackground(cgclient.gui.CGButtonBG(
             self.d_login_err.wbtn_ok,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True,
-            repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
         self.addSubMenu(self.d_login_err)
@@ -171,24 +156,14 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
             label_cancel=self.peng.tl("cg:gui.menu.smain.lobby_inv.cancel"),
             label_main=self.peng.tl("cg:gui.menu.smain.lobby_inv.label_main"),
         )
-        self.d_lobby_inv.wbtn_confirm.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_lobby_inv.wbtn_confirm.setBackground(cgclient.gui.CGButtonBG(
             self.d_lobby_inv.wbtn_confirm,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
-        self.d_lobby_inv.wbtn_cancel.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_lobby_inv.wbtn_cancel.setBackground(cgclient.gui.CGButtonBG(
             self.d_lobby_inv.wbtn_cancel,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
         self.d_lobby_inv.wbtn_confirm.pos = lambda sw, sh, bw, bh: (sw / 2 - bw - 5, sh / 2 - bh * 2)
@@ -217,25 +192,18 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
 
         # Status Message Menu
         self.d_status_message = peng3d.gui.menus.DialogSubMenu(
-            "status_msg", self, self.window, self.peng
+            "status_msg", self, self.window, self.peng,
+            label_ok=self.peng.tl("cg:gui.menu.status_msg.okbtn.label"),
         )
-        self.d_status_message.label_ok = self.peng.tl("cg:gui.menu.status_msg.okbtn.label")
-        self.d_status_message.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_status_message.wbtn_ok.setBackground(cgclient.gui.CGButtonBG(
             self.d_status_message.wbtn_ok,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
         self.addSubMenu(self.d_status_message)
 
-        def f():
-            self.peng.cg.send_event("cg:status.message.close")
-
-        self.d_status_message.wbtn_ok.addAction("click", f)
+        self.d_status_message.wbtn_ok.addAction("click", self.peng.cg.send_event, "cg:status.message.close")
+        self.d_status_message.addAction("send_form", self.peng.cg.send_event, "cg:status.message.close")
 
         # Login Menu
         self.s_login = LoginSubMenu("login", self, self.window, self.peng)
@@ -294,12 +262,12 @@ class LoginSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.user)
 
         # Password Field
-        # TODO: use an actual password field
         default_pwd = self.menu.cg.client.pwd if self.menu.cg.client.pwd is not None else ""
-        self.pwd = cgclient.gui.CGTextInput(
+        self.pwd = cgclient.gui.CGPasswordInput(
             "pwd", self, self.window, self.peng,
             pos=self.grid.get_cell([1, 8], [1, 1]),
             text=default_pwd,
+            default=self.peng.tl("cg:gui.menu.smain.login.pwd.default"),
             font_size=20
         )
         self.addWidget(self.pwd)
@@ -311,17 +279,20 @@ class LoginSubMenu(peng3d.gui.SubMenu):
             label=self.peng.tl("cg:gui.menu.smain.login.okbtn.label"),
         )
         self.addWidget(self.okbtn)
+        self.okbtn.addAction("click", self.send_form)
 
-        def f():
-            if self.pwd.text.strip() != "" and self.user.text.strip() != "":
-                self.menu.cg.client.send_message("cg:auth.precheck", {
-                    "username": self.user.text.strip(),
-                })
+        self.addAction("send_form", self.on_send_form)
 
-                self.menu.changeSubMenu("load")
-                self.menu.d_load.label_main = self.peng.tl("cg:gui.menu.smain.load.login")
+    def on_send_form(self):
+        self.menu.cg.client.send_message("cg:auth.precheck", {
+            "username": self.user.text.strip(),
+        })
 
-        self.okbtn.addAction("click", f)
+        self.menu.changeSubMenu("load")
+        self.menu.d_load.label_main = self.peng.tl("cg:gui.menu.smain.load.login")
+
+    def form_valid(self, ctx=None):
+        return self.pwd.text.strip() != "" and self.user.text.strip() != ""
 
 
 class MainSubMenu(peng3d.gui.SubMenu):
@@ -459,15 +430,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
             pos=self.grid.get_cell([0, 4], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.main.playbtn.label"),
         )
-        self.playbtn.setBackground(peng3d.gui.FramedImageBackground(
+        self.playbtn.setBackground(cgclient.gui.CGButtonBG(
             self.playbtn,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
-            frame=[[1, 2, 1], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
         ))
 
         def f():
@@ -489,15 +453,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
             pos=self.grid.get_cell([0, 3], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.main.adjourned.label")
         )
-        self.adjourned.setBackground(peng3d.gui.FramedImageBackground(
+        self.adjourned.setBackground(cgclient.gui.CGButtonBG(
             self.adjourned,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
-            frame=[[1, 2, 1], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
         ))
 
         self.adjourned.addAction("press_down", f1, self.adjourned)
@@ -511,15 +468,8 @@ class MainSubMenu(peng3d.gui.SubMenu):
             pos=self.grid.get_cell([0, 2], [1, 1]),
             label=self.peng.tl("cg:gui.menu.smain.main.lbbtn.label")
         )
-        self.lbbtn.setBackground(peng3d.gui.FramedImageBackground(
+        self.lbbtn.setBackground(cgclient.gui.CGButtonBG(
             self.lbbtn,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            bg_disabled=("cg:img.btn.btn_disabled", "gui"),
-            frame=[[1, 2, 1], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
         ))
 
         self.lbbtn.addAction("press_down", f1, self.lbbtn)
@@ -983,8 +933,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
             bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
             scale=(.3, .3),
-        )
-        )
+        ))
 
         # Upper Bar
         self.w_upper_bar = peng3d.gui.Widget(
@@ -1140,7 +1089,6 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
         self.loadbtn.enabled = button.match
         self.delbtn.enabled = True
 
-
     def on_btn_up(self, button):
         self.chosen_game = None
         self.loadbtn.enabled = False
@@ -1257,11 +1205,11 @@ class TemplateSubMenu(peng3d.gui.SubMenu):
 
         self.exit_mode = "back"
 
-        self.setBackground(peng3d.gui.FramedImageBackground(
+        self.setBackground(peng3d.gui.button.FramedImageBackground(
             peng3d.gui.FakeWidget(self),
             bg_idle=("cg:img.bg.bg_dark_brown", "gui"),
             frame=[[10, 1, 10], [10, 1, 10]],
-            scale=(.3, .3)
+            scale=(.3, .3),
         ))
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [12, 18], [60, 30])

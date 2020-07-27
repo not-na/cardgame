@@ -72,6 +72,8 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng)
 
+        self.addAction("send_form", self.on_send_form)
+
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [3, 8], [60, 30])
 
         # Background
@@ -125,10 +127,7 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.playbtn)
 
-        def f():
-            self.menu.changeSubMenu("serverselect")
-
-        self.playbtn.addAction("click", f)
+        self.playbtn.addAction("click", self.send_form)
 
         # Settings Button
         # This button switches to the settings submenu
@@ -145,6 +144,9 @@ class TitleScreenSubMenu(peng3d.gui.SubMenu):
 
         self.settingsbtn.addAction("click", f)
 
+    def on_send_form(self):
+        self.menu.changeSubMenu("serverselect")
+
 
 class ServerSelectionSubMenu(peng3d.gui.SubMenu):
     def __init__(self, name, menu, window, peng):
@@ -156,6 +158,8 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
         self.server_data = {}
 
         self.server_lock = threading.Lock()
+
+        self.addAction("send_form", self.on_send_form)
 
         self.server_queue = queue.Queue()
         pyglet.clock.schedule_interval(self._update_serverlist, 0.1)
@@ -206,13 +210,7 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.connectbtn)
         self.connectbtn.enabled = False
 
-        def f():
-            if not self.c_add.visible and not self.c_edit.visible:
-                self.menu.cg.client.connect_to(self.server_data[self.active_server]["address"], self.active_server)
-                self.window.changeMenu("servermain")
-                self.window.menus["servermain"].changeSubMenu("load")
-
-        self.connectbtn.addAction("click", f)
+        self.connectbtn.addAction("click", self.send_form)
 
         # Server Add Button
         self.addbtn = cgclient.gui.CGButton(
@@ -341,6 +339,9 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
             size=None
         )
         self.addWidget(self.c_edit)
+
+    def form_valid(self, ctx=None):
+        return not self.c_add.visible and not self.c_edit.visible
 
     def add_server(self, data):
         for btn in self.serverbtns:
@@ -517,6 +518,11 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
         self.connectbtn.enabled = True
         self.editbtn.enabled = True
         self.deletebtn.enabled = True
+
+    def on_send_form(self):
+        self.menu.cg.client.connect_to(self.server_data[self.active_server]["address"], self.active_server)
+        self.window.changeMenu("servermain")
+        self.window.menus["servermain"].changeSubMenu("load")
 
     def register_event_handlers(self):
         self.menu.cg.add_event_listener("cg:client.ping.complete", self.handle_serverpingcomplete)

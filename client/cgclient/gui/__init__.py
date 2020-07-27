@@ -64,6 +64,21 @@ CGTextInput = functools.partial(peng3d.gui.TextInput,
                                 border=[6, 0],
                                 )
 
+CGPasswordInput = functools.partial(peng3d.gui.PasswordInput,
+                                parent_bgcls=peng3d.gui.button.FramedImageBackground,
+                                bg_idle=("cg:img.btn.fld_idle", "gui"),
+                                bg_hover=("cg:img.btn.fld_hov", "gui"),
+                                bg_pressed=("cg:img.btn.fld_press", "gui"),
+                                frame=[
+                                    [150, 700, 150],
+                                    [0, 1, 0],
+                                ],
+                                repeat_edge=True,
+                                repeat_center=True,
+                                scale=[None, 0],
+                                border=[6, 0],
+                                )
+
 CGButton = functools.partial(peng3d.gui.FramedImageButton,  # Button like on the titlescreen
                              bg_idle=("cg:img.btn.btn_idle", "gui"),
                              bg_hover=("cg:img.btn.btn_hov", "gui"),

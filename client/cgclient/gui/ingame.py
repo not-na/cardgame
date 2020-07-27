@@ -98,7 +98,7 @@ class BackgroundLayer(peng3d.gui.GUILayer):
         super().on_resize(w, h)
         if self.peng.cg.client.game is None:
             return
-        # This must be done here for GameLayer has no on_resize method
+        # This must be done here because GameLayer has no on_resize method
         for i in ["hand1", "hand3", "tricks0", "tricks1", "tricks2", "tricks3"]:
             for c in self.peng.cg.client.game.slots[i]:
                 if c.anim_state != cgclient.gui.card.ANIM_STATE_ACTIVE:
@@ -1671,14 +1671,9 @@ class StatusLayer(peng3d.gui.GUILayer):
         )
         )
         self.d_status_message.label_ok = self.peng.tl("cg:gui.menu.status_msg.okbtn.label")
-        self.d_status_message.wbtn_ok.setBackground(peng3d.gui.FramedImageBackground(
+        self.d_status_message.wbtn_ok.setBackground(cgclient.gui.CGButtonBG(
             self.d_status_message.wbtn_ok,
-            bg_idle=("cg:img.btn.btn_idle", "gui"),
-            bg_hover=("cg:img.btn.btn_hov", "gui"),
-            bg_pressed=("cg:img.btn.btn_press", "gui"),
-            frame=[[249, 502, 249], [0, 1, 0]],
-            scale=(None, 0),
-            repeat_edge=True, repeat_center=True,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
         )
         )
         self.addSubMenu(self.d_status_message)
@@ -1692,9 +1687,9 @@ class StatusLayer(peng3d.gui.GUILayer):
         self.s_empty = peng3d.gui.SubMenu("empty", self, self.window, self.peng)
         self.addSubMenu(self.s_empty)
 
-        def f():
-            if self.activeSubMenu == "status_msg":
-                self.d_status_message.exitDialog()
-        self.peng.keybinds.add("enter", "cg:statusmsg.exit.ingame", f)
+        self.addAction("send_form", self.on_send_form)
 
         self.changeSubMenu("empty")
+
+    def on_send_form(self):
+        self.d_status_message.exitDialog()

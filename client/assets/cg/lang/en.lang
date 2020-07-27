@@ -281,6 +281,7 @@ gui.menu.smain.load.load=Loading...
 gui.menu.smain.load.login=Logging in...
 
 gui.menu.smain.login.okbtn.label=Log in
+gui.menu.smain.login.pwd.default=Password
 
 gui.menu.smain.create_acc.confirm=Create account
 gui.menu.smain.create_acc.cancel=Cancel
