@@ -119,4 +119,5 @@ class CGame(object):
             self.cards[card].start_anim(self.cards[card].slot, self.cards[card].slot)
         self.cur_cardbatch = []
 
-
+    def sort_cards(self):
+        pass

@@ -1502,8 +1502,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             self.quitbtn.enabled = True
             self.quitbtn._label.font_size = 25
             self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label")
-        elif round_num % 4 == 1:
-            self.quitbtn.enabled = True
+        elif round_num % 4 == 3:
+            self.quitbtn.enabled = False
             self.quitbtn._label.font_size = 16
             self.quitbtn.label = self.peng.tl("cg:gui.menu.ingame.scoreboard.quitbtn.label4")
         else:

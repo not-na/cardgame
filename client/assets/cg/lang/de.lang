@@ -417,6 +417,7 @@ gui.menu.settings.exitbtn.label=Zurück
 gui.menu.settings.lang.label=Sprache:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
+gui.menu.settings.sort.label=Karten automatisch sortieren
 
 
 question.unknown.text=Frage?

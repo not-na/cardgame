@@ -1868,6 +1868,7 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.bg_layer)
 
+        # TODO Fix this in peng3d or whereever
         self.addAction("statechanged", lambda: self.bg_layer.switchImage(self.getState()))
 
         h = pyglet.font.load("Times New Roman", 30).ascent / 2

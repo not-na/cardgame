@@ -417,6 +417,7 @@ gui.menu.settings.exitbtn.label=Back
 gui.menu.settings.lang.label=Language:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
+gui.menu.settings.sort.label=Sort cards automatically
 
 
 question.unknown.text=Question?

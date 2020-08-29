@@ -133,6 +133,9 @@ class RoundChangePacket(CGPacket):
                 self.cg.client.gui.ingame.gui_layer.s_ingame.readybtn.visible = True
                 if self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.should_visible:
                     self.cg.client.gui.ingame.gui_layer.s_ingame.throwbtn.visible = True
+                # Sort cards
+                if self.cg.client.settings.get("dk.sort_cards", False):
+                    self.cg.client.game.sort_cards()
             elif msg["phase"] == "reservations":
                 pass
             elif msg["phase"] == "tricks":

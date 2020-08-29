@@ -87,6 +87,7 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
         self.exitbtn.addAction("click", f)
 
         # Language Selector
+        # TODO Add language discovery to windows
         self.langlabel = peng3d.gui.Label(
             "langlabel", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 7], [2, 1], anchor_x="left"),
@@ -157,6 +158,19 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.langcurlabel)
 
+        # Autosort for cards
+        self.sortbtn = peng3d.gui.ToggleButton(
+            "sortlabel", self, self.window, self.peng,
+            pos=self.grid.get_cell([1, 6], [6, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.sort.label"),
+        )
+        self.sortbtn.setBackground(cgclient.gui.CGButtonBG(self.sortbtn))
+        self.addWidget(self.sortbtn)
+
+        def f():
+            self.menu.cg.client.settings["dk.sort_cards"] = not self.menu.cg.client.settings.get("dk.sort_cards", False)
+        self.sortbtn.addAction("click", f)
+
         # TODO: maybe add UI for cursor type
         # TODO: add UI + logic for FPS limit / vsync
 
@@ -165,3 +179,5 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
 
         self.peng.cg.info(f"Found {len(self.langlist)} languages")
         self.peng.cg.debug(f"Available languages: {self.langlist}")
+
+        self.sortbtn.pressed = self.menu.cg.client.settings.get("dk.sort_cards", False)
