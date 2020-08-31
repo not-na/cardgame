@@ -292,6 +292,10 @@ gui.menu.smain.loginerr.ok=OK
 gui.menu.smain.loginerr.wrongcred=Falsche Anmeldeinformationen oder ungültiger Benutzername!
 gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
 
+gui.menu.smain.connerr.unknown=Unbekannter Fehler beim Verbinden
+gui.menu.smain.connerr.ok=OK
+gui.menu.smain.connerr.version=Inkompatibler Server mit Version {semver} ({protoversion}, {flavor})
+
 gui.menu.smain.main.createbtn.label=Lobby erstellen
 gui.menu.smain.main.playbtn.label=Spielen
 gui.menu.smain.main.adjourned.label=Vertagte Spiele
@@ -417,8 +421,9 @@ gui.menu.settings.exitbtn.label=Zurück
 gui.menu.settings.lang.label=Sprache:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
-gui.menu.settings.sort.label=Karten automatisch sortieren
-
+gui.menu.settings.sort.label=Karten automatisch sortieren:
+gui.menu.settings.sort.label.0=Nein
+gui.menu.settings.sort.label.1=Ja
 
 question.unknown.text=Frage?
 question.unknown.choice1=Jain

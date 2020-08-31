@@ -34,7 +34,7 @@ import cg
 import cgclient
 import cgclient.gui
 
-from cg.constants import STATE_AUTH, MODE_CG
+from cg.constants import STATE_AUTH, MODE_CG, STATE_VERSIONCHECK
 from cg.util.serializer import json
 
 
@@ -49,7 +49,7 @@ class CGClient(peng3dnet.net.Client):
     def on_handshake_complete(self):
         super().on_handshake_complete()
 
-        self.remote_state = STATE_AUTH
+        self.remote_state = STATE_VERSIONCHECK
         self.mode = MODE_CG
 
         self.cg.info("Handshake with server complete, proceeding to login")
@@ -63,13 +63,22 @@ class CGClient(peng3dnet.net.Client):
             "peer": self,
         })
 
+        self.send_message("cg:version.check", {
+            "protoversion": cgclient.version.PROTO_VERSION,
+            "semver": cgclient.version.SEMVER,
+            "flavor": cgclient.version.FLAVOR,
+        })
+
     def on_close(self, reason=None):
         super().on_close(reason)
 
         if reason in ["packetregmismatch", "socketclose", "smartpacketinvalid"]:
             self.cg.error(f"Connection closed due to '{reason}'")
+        elif reason == "versionmismatch":
+            self.cg.warning(f"Connection closed due to version mismatch")
+            return
         else:
-            self.cg.info(f"Connection closed due to '{reason}'")
+            self.cg.warning(f"Connection closed due to '{reason}'")
 
         self.cg.send_event("cg:network.client.close_conn", {"reason": reason})
 

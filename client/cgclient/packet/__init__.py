@@ -28,6 +28,12 @@ def register_default_packets(reg, peer, cg, add):
     def r(name: str, packet):
         add(name, packet(reg, peer, c=cg))
 
+    # VERSIONCHECK CONNECTION STATE
+
+    from . import version_check
+    # Version Check Packet
+    r("cg:version.check", version_check.VersionCheckPacket)
+
     # AUTH CONNECTION STATE
 
     from . import auth_precheck

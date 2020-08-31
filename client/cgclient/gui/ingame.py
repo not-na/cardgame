@@ -1678,18 +1678,12 @@ class StatusLayer(peng3d.gui.GUILayer):
         )
         self.addSubMenu(self.d_status_message)
 
-        def f():
-            self.peng.cg.send_event("cg:status.message.close")
-
-        self.d_status_message.wbtn_ok.addAction("click", f)
+        self.d_status_message.wbtn_ok.addAction("click", self.peng.cg.send_event, "cg:status.message.close")
+        self.d_status_message.addAction("send_form", self.peng.cg.send_event, "cg:status.message.close")
+        self.d_status_message.addAction("send_form", self.d_status_message.exitDialog)
 
         # Empty menu
         self.s_empty = peng3d.gui.SubMenu("empty", self, self.window, self.peng)
         self.addSubMenu(self.s_empty)
 
-        self.addAction("send_form", self.on_send_form)
-
         self.changeSubMenu("empty")
-
-    def on_send_form(self):
-        self.d_status_message.exitDialog()

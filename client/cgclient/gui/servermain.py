@@ -99,6 +99,23 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
         )
         self.addSubMenu(self.d_load)
 
+        # Connection Error Screen
+        self.d_connerr = peng3d.gui.DialogSubMenu(
+            "connerr", self, self.window, self.peng,
+            label_main=self.peng.tl("cg:gui.menu.smain.connerr.unknown"),
+            label_ok=self.peng.tl("cg:gui.menu.smain.connerr.ok"),
+        )
+        self.d_connerr.wbtn_ok.setBackground(cgclient.gui.CGButtonBG(
+            self.d_connerr.wbtn_ok,
+            frame=[[249, 502, 249], [0, 1, 0]],  # TODO: check what's up with the 249/502 and possibly remove
+        )
+        )
+        self.addSubMenu(self.d_connerr)
+
+        def f():
+            self.window.changeMenu("serverselect")
+        self.d_connerr.addAction("click_ok", f)
+
         # Create Account Dialog
         self.d_create_acc = peng3d.gui.menus.ConfirmSubMenu(
             "create_acc", self, self.window, self.peng,
@@ -204,6 +221,7 @@ class ServerMainMenu(peng3d.gui.GUIMenu):
 
         self.d_status_message.wbtn_ok.addAction("click", self.peng.cg.send_event, "cg:status.message.close")
         self.d_status_message.addAction("send_form", self.peng.cg.send_event, "cg:status.message.close")
+        self.d_status_message.addAction("send_form", self.d_status_message.exitDialog)
 
         # Login Menu
         self.s_login = LoginSubMenu("login", self, self.window, self.peng)

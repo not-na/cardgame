@@ -27,6 +27,8 @@ Packets
 .. toctree::
    :maxdepth: 1
 
+   packets/packet_version_check
+
    packets/packet_auth
    packets/packet_auth_precheck
 

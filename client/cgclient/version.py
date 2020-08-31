@@ -25,4 +25,8 @@ VERSIONSTRING = "v0.1.0"
 
 VERSION = (0, 1, 0, "dev")
 
+SEMVER = "0.1.0-dev"
+
 PROTO_VERSION = 1
+
+FLAVOR = "vanilla"

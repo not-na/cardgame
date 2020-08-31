@@ -38,7 +38,7 @@ import peng3dnet
 import cg
 import cgserver
 
-from cg.constants import STATE_AUTH, MODE_CG
+from cg.constants import STATE_AUTH, MODE_CG, STATE_VERSIONCHECK
 from cg.util import uuidify
 from cg.util.serializer import msgpack
 
@@ -70,6 +70,7 @@ class CGServer(peng3dnet.ext.ping.PingableServerMixin, peng3dnet.net.Server):
             "playerlist": [],  # TODO: implement player list
             "canlogon": True,  # TODO: implement properly
             "version": self.cg.get_proto_version(),
+            "flavor": cgserver.version.FLAVOR,
             "timestamp": time.time(),
         }
 
@@ -80,7 +81,7 @@ class ClientOnCGServer(peng3dnet.net.ClientOnServer):
     def on_handshake_complete(self):
         super().on_handshake_complete()
 
-        self.state = STATE_AUTH
+        self.state = STATE_VERSIONCHECK
         self.mode = MODE_CG
         self.user = None
 

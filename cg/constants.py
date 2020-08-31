@@ -48,6 +48,11 @@ The ``lobby`` state signals that the client is in a lobby.
 This state is usually rather short-lived and followed by one of the :py:data:`STATE_GAME_*` states.
 """
 
+STATE_VERSIONCHECK = 103
+"""
+The ``versioncheck`` state signals that the version compatibility between server and client still has to be checked.
+"""
+
 STATE_GAME_DK = 110
 """
 The ``game_dk`` state signals that this client is currently playing :term:`Doppelkopf`\\ .

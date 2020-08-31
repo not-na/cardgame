@@ -292,6 +292,10 @@ gui.menu.smain.loginerr.ok=OK
 gui.menu.smain.loginerr.wrongcred=Invalid log in credentials or invalid username!
 gui.menu.smain.loginerr.userexists=This username is already used!
 
+gui.menu.smain.connerr.unknown=Unknown error while connecting
+gui.menu.smain.connerr.ok=OK
+gui.menu.smain.connerr.version=Incompatible Server with version {semver} ({protoversion}, {flavor})
+
 gui.menu.smain.main.createbtn.label=Create Lobby
 gui.menu.smain.main.playbtn.label=Play
 gui.menu.smain.main.adjourned.label=Adjourned Games
@@ -417,7 +421,9 @@ gui.menu.settings.exitbtn.label=Back
 gui.menu.settings.lang.label=Language:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
-gui.menu.settings.sort.label=Sort cards automatically
+gui.menu.settings.sort.label=Sort cards automatically:
+gui.menu.settings.sort.label.0=No
+gui.menu.settings.sort.label.1=Yes
 
 
 question.unknown.text=Question?

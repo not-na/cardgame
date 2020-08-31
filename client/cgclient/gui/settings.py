@@ -159,16 +159,28 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
         self.addWidget(self.langcurlabel)
 
         # Autosort for cards
+        self.sortlabel = peng3d.gui.Label(
+            "sortlabel", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 6], [2, 1], anchor_x="left"),
+            # size=[0,0],
+            label=self.peng.tl("cg:gui.menu.settings.sort.label"),
+            anchor_x="center",
+        )
+        self.addWidget(self.sortlabel)
+
         self.sortbtn = peng3d.gui.ToggleButton(
             "sortlabel", self, self.window, self.peng,
-            pos=self.grid.get_cell([1, 6], [6, 1]),
-            label=self.peng.tl("cg:gui.menu.settings.sort.label"),
+            pos=self.grid.get_cell([3, 6], [4, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.sort.label.0"),
         )
         self.sortbtn.setBackground(cgclient.gui.CGButtonBG(self.sortbtn))
         self.addWidget(self.sortbtn)
 
+        self.sortbtn.pressed = self.menu.cg.client.settings.get("dk.sort_cards", False)
+
         def f():
             self.menu.cg.client.settings["dk.sort_cards"] = not self.menu.cg.client.settings.get("dk.sort_cards", False)
+            self.sortbtn.label = self.peng.tl(f"cg:gui.menu.settings.sort.label.{int(self.menu.cg.client.settings['dk.sort_cards'])}")
         self.sortbtn.addAction("click", f)
 
         # TODO: maybe add UI for cursor type
@@ -179,5 +191,3 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
 
         self.peng.cg.info(f"Found {len(self.langlist)} languages")
         self.peng.cg.debug(f"Available languages: {self.langlist}")
-
-        self.sortbtn.pressed = self.menu.cg.client.settings.get("dk.sort_cards", False)

@@ -21,6 +21,8 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 import random
+import secrets
+import sys
 import time
 from itertools import chain
 from typing import List, Optional, Dict, Tuple, Union, Set
@@ -483,6 +485,8 @@ class DoppelkopfGame(CGame):
                     )
                 )
         }
+
+        # TODO: allow for multiple adjourning while still keeping all round data
         if self.move_history == {}:
             for r in self.rounds:
                 data["game_data"]["rounds"][r.round_id.hex] = {
@@ -491,7 +495,9 @@ class DoppelkopfGame(CGame):
                             self.players.index(v["player"]),
                             f"{v['type']}:{v['data']}"
                         ) for v in r.moves.values()
-                    ]
+                    ],
+                    "seed": r.random_seed,
+                    "python_ver": sys.version,
                 }
         else:
             data["game_data"]["rounds"] = self.move_history
@@ -722,7 +728,8 @@ class DoppelkopfGame(CGame):
                             self.players.index(v["player"]),
                             f"{v['type']}:{v['data']}"
                         ) for v in r.moves.values()
-                    ]
+                    ],
+                    "seed": r.random_seed,
                 } for r in self.rounds
             },
         }
@@ -848,6 +855,9 @@ class DoppelkopfRound(object):
 
         self.deal_counter = 0
         self.players_loaded = set()
+
+        self.random_seed = secrets.randbits(128)
+        self.random = random.Random(self.random_seed)
 
     @property
     def hands(self) -> Dict[uuid.UUID, List[uuid.UUID]]:
@@ -1563,7 +1573,7 @@ class DoppelkopfRound(object):
             if self.DEV_MODE_PREP_CARDS:
                 card_id = stack.pop(0)
             else:
-                card_id = stack.pop(random.randint(0, len(stack) - 1))
+                card_id = stack.pop(self.random.randint(0, len(stack) - 1))
             self.game.cg.info(f"Dealing card {self.cards[card_id].card_value} to hand{self.deal_counter % 4}")
             self.transfer_card(self.cards[card_id], "stack", f"hand{self.deal_counter % 4}")
 
