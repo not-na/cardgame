@@ -24,7 +24,7 @@ import ctypes
 import math
 import time
 import uuid
-from typing import List, Mapping, Optional, Tuple, Dict
+from typing import List, Mapping, Optional, Tuple, Dict, Type
 
 import peng3d
 from . import card
@@ -111,6 +111,8 @@ class GameLayer(peng3d.layer.Layer):
     batch: pyglet.graphics.Batch
     batch_pick: pyglet.graphics.Batch
 
+    cur_card_type: Type[card.CardType]
+
     NUM_SYNCS = 2
     MIN_COLORID = 1 / 30.
 
@@ -137,6 +139,8 @@ class GameLayer(peng3d.layer.Layer):
         self.mouse_moved = True
         self.mouse_pos = 0, 0
         self.mouse_color = 255, 0, 255
+
+        self.cur_card_type = card.CARD_TYPES[self.menu.cg.client.settings.get("card_deck", card.DEFAULT_CARD_TYPE)]
 
         self.batch = pyglet.graphics.Batch()
         self.batch_pick = pyglet.graphics.Batch()
@@ -176,6 +180,8 @@ class GameLayer(peng3d.layer.Layer):
         self.peng.registerEventHandler("on_mouse_press", self.on_mouse_press)
         self.peng.registerEventHandler("on_mouse_release", self.on_mouse_release)
 
+        self.menu.cg.add_event_listener("cg:client.settings.cardtype.change", self.handle_cardtypechange)
+
         # TODO: possibly increase the animation frequency for high refreshrate monitors
         pyglet.clock.schedule_interval(self.update, 1 / 60.)
 
@@ -191,7 +197,7 @@ class GameLayer(peng3d.layer.Layer):
             return slot
 
     def get_backname(self):
-        return "cg:card.back_1"
+        return "cg:card."+self.cur_card_type.name+"."+self.cur_card_type.back_names[0]
 
     def gen_color_id(self, co: card.Card) -> Tuple:
         for n in range(0, 255):
@@ -506,9 +512,9 @@ class GameLayer(peng3d.layer.Layer):
     def on_menu_enter(self,old):
         super().on_menu_enter(old)
 
-        for suit in card.SUITES.values():
-            for val in card.COUNTS.values():
-                self.peng.resourceMgr.getTex(f"cg:card.{suit}_{val}", "card")
+        for suit in self.cur_card_type.suits.keys():
+            for val in self.cur_card_type.counts.keys():
+                self.peng.resourceMgr.getTex(self.cur_card_type.get_texname(suit+val), "card")
 
     def on_debug(self, symbol, modifiers, release):
         if release:
@@ -520,6 +526,13 @@ class GameLayer(peng3d.layer.Layer):
             return
         co = self.game.cards[c]
         self.menu.cg.info(f"DEBUG: {co.value=} {co.slot=} {co.rot=} {co.texf[1]}/{co.texb[1]}")
+
+    def handle_cardtypechange(self, event: str, data: dict):
+        self.cur_card_type = card.CARD_TYPES[data["new"]]
+
+        if self.game is not None:
+            for c in self.game.cards.values():
+                c.redraw()
 
     def clean_up(self):
         # Delete all cards and reset to beginning

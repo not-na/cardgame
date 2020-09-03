@@ -421,9 +421,16 @@ gui.menu.settings.exitbtn.label=Zurück
 gui.menu.settings.lang.label=Sprache:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
+gui.menu.settings.card.label=Kartendeck:
+gui.menu.settings.card.prevbtn=<
+gui.menu.settings.card.nextbtn=>
 gui.menu.settings.sort.label=Karten automatisch sortieren:
 gui.menu.settings.sort.label.0=Nein
 gui.menu.settings.sort.label.1=Ja
+
+cards.french.name=Französisch
+cards.bavarian.name=Bayrisch
+
 
 question.unknown.text=Frage?
 question.unknown.choice1=Jain

@@ -20,10 +20,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+import abc
 import math
 import time
 import uuid
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import peng3d
 from pyglet.graphics import Group
@@ -35,32 +36,7 @@ import pyglet
 from pyglet.gl import *
 import numpy as np
 
-SUITES = {
-    "c": "clubs",
-    "s": "spades",
-    "h": "hearts",
-    "d": "diamonds",
-}
 
-COUNTS = {
-    "2": "2",
-    "3": "3",
-    "4": "4",
-    "5": "5",
-    "6": "6",
-    "7": "7",
-    "8": "8",
-    "9": "9",
-    "10": "10",
-    "j": "jack",
-    "q": "queen",
-    "k": "king",
-    "a": "ace",
-}
-
-# Standard cards - 6cm x 9cm
-CARD_SIZE_W = 0.6
-CARD_SIZE_H = 0.9
 CARD_ANGLE = 2  # In degrees
 
 HOVER_EXTENSION = 0.1
@@ -75,6 +51,155 @@ ANIM_STATE_ACTIVE = 1
 DEBUG_CARDS = False
 
 OPEN_CARDS = 0  # 0, if normal, 180 if all open
+
+
+class CardType(object, metaclass=abc.ABCMeta):
+    """
+    Abstract Base Class for all card types / decks.
+
+    Contains constants and helper methods for displaying cards in the style of this deck.
+    """
+
+    name: str
+    """
+    Name of the deck.
+    
+    Will be mainly used for texture name generation and for translation key generation.
+    """
+
+    size: Tuple[float, float]
+    """
+    Tuple of ``(width, height)`` for the displayed card size.
+    
+    One unit is roughly equal to 10cm.
+    """
+
+    suits: Dict[str, str]
+    """
+    Dictionary mapping internal suit letters to strings used in texture names.
+    """
+    counts: Dict[str, str]
+    """
+    Dictionary mapping internal count strings strings used in texture names.
+    """
+
+    joker_prefix: str
+    """
+    Prefix for joker cards.
+    """
+
+    back_names: List[str]
+
+    @classmethod
+    def get_texname(cls, value: str):
+        if value == "":
+            n = "unknown_front"
+        elif value.startswith("j"):
+            n = cls.joker_prefix+value[1]
+        else:
+            suite = cls.suits[value[0]]
+            count = cls.counts[value[1:]]
+            n = suite+count
+
+        return "cg:card."+cls.name+"."+n
+
+
+class FrenchCardType(CardType):
+    """
+    Card type for classic french-style cards.
+
+    Used by default for new installations.
+    """
+
+    name = "french"
+
+    size = [0.6, 0.9]
+
+    suits = {
+        "c": "clubs_",
+        "s": "spades_",
+        "h": "hearts_",
+        "d": "diamonds_",
+    }
+
+    counts = {
+        "2": "2",
+        "3": "3",
+        "4": "4",
+        "5": "5",
+        "6": "6",
+        "7": "7",
+        "8": "8",
+        "9": "9",
+        "10": "10",
+        "j": "jack",
+        "q": "queen",
+        "k": "king",
+        "a": "ace",
+    }
+
+    joker_prefix = "joker_"
+
+    back_names = [
+        "back_1",
+        "back_2",
+        "back_3",
+        "back_4",
+        "back_5",
+    ]
+
+
+class BavarianCardType(CardType):
+    """
+    Card type for bavarian / german style cards.
+    """
+
+    name = "bavarian"
+
+    size = [0.6, 1.2]
+
+    suits = {
+        "c": "e",
+        "s": "l",
+        "h": "h",
+        "d": "s",
+    }
+
+    counts = {
+        "2": "2",
+        "3": "3",
+        "4": "4",
+        "5": "5",
+        "6": "6",
+        "7": "7",
+        "8": "8",
+        "9": "9",
+        "10": "10",
+        "j": "u",
+        "q": "o",
+        "k": "k",
+        "a": "a",
+    }
+
+    joker_prefix = ""
+
+    back_names = [
+        "back_1",
+    ]
+
+
+CARD_TYPES = {
+    "french": FrenchCardType,
+    "bavarian": BavarianCardType,
+
+}
+
+CARD_TYPE_ORDER = [
+    "french",
+    "bavarian",
+]
+
+DEFAULT_CARD_TYPE = "french"
 
 
 def rotation_matrix(axis, theta):
@@ -101,7 +226,7 @@ def lin_interpolate(src: float, target: float, p: float):
 
 def multi_interpolate(src: List[float], target: List[float], p: float):
     if len(src) != len(target):
-        raise ValueError("multi_interpolate() requires two list of equal length")
+        raise ValueError("multi_interpolate() requires two lists of equal length")
 
     out = []
     for i in range(len(src)):
@@ -453,16 +578,7 @@ class Card(object):
         return pos, angle
 
     def get_texname(self) -> str:
-        if self.value == "":
-            name = "unknown_front"
-        elif self.value.startswith("j"):
-            name = f"joker_{self.value[1]}"
-        else:
-            suite = SUITES[self.value[0]]
-            count = COUNTS[self.value[1:]]
-            name = f"{suite}_{count}"
-
-        return f"cg:card.{name}"
+        return self.layer.cur_card_type.get_texname(self.value)
 
     def get_vertices(self, offset: float) -> List[float]:
         # Card position is anchored in the center of the card
@@ -470,8 +586,8 @@ class Card(object):
         center = Vector3(*self.pos)
 
         # First, generate vectors for x and y of card
-        vcw = Vector3(CARD_SIZE_W / 2, 0, 0)  # Vector pointing along the width (short side) of the card
-        vch = Vector3(0, 0, CARD_SIZE_H / 2)  # Vector pointing along the height (long side) of the card
+        vcw = Vector3(self.layer.cur_card_type.size[0] / 2, 0, 0)  # Vector pointing along the width (short side) of the card
+        vch = Vector3(0, 0, self.layer.cur_card_type.size[1] / 2)  # Vector pointing along the height (long side) of the card
         vcp = Vector3(0, offset, 0)  # Vector pointing "out" of the card, perpendicular
 
         # a_s = math.radians(self.rot[0])  # Angle along short axis in radians,

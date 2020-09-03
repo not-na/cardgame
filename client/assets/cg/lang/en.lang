@@ -421,9 +421,15 @@ gui.menu.settings.exitbtn.label=Back
 gui.menu.settings.lang.label=Language:
 gui.menu.settings.lang.prevbtn=<
 gui.menu.settings.lang.nextbtn=>
+gui.menu.settings.card.label=Card Deck:
+gui.menu.settings.card.prevbtn=<
+gui.menu.settings.card.nextbtn=>
 gui.menu.settings.sort.label=Sort cards automatically:
 gui.menu.settings.sort.label.0=No
 gui.menu.settings.sort.label.1=Yes
+
+cards.french.name=French
+cards.bavarian.name=Bavarian
 
 
 question.unknown.text=Question?

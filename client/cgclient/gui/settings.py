@@ -25,6 +25,8 @@ import peng3d
 
 import cgclient.gui
 
+from . import card
+
 
 class SettingsMenu(peng3d.gui.GUIMenu):
     def __init__(self, name, window, peng, gui):
@@ -158,10 +160,86 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
         )
         self.addWidget(self.langcurlabel)
 
+        # Card Deck Selector
+        self.cardlabel = peng3d.gui.Label(
+            "cardlabel", self, self.window, self.peng,
+            pos=self.grid.get_cell([0, 6], [2, 1], anchor_x="left"),
+            # size=[0,0],
+            label=self.peng.tl("cg:gui.menu.settings.card.label"),
+            anchor_x="center",
+        )
+        self.addWidget(self.cardlabel)
+
+        self.cardgrid = peng3d.gui.layout.GridLayout(
+            self.peng,
+            self.grid.get_cell([3, 6], [4, 1], border=0),
+            [5, 1], [20, 20]
+        )
+
+        self.cardprevbtn = cgclient.gui.CGButton(
+            "cardprevbtn", self, self.window, self.peng,
+            pos=self.cardgrid.get_cell([0, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.card.prevbtn"),
+            font_size=35,
+        )
+        self.addWidget(self.cardprevbtn)
+
+        def f():
+            curcard = self.menu.cg.client.settings.get("card_deck", card.DEFAULT_CARD_TYPE)
+            if curcard not in card.CARD_TYPES.keys():
+                self.peng.cg.error(f"Current card type {curcard} not in available card types!")
+                return
+            curidx = card.CARD_TYPE_ORDER.index(curcard)
+            idx = (curidx - 1) % len(card.CARD_TYPES)
+            newcard = card.CARD_TYPE_ORDER[idx]
+
+            self.peng.cg.info(f"Switching card type to {newcard}")
+            self.peng.cg.client.settings["card_deck"] = newcard
+            self.peng.cg.send_event("cg:client.settings.cardtype.change", {"new": newcard, "old": curcard})
+
+            self.cardcurlabel.label = self.peng.tl(
+                f"cg:cards.{self.menu.cg.client.settings.get('card_deck', card.DEFAULT_CARD_TYPE)}.name")
+
+        self.cardprevbtn.addAction("click", f)
+
+        self.cardnextbtn = cgclient.gui.CGButton(
+            "cardnextbtn", self, self.window, self.peng,
+            pos=self.cardgrid.get_cell([4, 0], [1, 1]),
+            label=self.peng.tl("cg:gui.menu.settings.card.nextbtn"),
+            font_size=35,
+        )
+        self.addWidget(self.cardnextbtn)
+
+        def f():
+            curcard = self.menu.cg.client.settings.get("card_deck", card.DEFAULT_CARD_TYPE)
+            if curcard not in card.CARD_TYPES.keys():
+                self.peng.cg.error(f"Current card type {curcard} not in available card types!")
+                return
+            curidx = card.CARD_TYPE_ORDER.index(curcard)
+            idx = (curidx + 1) % len(card.CARD_TYPES)
+            newcard = card.CARD_TYPE_ORDER[idx]
+
+            self.peng.cg.info(f"Switching card type to {newcard}")
+            self.peng.cg.client.settings["card_deck"] = newcard
+            self.peng.cg.send_event("cg:client.settings.cardtype.change", {"new": newcard, "old": curcard})
+
+            self.cardcurlabel.label = self.peng.tl(
+                f"cg:cards.{self.menu.cg.client.settings.get('card_deck', card.DEFAULT_CARD_TYPE)}.name")
+
+        self.cardnextbtn.addAction("click", f)
+
+        self.cardcurlabel = peng3d.gui.Label(
+            "cardcurlabel", self, self.window, self.peng,
+            pos=self.cardgrid.get_cell([1, 0], [3, 1]),
+            label=self.peng.tl(f"cg:cards.{self.menu.cg.client.settings.get('card_deck', card.DEFAULT_CARD_TYPE)}.name"),
+            font_size=35,
+        )
+        self.addWidget(self.cardcurlabel)
+
         # Autosort for cards
         self.sortlabel = peng3d.gui.Label(
             "sortlabel", self, self.window, self.peng,
-            pos=self.grid.get_cell([0, 6], [2, 1], anchor_x="left"),
+            pos=self.grid.get_cell([0, 5], [2, 1], anchor_x="left"),
             # size=[0,0],
             label=self.peng.tl("cg:gui.menu.settings.sort.label"),
             anchor_x="center",
@@ -170,7 +248,7 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
 
         self.sortbtn = peng3d.gui.ToggleButton(
             "sortlabel", self, self.window, self.peng,
-            pos=self.grid.get_cell([3, 6], [4, 1]),
+            pos=self.grid.get_cell([3, 5], [4, 1]),
             label=self.peng.tl("cg:gui.menu.settings.sort.label.0"),
         )
         self.sortbtn.setBackground(cgclient.gui.CGButtonBG(self.sortbtn))
