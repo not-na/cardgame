@@ -48,6 +48,46 @@ def get_settings_path(name):
         return os.path.expanduser('~/.%s' % name)
 
 
+CONFIG = {
+    "cg:debug.event.dump_file": "events.txt",
+
+    "cg:network.default_port": 11225,
+
+    "cg:graphics.resolution.width": 1920,
+    "cg:graphics.resolution.height": 1080,
+    "cg:graphics.caption": "CardGame",
+    "cg:graphics.vsync": True,
+    "cg:graphics.fullscreen": False,
+    "cg:graphics.fps": 60,
+    "cg:graphics.background": "cg:img.bg.table_bg",
+
+    "cg:logging.loglevel.main": 10,
+    "cg:logging.loglevel.launcher": 20,
+    "cg:logging.loglevel.file": 10,
+    "cg:logging.basefilename": "logs/cg.log",
+    "cg:logging.backupcount": 16,
+    "cg:logging.format.file": "[%(filetime)s] [%(module)s/%(levelname)s] %(message)s",
+    "cg:logging.format.launcher": "[%(launchertime)s] [%(module)s/%(levelname)s] %(message)s",
+    "cg:logging.format.launchertime": "%X",
+    "cg:logging.format.crashtime": "%x %X",
+    "cg:logging.format.filetime": "%x %X",
+
+    "cg:server.name": "server",
+    "cg:server.visiblename": "CG Server",
+    "cg:server.is_public": False,
+    "cg:server.maxplayers": 20,
+    "cg:server.address": "localhost",
+    "cg:server.port": 11225,
+    "cg:server.slogan": "A CG Server",
+    "cg:server.secret_length": 32,
+    "cg:server.default_privilege_level": 100,
+    "cg:server.default_permissions": [
+        "cg:chat.lobby.write",
+        "cg:chat.lobby.read",
+    ]
+}
+
+
 class ConfigCache(cg.util.cache.Cache):
     def __init__(self, parent, name=None):
         self.parent = parent
@@ -65,7 +105,10 @@ class ConfigManager(object):
         self.cache = ConfigCache(self, "cfgcache")
 
     def get_config_option(self, key: str):
-        return self.cache.get_by_key(key)
+        # Config system is effectively disabled, since it's not really used anyway
+        # Only caused issues with pyinstaller and is also not user-accessible
+        return CONFIG[key]
+        #return self.cache.get_by_key(key)
 
     def set_config_option(self, key: str, value):
         self.cg.warn("set_config_option does not save values, use a custom format instead")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  main.py
+#  cmdlauncher.py
 #  
 #  Copyright 2020 notna <notna@apparat.org>
 #  

@@ -44,7 +44,7 @@ from . import servermain
 from . import settings
 from . import ingame
 
-SHOW_FPS = True
+SHOW_FPS = cgclient.DEV_MODE
 
 DEFAULT_LANGUAGE = "de"
 
@@ -120,6 +120,9 @@ class PengGUI(object):
         # Initialize our Peng singleton
         self.peng = peng3d.Peng()
         self.peng.cg = self.cg
+
+        self.cg.set_channel_from_file("channel.txt")
+        cg.util.print_version_information(self.cg, cgclient.version)
 
         # TODO: add dynamic max texture size
         self.peng.cfg["rsrc.maxtexsize"] = 4096
@@ -214,6 +217,8 @@ class PengGUI(object):
         self.cg.debug("Initialized loading screen, waiting for other menus")
 
     def register_menus(self, dt=None):
+        self.cg.check_for_updates()
+
         self.cg.debug("Initializing remaining menus")
 
         self.serverselect = serverselect.ServerSelectMenu(
@@ -248,6 +253,8 @@ class PengGUI(object):
 
         if self.client._client is not None:
             self.client._client.process()
+
+        self.cg.process_async_events()
 
     def start_main_loop(self):
         self.run = True

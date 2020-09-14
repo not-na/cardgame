@@ -139,6 +139,10 @@ class DedicatedServer(object):
     def __init__(self, c: cg.CardGame, addr=None, port=None):
         self.cg = c
 
+        self.cg.set_channel_from_file("channel.txt")
+        cg.util.print_version_information(self.cg, cgserver.version)
+        self.cg.check_for_updates()
+
         self.register_event_handlers()
 
         self.command_manager = cgserver.command.CommandManager(self.cg)
@@ -258,6 +262,8 @@ class DedicatedServer(object):
                 except Exception:
                     self.cg.error(f"Error while calling scheduled function:")
                     self.cg.exception("Exception within scheduled function")
+
+            self.cg.process_async_events()
 
     def schedule_function(self, func: Callable, delay: float, flags=0, *args, **kwargs):
         with self.process_lock:

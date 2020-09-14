@@ -21,6 +21,8 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+DEV_MODE = True
+
 from . import version
 from . import command
 from . import user

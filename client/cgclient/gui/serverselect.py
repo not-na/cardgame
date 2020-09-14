@@ -467,7 +467,7 @@ class ServerSelectionSubMenu(peng3d.gui.SubMenu):
         pdata = data.get("pingdata", {})
 
         name = pdata.get("visiblename", "")
-        if name.strip() == "" or name == "None":
+        if name is None or name.strip() == "" or name == "None":
             name = data["name"]
         if name.strip() == "":
             name = "A CardGame Server"

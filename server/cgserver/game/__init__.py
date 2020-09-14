@@ -41,7 +41,7 @@ def register_games(reg: Callable):
 
 
 class CGame(object, metaclass=abc.ABCMeta):
-    DEV_MODE = False
+    DEV_MODE = cgserver.DEV_MODE and False
     GAMERULES: Dict[str, Dict[str, Any]] = {}
     """
     Dictionary defining all valid gamerules for the given game.

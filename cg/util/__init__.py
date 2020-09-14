@@ -20,6 +20,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+import sys
 import uuid
 from math import floor
 from typing import Union, Dict, Tuple, List
@@ -27,6 +29,7 @@ from typing import Union, Dict, Tuple, List
 from . import cache
 from . import serializer
 from . import time
+from . import itch
 
 
 def uuidify(uuid_in: Union[str, uuid.UUID, List[Union[str, uuid.UUID]]]):
@@ -99,3 +102,13 @@ def check_requirements(name: str, value: Union[float, bool, str], gamerules: Dic
         if value not in valid:
             return False
     return True
+
+
+def print_version_information(cg, version):
+    cg.info(f"Version: {version.SEMVER} ({version.FLAVOR})")
+    cg.info(f"Release Channel: {cg.channel}")
+
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        cg.info(f"Running from PyInstaller MEIPASS {sys._MEIPASS}")
+    else:
+        cg.info("Running from Source Code")

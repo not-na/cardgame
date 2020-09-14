@@ -40,7 +40,7 @@ class CardgameApp(cli.Application):
 
     addr = cli.SwitchAttr(["-a", "--address"],
                           argtype=str,
-                          default="localhost",
+                          default="0.0.0.0",
                           help="Address the server should run under",
                           )
 
