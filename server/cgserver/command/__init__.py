@@ -142,6 +142,12 @@ class CommandManager(object):
         import cgserver.command.stop
         self.register_command("stop", cgserver.command.stop.StopCommand(self.cg))
 
+        import cgserver.command.accounts
+        self.register_command("accounts", cgserver.command.accounts.AccountsCommand(self.cg))
+
+        import cgserver.command.settings
+        self.register_command("settings", cgserver.command.settings.SettingsCommand(self.cg))
+
         if cgserver.game.CGame.DEV_MODE:
             import cgserver.command.dev
             self.register_command("dev", cgserver.command.dev.DevCommand(self.cg))

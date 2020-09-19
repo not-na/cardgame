@@ -52,6 +52,14 @@ class AuthPacket(CGPacket):
         username = msg["username"]
 
         if msg.get("create", False):
+            if not self.cg.server.settings["allow_new_accounts"]:
+                self.peer.send_message("cg:auth",
+                                       {
+                                           "status": "register_disabled",
+                                           "username": username.lower(),
+                                       }, cid)
+                return
+
             if username.lower() in self.cg.server.users:
                 # User already exists
                 self.peer.send_message("cg:auth", {
@@ -109,10 +117,18 @@ class AuthPacket(CGPacket):
                 }, cid)
                 return
             elif self.cg.server.users[username.lower()].check_password(msg.get("pwd", "")):
+                u = self.cg.server.users[username.lower()]
+
+                if u.uuid.hex in self.cg.server.settings["blocklist"]:
+                    self.peer.send_message("cg:auth", {
+                        "status": "blocked",
+                        "username": username.lower()
+                    }, cid)
+                    return
+
                 # Correct password, log in
                 self.cg.info(f"User {username} logged in")
 
-                u = self.cg.server.users[username.lower()]
                 self.peer.clients[cid].user = u
                 self.peer.clients[cid].state = STATE_ACTIVE
 

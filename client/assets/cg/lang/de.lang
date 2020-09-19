@@ -291,6 +291,8 @@ gui.menu.smain.loginerr.unknown=Unbekannter Fehler während der Anmeldung
 gui.menu.smain.loginerr.ok=OK
 gui.menu.smain.loginerr.wrongcred=Falsche Anmeldeinformationen oder ungültiger Benutzername!
 gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
+gui.menu.smain.loginerr.registerdisabled=Der Server erlaubt keine Registrierungen!
+gui.menu.smain.loginerr.blocked=Der angegebene Benutzername ist blockiert!
 
 gui.menu.smain.connerr.unknown=Unbekannter Fehler beim Verbinden
 gui.menu.smain.connerr.ok=OK

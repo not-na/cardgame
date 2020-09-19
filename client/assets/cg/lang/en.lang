@@ -291,6 +291,8 @@ gui.menu.smain.loginerr.unknown=Unknown error during logging in
 gui.menu.smain.loginerr.ok=OK
 gui.menu.smain.loginerr.wrongcred=Invalid log in credentials or invalid username!
 gui.menu.smain.loginerr.userexists=This username is already used!
+gui.menu.smain.loginerr.registerdisabled=User registration is disabled!
+gui.menu.smain.loginerr.blocked=The given username is blocked!
 
 gui.menu.smain.connerr.unknown=Unknown error while connecting
 gui.menu.smain.connerr.ok=OK

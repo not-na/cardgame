@@ -72,13 +72,8 @@ CONFIG = {
     "cg:logging.format.crashtime": "%x %X",
     "cg:logging.format.filetime": "%x %X",
 
-    "cg:server.name": "server",
-    "cg:server.visiblename": "CG Server",
-    "cg:server.is_public": False,
-    "cg:server.maxplayers": 20,
-    "cg:server.address": "localhost",
+    "cg:server.address": "0.0.0.0",
     "cg:server.port": 11225,
-    "cg:server.slogan": "A CG Server",
     "cg:server.secret_length": 32,
     "cg:server.default_privilege_level": 100,
     "cg:server.default_permissions": [

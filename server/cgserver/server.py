@@ -40,7 +40,7 @@ import cgserver
 
 from cg.constants import STATE_AUTH, MODE_CG, STATE_VERSIONCHECK
 from cg.util import uuidify
-from cg.util.serializer import msgpack
+from cg.util.serializer import msgpack, json
 
 
 @dataclass(order=True)
@@ -61,12 +61,12 @@ class CGServer(peng3dnet.ext.ping.PingableServerMixin, peng3dnet.net.Server):
         self.cg.info(f"Server Ping by Client #{cid} with IP Address {c.addr[0]}:{c.addr[1]}")
 
         return {
-            "name": self.cg.get_config_option("cg:server.name"),
-            "visiblename": self.cg.get_config_option("cg:server.visiblename"),
-            "slogan": self.cg.get_config_option("cg:server.slogan"),
-            "maxplayers": self.cg.get_config_option("cg:server.maxplayers"),
+            "name": self.cg.server.settings["name"],
+            "visiblename": self.cg.server.settings["visiblename"],
+            "slogan": self.cg.server.settings["slogan"],
+            "maxplayers": self.cg.server.settings["max_players"],
             #"canonical_address": socket.getfqdn(),
-            "playercount": 0,  # TODO: implement player count
+            "playercount": len(self.clients),  # TODO: don't include ping clients
             "playerlist": [],  # TODO: implement player list
             "canlogon": True,  # TODO: implement properly
             "version": self.cg.get_proto_version(),
@@ -143,6 +143,8 @@ class DedicatedServer(object):
         cg.util.print_version_information(self.cg, cgserver.version)
         self.cg.check_for_updates()
 
+        self.settings = {}
+
         self.register_event_handlers()
 
         self.command_manager = cgserver.command.CommandManager(self.cg)
@@ -202,6 +204,8 @@ class DedicatedServer(object):
         self.scheduled_events: List[_ScheduledFunction] = []
         self.event_queue = queue.Queue()
         self.process_lock = threading.Lock()
+
+        self.load_settings()
 
     def start(self):
         self.start_listening()
@@ -389,6 +393,77 @@ class DedicatedServer(object):
             "message": msg,
             "data": data,
         })
+
+    def load_settings(self):
+        fname = self.cg.get_settings_path("server_settings.json")
+
+        # First, check if the data file exists and is a file
+        if not (os.path.exists(fname) and os.path.isfile(fname)):
+            self.cg.warn("Generating new settings because server_settings.json was not found")
+            self.settings = {}
+            self.norm_settings()
+            return
+
+        # Try to open it safely
+        try:
+            with open(fname, "r") as f:
+                data = json.load(f)
+        except Exception:
+            self.cg.error("Could not load settings from file, probably broken")
+            self.cg.exception("Exception during settings load:")
+            self.settings = {}
+            self.norm_settings()
+            return
+
+        self.settings = data
+
+        self.cg.send_event("cg:settings.load", {"settings": self.settings})
+
+        self.cg.info(f"Successfully loaded settings")
+        self.norm_settings()
+
+    def norm_settings(self):
+        changed = False
+
+        if "name" not in self.settings:
+            self.settings["name"] = "server"
+            changed = True
+        if "visiblename" not in self.settings:
+            self.settings["visiblename"] = "A CG Server"
+            changed = True
+        if "allow_new_accounts" not in self.settings:
+            self.settings["allow_new_accounts"] = True
+            changed = True
+        if "max_players" not in self.settings:
+            self.settings["max_players"] = 20
+            changed = True
+        if "slogan" not in self.settings:
+            self.settings["slogan"] = ""
+            changed = True
+        if "blocklist" not in self.settings:
+            self.settings["blocklist"] = []
+            changed = True
+        # Whitelist not yet implemented
+        # Doesn't make much sense anyway, since we don't have a central auth server
+        # if ("whitelist_enabled" not in self.settings
+        #         or not isinstance(self.settings["whitelist_enabled"], bool)):
+        #     self.settings["whitelist_enabled"] = False
+        #     changed = True
+        # if self.settings["whitelist_enabled"] and "whitelist" not in self.settings:
+        #     self.settings["whitelist"] = []
+
+        if changed:
+            self.save_settings()
+
+    def save_settings(self):
+        self.cg.info(f"Saving settings")
+
+        self.cg.send_event("cg:settings.save", {"settings": self.settings})
+
+        fname = self.cg.get_settings_path("server_settings.json")
+
+        with open(fname, "w") as f:
+            json.dump(self.settings, f)
 
     # Event Handlers
     def register_event_handlers(self):

@@ -64,10 +64,24 @@ class AuthPacket(CGPacket):
         elif status == "user_exists":
             self.cg.info("User exists, redirecting to login")
             self.cg.client.gui.servermain.changeSubMenu("login")
-            self.cg.client.gui.servermain.d_loginerr.label_main = self.cg.client.gui.peng.tl(
+            self.cg.client.gui.servermain.d_login_err.label_main = self.cg.client.gui.peng.tl(
                 "cg:gui.menu.smain.loginerr.userexists"
             )
-            self.cg.client.gui.servermain.d_loginerr.activate()
+            self.cg.client.gui.servermain.d_login_err.activate()
+        elif status == "register_disabled":
+            self.cg.error("Registration is disabled, redirecting to login")
+            self.cg.client.gui.servermain.changeSubMenu("login")
+            self.cg.client.gui.servermain.d_login_err.label_main = self.cg.client.gui.peng.tl(
+                "cg:gui.menu.smain.loginerr.registerdisabled"
+            )
+            self.cg.client.gui.servermain.d_login_err.activate()
+        elif status == "blocked":
+            self.cg.error("User is blocked, redirecting to login")
+            self.cg.client.gui.servermain.changeSubMenu("login")
+            self.cg.client.gui.servermain.d_login_err.label_main = self.cg.client.gui.peng.tl(
+                "cg:gui.menu.smain.loginerr.blocked"
+            )
+            self.cg.client.gui.servermain.d_login_err.activate()
         elif status == "logged_out":
             self.cg.error("logged_out auth status not yet supported")
         else:

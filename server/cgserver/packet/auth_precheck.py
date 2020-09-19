@@ -45,6 +45,8 @@ class AuthPrecheckPacket(CGPacket):
         user = msg["username"]
 
         valid = USER_PATTERN.fullmatch(user) is not None and not user.lower().startswith("bot")
+        # TODO: send "creatability" to the client
+        could_create = self.cg.server.settings["allow_new_accounts"]
         exists = user.lower() in self.cg.server.users
 
         self.peer.send_message("cg:auth.precheck", {
