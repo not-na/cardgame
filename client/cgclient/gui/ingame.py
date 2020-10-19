@@ -1631,11 +1631,10 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         for i in self.separation_bars:
             for bar in i:
                 bar.visible = False
-        self.separation_bars = [[], [], [], [], []]
+        self.separation_bars = [[], [], [], [], []]  # TODO Memory leak, reuse old separation bars
 
         for i in self.score_labels:
-            i.visible = False
-        self.score_labels = []
+            i.label = "score_label"
 
         self.container.size = (lambda sw, sh: (sw, 0))
         self.container._scrollbar.visible = False

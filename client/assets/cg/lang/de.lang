@@ -276,6 +276,10 @@ gui.menu.serverselect.serverselect.edit.name.default=Servername eingeben
 gui.menu.serverselect.serverselect.edit.okbtn.label=Fertig
 gui.menu.serverselect.serverselect.edit.cancelbtn.label=Abbrechen
 
+gui.menu.update.header=Spiel Aktualisieren
+gui.menu.update.updatebtn.label=Aktualisieren
+gui.menu.update.cancelbtn.label=Abbrechen
+
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
 gui.menu.smain.load.login=Anmelden...

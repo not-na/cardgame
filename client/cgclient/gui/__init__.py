@@ -43,6 +43,7 @@ from . import serverselect
 from . import servermain
 from . import settings
 from . import ingame
+from . import updategame
 
 SHOW_FPS = cgclient.DEV_MODE
 
@@ -65,19 +66,19 @@ CGTextInput = functools.partial(peng3d.gui.TextInput,
                                 )
 
 CGPasswordInput = functools.partial(peng3d.gui.PasswordInput,
-                                parent_bgcls=peng3d.gui.button.FramedImageBackground,
-                                bg_idle=("cg:img.btn.fld_idle", "gui"),
-                                bg_hover=("cg:img.btn.fld_hov", "gui"),
-                                bg_pressed=("cg:img.btn.fld_press", "gui"),
-                                frame=[
-                                    [150, 700, 150],
-                                    [0, 1, 0],
-                                ],
-                                repeat_edge=True,
-                                repeat_center=True,
-                                scale=[None, 0],
-                                border=[6, 0],
-                                )
+                                    parent_bgcls=peng3d.gui.button.FramedImageBackground,
+                                    bg_idle=("cg:img.btn.fld_idle", "gui"),
+                                    bg_hover=("cg:img.btn.fld_hov", "gui"),
+                                    bg_pressed=("cg:img.btn.fld_press", "gui"),
+                                    frame=[
+                                        [150, 700, 150],
+                                        [0, 1, 0],
+                                    ],
+                                    repeat_edge=True,
+                                    repeat_center=True,
+                                    scale=[None, 0],
+                                    border=[6, 0],
+                                    )
 
 CGButton = functools.partial(peng3d.gui.FramedImageButton,  # Button like on the titlescreen
                              bg_idle=("cg:img.btn.btn_idle", "gui"),
@@ -110,6 +111,7 @@ class PengGUI(object):
     servermain: servermain.ServerMainMenu
     settings: settings.SettingsMenu
     ingame: ingame.IngameMenu
+    updategame: updategame.UpdateGameMenu
 
     def __init__(self, client, c: cg.CardGame):
         self.client = client
@@ -244,6 +246,12 @@ class PengGUI(object):
             self.window, self.peng, self,
         )
         self.window.addMenu(self.ingame)
+
+        self.updategame = updategame.UpdateGameMenu(
+            "updategame",
+            self.window, self.peng, self
+        )
+        self.window.addMenu(self.updategame)
 
         self.window.changeMenu("serverselect")
 

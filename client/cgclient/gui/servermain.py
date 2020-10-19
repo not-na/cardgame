@@ -2179,6 +2179,7 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             self.kickbtn.switchImage("transparent")
             self.admin_icon.switchImage("transparent")
             self.make_admin_btn.switchImage("transparent")
+            self.readybtn.switchImage("transparent")
 
         self.icon_layer.switchImage(self.player.profile_img)
 
@@ -2299,6 +2300,11 @@ class PlayerButton(peng3d.gui.LayeredWidget):
             self.username_label_layer.label = self.player.username
 
             profile_img = self.player.profile_img
+
+            if profile_img == "transparent":
+                self.icon_layer.switchImage("transparent")
+                return
+
             if profile_img not in self.peng.cg.client.gui.discover_profile_images():
                 profile_img = "default"
             self.icon_layer.addImage(profile_img, (f"cg:profile.{profile_img}", "profile"))
