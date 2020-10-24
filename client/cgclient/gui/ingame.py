@@ -276,9 +276,14 @@ class GameLayer(peng3d.layer.Layer):
             self.mouse_moved = False
 
         t = time.time()
+
+        # TODO: remove this deprecated function and use a custom shader instead
+        glAlphaFunc(GL_GREATER, 0.5)
+        glEnable(GL_ALPHA_TEST)
         # Draw the main batch
         # Contains the table and cards
         self.batch.draw()
+        glDisable(GL_ALPHA_TEST)
 
         et = time.time()
         # self.menu.cg.info(f"T_r: {(et-t)*1000:.4f}ms")

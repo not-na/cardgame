@@ -276,9 +276,12 @@ gui.menu.serverselect.serverselect.edit.name.default=Servername eingeben
 gui.menu.serverselect.serverselect.edit.okbtn.label=Fertig
 gui.menu.serverselect.serverselect.edit.cancelbtn.label=Abbrechen
 
-gui.menu.update.header=Spiel Aktualisieren
-gui.menu.update.updatebtn.label=Aktualisieren
+gui.menu.update.header=Spiel-Update verfügbar
+gui.menu.update.updatebtn.label=Mehr...
 gui.menu.update.cancelbtn.label=Abbrechen
+gui.menu.update.body.1=Version {newver} von CardGame ist nun verfügbar.
+gui.menu.update.body.2=Derzeit läuft die Version {oldver}.
+gui.menu.update.body.3=Für weitere Informationen klicken Sie bitte auf "Mehr..."
 
 gui.menu.smain.load.connect=Verbinden...
 gui.menu.smain.load.load=Laden...
