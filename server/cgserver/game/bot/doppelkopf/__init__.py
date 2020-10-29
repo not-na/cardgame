@@ -46,7 +46,7 @@ def gen_delay(base: float, var: float) -> float:
     :return:
     """
     if RANDOMIZE_DELAYS:
-        return max(0, random.gauss(base, var))
+        return max(0.0, random.gauss(base, var))
     else:
         return base
 
@@ -81,6 +81,200 @@ class Card(object):
         else:
             self.color = value[0]
             self.value = value[1:]
+
+
+def get_card_color(card: Union[Card, str], game_type, gamerules) -> str:
+    # Clubs
+    if isinstance(card, Card):
+        card = card.card_value
+    if card == "c9":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s"]:
+            return "clubs"
+
+    if card == "cj":
+        if game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "clubs"
+
+    if card == "cq":
+        if game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "clubs"
+
+    if card == "ck":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s", "solo_9s"]:
+            return "clubs"
+
+    if card == "c10":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_jack", "solo_queen", "solo_brothel",
+                              "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_9s"]:
+            return "clubs"
+        elif game_type == "solo_spades":
+            if not gamerules["dk.solo_shift_h10"]:
+                return "clubs"
+
+    if card == "ca":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_10s", "solo_9s"]:
+            return "clubs"
+
+    # Spades
+    if card == "s9":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s"]:
+            return "spades"
+
+    if card == "sj":
+        if game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "spades"
+
+    if card == "sq":
+        if game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "spades"
+
+    if card == "sk":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
+            return "spades"
+
+    if card == "s10":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_clubs", "solo_jack", "solo_queen", "solo_brothel",
+                              "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_9s"]:
+            return "spades"
+        elif game_type == "solo_hearts":
+            if not gamerules["dk.solo_shift_h10"]:
+                return "spades"
+
+    if card == "sa":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_hearts", "solo_pure_clubs", "solo_10s", "solo_9s"]:
+            return "spades"
+
+    # Hearts
+    if card == "h9":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s"]:
+            return "hearts"
+
+    if card == "hj":
+        if game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "hearts"
+
+    if card == "hq":
+        if game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
+                              "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "hearts"
+
+    if card == "hk":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
+            return "hearts"
+
+    if card == "h10":
+        if game_type in ["solo_queen", "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel",
+                              "solo_picture", "solo_fleshless", "solo_boneless", "solo_pure_diamonds",
+                              "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_9s"]:
+            return "hearts"
+        elif game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                                "solo_diamonds", "solo_null"]:
+            if not gamerules["dk.heart10"]:
+                return "hearts"
+        elif game_type in ["solo_spades", "solo_clubs"]:
+            if gamerules["dk.solo_shift_h10"]:
+                return "hearts"
+            if not gamerules["dk.heart10"]:
+                return "hearts"
+
+    if card == "ha":
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
+                              "solo_pure_spades", "solo_pure_clubs", "solo_10s", "solo_9s"]:
+            return "hearts"
+
+    # Diamonds
+    if card == "d9":
+        if game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "", "solo_pure_hearts", "solo_pure_spades",
+                              "solo_pure_clubs", "solo_aces", "solo_10s"]:
+            return "diamonds"
+
+    if card == "dj":
+        if game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "diamonds"
+
+    if card == "dq":
+        if game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
+                              "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
+                              "solo_9s"]:
+            return "diamonds"
+
+    if card == "dk":
+        if game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_fleshless", "solo_boneless", "solo_pure_hearts",
+                              "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
+            return "diamonds"
+
+    if card == "d10":
+        if game_type in ["solo_hearts", "solo_spades", "solo_jack", "solo_queen", "solo_brothel",
+                              "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
+                              "solo_pure_clubs", "solo_aces", "solo_9s"]:
+            return "diamonds"
+        elif game_type == "solo_clubs":
+            if not gamerules["dk.solo_shift_h10"]:
+                return "diamonds"
+
+    if card == "da":
+        if game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
+                              "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
+                              "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
+                              "solo_pure_clubs", "solo_10s", "solo_9s"]:
+            return "diamonds"
+
+    return "trump"
 
 
 class DoppelkopfBot(Bot):
@@ -159,195 +353,7 @@ class DoppelkopfBot(Bot):
                 return card
 
     def get_card_color(self, card: Card) -> str:
-        # Clubs
-        if card.card_value == "c9":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s"]:
-                return "clubs"
-
-        if card.card_value == "cj":
-            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "clubs"
-
-        if card.card_value == "cq":
-            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "clubs"
-
-        if card.card_value == "ck":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_10s", "solo_9s"]:
-                return "clubs"
-
-        if card.card_value == "c10":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_jack", "solo_queen", "solo_brothel",
-                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_aces", "solo_9s"]:
-                return "clubs"
-            elif self.game_type == "solo_spades":
-                if not self.gamerules["dk.solo_shift_h10"]:
-                    return "clubs"
-
-        if card.card_value == "ca":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_10s", "solo_9s"]:
-                return "clubs"
-
-        # Spades
-        if card.card_value == "s9":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s"]:
-                return "spades"
-
-        if card.card_value == "sj":
-            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "spades"
-
-        if card.card_value == "sq":
-            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "spades"
-
-        if card.card_value == "sk":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
-                return "spades"
-
-        if card.card_value == "s10":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_clubs", "solo_jack", "solo_queen", "solo_brothel",
-                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_clubs", "solo_aces", "solo_9s"]:
-                return "spades"
-            elif self.game_type == "solo_hearts":
-                if not self.gamerules["dk.solo_shift_h10"]:
-                    return "spades"
-
-        if card.card_value == "sa":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_hearts", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_hearts", "solo_pure_clubs", "solo_10s", "solo_9s"]:
-                return "spades"
-
-        # Hearts
-        if card.card_value == "h9":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s"]:
-                return "hearts"
-
-        if card.card_value == "hj":
-            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "hearts"
-
-        if card.card_value == "hq":
-            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_diamonds", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "hearts"
-
-        if card.card_value == "hk":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
-                return "hearts"
-
-        if card.card_value == "h10":
-            if self.game_type in ["solo_queen", "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel",
-                                  "solo_picture", "solo_fleshless", "solo_boneless", "solo_pure_diamonds",
-                                  "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_9s"]:
-                return "hearts"
-            elif self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                    "solo_diamonds", "solo_null"]:
-                if not self.gamerules["dk.heart10"]:
-                    return "hearts"
-            elif self.game_type in ["solo_spades", "solo_clubs"]:
-                if self.gamerules["dk.solo_shift_h10"]:
-                    return "hearts"
-                if not self.gamerules["dk.heart10"]:
-                    return "hearts"
-
-        if card.card_value == "ha":
-            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
-                                  "solo_diamonds", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_null", "solo_pure_diamonds",
-                                  "solo_pure_spades", "solo_pure_clubs", "solo_10s", "solo_9s"]:
-                return "hearts"
-
-        # Diamonds
-        if card.card_value == "d9":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "", "solo_pure_hearts", "solo_pure_spades",
-                                  "solo_pure_clubs", "solo_aces", "solo_10s"]:
-                return "diamonds"
-
-        if card.card_value == "dj":
-            if self.game_type in ["solo_queen", "solo_king", "solo_noble_brothel", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "diamonds"
-
-        if card.card_value == "dq":
-            if self.game_type in ["solo_jack", "solo_king", "solo_monastery", "solo_fleshless", "solo_boneless",
-                                  "solo_pure_hearts", "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s",
-                                  "solo_9s"]:
-                return "diamonds"
-
-        if card.card_value == "dk":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_fleshless", "solo_boneless", "solo_pure_hearts",
-                                  "solo_pure_spades", "solo_pure_clubs", "solo_aces", "solo_10s", "solo_9s"]:
-                return "diamonds"
-
-        if card.card_value == "d10":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_jack", "solo_queen", "solo_brothel",
-                                  "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
-                                  "solo_pure_clubs", "solo_aces", "solo_9s"]:
-                return "diamonds"
-            elif self.game_type == "solo_clubs":
-                if not self.gamerules["dk.solo_shift_h10"]:
-                    return "diamonds"
-
-        if card.card_value == "da":
-            if self.game_type in ["solo_hearts", "solo_spades", "solo_clubs", "solo_jack", "solo_queen",
-                                  "solo_brothel", "solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture",
-                                  "solo_fleshless", "solo_boneless", "solo_pure_hearts", "solo_pure_spades",
-                                  "solo_pure_clubs", "solo_10s", "solo_9s"]:
-                return "diamonds"
-
-        return "trump"
+        return get_card_color(card, self.game_type, self.gamerules)
 
     def update_party(self, player: uuid.UUID, party: str) -> None:
         self.parties[party].add(player)
@@ -548,7 +554,7 @@ class DoppelkopfBot(Bot):
         self.cg.info(f"Bot playing card {card.card_id} with value {card.card_value}")
 
         if card not in self.own_hand:
-            self.cg.error(f"Bot trying to play card not in own hand")
+            self.cg.warning(f"Bot trying to play card not in own hand")
             # Still try, just in case it is legal
 
         self.send_event("cg:event.delay", {
@@ -1231,8 +1237,8 @@ class DoppelkopfBot(Bot):
 
         return moves
 
-    def add_move(self, player: uuid.UUID, type: str, data: Any, datadata: Any = None):
-        self.moves.append({player: {type: data}})
+    def add_move(self, player: uuid.UUID, t: str, data: Any, datadata: Any = None):
+        self.moves.append({player: {t: data}})
         if datadata is not None:
             self.moves[-1][uuidify(player)]["data"] = datadata
 
@@ -1249,7 +1255,7 @@ class DoppelkopfBot(Bot):
         # Similar to a real client
         # Then call the appropriate handler with the packet data
         if packet != "cg:game.dk.card.transfer":
-            self.cg.info(f"Received packet {packet} with data {data} on {self.bot_id}")
+            self.cg.debug(f"Received packet {packet} with data {data} on bot {self.bot_id}")
 
         if packet == "cg:game.start":
             self.initialize(data)
@@ -1273,7 +1279,7 @@ class DoppelkopfBot(Bot):
             self.on_status_message(data)
         # Add more packets here
         else:
-            self.cg.debug(f"Bot {self.bot_id} could not handle packet type {packet} with data {data}")
+            self.cg.warn(f"Bot {self.bot_id} could not handle packet type {packet} with data {data}")
 
     def serialize(self) -> Dict[str, Any]:
         return {

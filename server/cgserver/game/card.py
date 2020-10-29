@@ -26,6 +26,12 @@ from typing import Dict
 
 
 class Card(object):
+    __slots__ = [
+        "card_id",
+        "color",
+        "value",
+    ]
+
     def __init__(self, color: str, value: str):
         self.card_id: uuid.UUID = uuid.uuid4()
 
