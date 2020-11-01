@@ -176,6 +176,7 @@ class PengGUI(object):
             self.window.registerEventHandler("on_draw", self.fps_display.draw)
 
         self.peng.keybinds.add("f12", "cg:set_fullscreen", self.toggle_fullscreen)
+        self.peng.keybinds.add("escape", "cg:open_settings", self.open_settings)
 
         self.peng.resourceMgr.addCategory("gui")    # GUI elements like buttons etc.
         self.peng.resourceMgr.addCategory("bg")     # Backgrounds
@@ -286,6 +287,15 @@ class PengGUI(object):
     def toggle_fullscreen(self, symbol, modifiers, release):
         if release:
             self.window.set_fullscreen(not self.window.fullscreen)
+
+    def open_settings(self, symbol, modifiers, release):
+        if release:
+            if self.window.activeMenu == "settings":
+                self.window.changeMenu(self.window.menu.prev_menu)
+            else:
+                prev_menu = self.window.activeMenu
+                self.window.changeMenu("settings")
+                self.window.menu.prev_menu = prev_menu
 
     def update_cursor(self):
         cursor = self.client.settings.get("cursor", "spades")

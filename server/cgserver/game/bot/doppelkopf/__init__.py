@@ -277,6 +277,309 @@ def get_card_color(card: Union[Card, str], game_type, gamerules) -> str:
     return "trump"
 
 
+def get_trick_winner(trick: List[str], last_trick: bool, game_type: str, gamerules: Dict) -> int:
+    cards_sorted = sorted(trick, key=(lambda x: get_card_sort_key(x, trick, game_type, gamerules)), reverse=True)
+
+    c = 0
+    h = 0
+    if cards_sorted[0] == cards_sorted[1]:
+        if get_card_sort_key(cards_sorted[0], trick, game_type, gamerules) == 100:  # Valid h10 (or s10, c10, d10 if solo)
+            if last_trick:  # Last Trick
+                if gamerules["dk.heart10_lasttrick"] == "first":
+                    for i in trick:  # Return first h10
+                        if i == cards_sorted[0]:
+                            return c
+                        c += 1
+                elif gamerules["dk.heart10_lasttrick"] == "second":
+                    for i in trick:  # Return second h10
+                        if i[1] == cards_sorted[1]:
+                            if h == 1:
+                                return c
+                            h += 1
+                        c += 1
+            else:  # Not last Trick
+                if gamerules["dk.heart10_prio"] == "first":
+                    for i in trick:  # Return first h10
+                        if i == cards_sorted[0]:
+                            return c
+                        c += 1
+                elif gamerules["dk.heart10_prio"] == "second":
+                    for i in trick:  # Return second h10
+                        if i[1] == cards_sorted[1]:
+                            if h == 1:
+                                return c
+                            h += 1
+                        c += 1
+
+        if cards_sorted[0] == "cj":  # Jack of clubs, Charlie
+            if last_trick:  # Last Trick
+                if gamerules["dk.charlie_prio"] == "first":
+                    for i in trick:  # Return first Charlie
+                        if i == cards_sorted[0]:
+                            return c
+                        c += 1
+                elif gamerules["dk.charlie_prio"] == "second":
+                    for i in trick:  # Return second Charlie
+                        if i[1] == cards_sorted[1]:
+                            if h == 1:
+                                return c
+                            h += 1
+                        c += 1
+
+    # If the rules above don't apply, return the highest card
+    for i in trick:
+        if i == cards_sorted[0]:
+            return c
+        c += 1
+
+
+def get_card_sort_key(card: str, trick: List[str], game_type: str, gamerules: Dict) -> int:
+    first_card = trick[0]
+
+    if get_card_color(card, game_type, gamerules) != "trump":
+        # Card is of same color -> color was served
+        if get_card_color(card, game_type, gamerules) == get_card_color(first_card, game_type, gamerules):
+            if card.endswith("9"):
+                return 1
+            elif card.endswith("j"):
+                return 3
+            elif card.endswith("q"):
+                return 4
+            elif card.endswith("k"):
+                return 5
+            elif card.endswith("10"):
+                return 6
+            elif card.endswith("a"):
+                return 7
+
+        # Card is neither of same color nor trump -> card was dropped
+        elif get_card_color(card, game_type, gamerules) != get_card_color(first_card, game_type, gamerules):
+            return 0
+
+    elif get_card_color(card, game_type, gamerules) == "trump":
+        # 9, king, 10, ace of diamonds in normal version
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
+                              "ramsch", "solo_diamonds", "solo_null"]:
+            if card == "d9":
+                return 10
+            elif card == "dk":
+                return 11
+            elif card == "d10":
+                return 12
+            elif card == "da":
+                return 13
+
+            elif card == "h10" and gamerules["dk.heart10"]:
+                return 100
+
+        # 9, king, 10, ace of hearts in hearts solo
+        elif game_type == "solo_hearts":
+            if card == "h9":
+                return 10
+            elif card == "hk":
+                return 11
+            elif card == "h10" and not gamerules["dk.heart10"]:
+                return 12
+            elif card == "ha":
+                return 13
+
+            elif card == "h10" and gamerules["dk.heart10"] and not gamerules[
+                "dk.solo_shift_h10"]:
+                return 100
+            elif card == "s10" and gamerules["dk.solo_shift_h10"]:
+                return 100
+
+        # 9, king, 10, ace of spades in spades solo
+        elif game_type == "solo_spades":
+            if card == "s9":
+                return 10
+            elif card == "sk":
+                return 11
+            elif card == "s10":
+                return 12
+            elif card == "sa":
+                return 13
+
+            elif card == "h10" and gamerules["dk.heart10"] and not gamerules[
+                "dk.solo_shift_h10"]:
+                return 100
+            elif card == "c10" and gamerules["dk.solo_shift_h10"]:
+                return 100
+
+        # 9, king, 10, ace of clubs in clubs solo
+        elif game_type == "solo_clubs":
+            if card == "c9":
+                return 10
+            elif card == "ck":
+                return 11
+            elif card == "c10":
+                return 12
+            elif card == "ca":
+                return 13
+
+            elif card == "h10" and gamerules["dk.heart10"] and not gamerules[
+                "dk.solo_shift_h10"]:
+                return 100
+            elif card == "d10" and gamerules["dk.solo_shift_h10"]:
+                return 100
+
+        # Jacks in normal version and solos with jack trumps
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_jack",
+                              "solo_brothel", "solo_monastery", "solo_picture", "solo_null"]:
+            if card == "dj":
+                return 20
+            elif card == "hj":
+                return 21
+            elif card == "sj":
+                return 22
+            elif card == "cj":
+                return 23
+
+        # Queens in normal version and solos with queen trumps
+        if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                              "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_queen",
+                              "solo_brothel", "solo_noble_brothel", "solo_picture", "solo_null"]:
+            if card == "dq":
+                return 30
+            elif card == "hq":
+                return 31
+            elif card == "sq":
+                return 32
+            elif card == "cq":
+                return 33
+
+        # Kings in solos with king trumps
+        if game_type in ["solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
+            if card == "dk":
+                return 40
+            elif card == "hk":
+                return 41
+            elif card == "sk":
+                return 42
+            elif card == "ck":
+                return 43
+
+        # 9, jack, queen, king, 10, ace of diamonds in pure diamonds solo
+        if game_type == "solo_pure_diamonds":
+            if card == "d9":
+                return 10
+            elif card == "dj":
+                return 12
+            elif card == "dq":
+                return 13
+            elif card == "dk":
+                return 14
+            elif card == "d10":
+                return 15
+            elif card == "da":
+                return 16
+
+        # 9, jack, queen, king, 10, ace of hearts in pure hearts solo
+        if game_type == "solo_pure_hearts":
+            if card == "h9":
+                return 10
+            elif card == "hj":
+                return 12
+            elif card == "hq":
+                return 13
+            elif card == "hk":
+                return 14
+            elif card == "h10":
+                return 15
+            elif card == "ha":
+                return 16
+
+        # 9, jack, queen, king, 10, ace of spades in pure spades solo
+        if game_type == "solo_pure_spades":
+            if card == "s9":
+                return 10
+            elif card == "sj":
+                return 12
+            elif card == "sq":
+                return 13
+            elif card == "sk":
+                return 14
+            elif card == "s10":
+                return 15
+            elif card == "sa":
+                return 16
+
+        # 9, jack, queen, king, 10, ace of clubs in pure clubs solo
+        if game_type == "solo_pure_clubs":
+            if card == "c9":
+                return 10
+            elif card == "cj":
+                return 12
+            elif card == "cq":
+                return 13
+            elif card == "ck":
+                return 14
+            elif card == "c10":
+                return 15
+            elif card == "ca":
+                return 16
+
+        # Aces in aces solo
+        if game_type == "solo_aces":
+            if card == "da":
+                return 10
+            elif card == "ha":
+                return 11
+            elif card == "sa":
+                return 12
+            elif card == "ca":
+                return 13
+
+        # 10s in tens solo
+        if game_type == "solo_10s":
+            if card == "d10":
+                return 10
+            elif card == "h10":
+                return 11
+            elif card == "s10":
+                return 12
+            elif card == "c10":
+                return 13
+
+        # 9s in nines solo
+        if game_type == "solo_9s":
+            if card == "d9":
+                return 10
+            elif card == "h9":
+                return 11
+            elif card == "s9":
+                return 12
+            elif card == "c9":
+                return 13
+
+        # Jolly Joker
+        if card in ["j0", "j1", "j2"]:
+            if gamerules["dk.joker"] == "over_h10":
+                return 150
+            elif gamerules["dk.joker"] == "over_pigs":
+                return 250
+            elif gamerules["dk.joker"] == "over_superpigs":
+                return 350
+
+        return 0
+
+
+def get_card_value(card: str):
+    if card.startswith("j") or card.endswith("9"):
+        return 0
+    if card.endswith("j"):
+        return 2
+    if card.endswith("q"):
+        return 3
+    if card.endswith("k"):
+        return 4
+    if card.endswith("10"):
+        return 10
+    if card.endswith("a"):
+        return 11
+
+
 class DoppelkopfBot(Bot):
     """
     Base class for all bots for the Doppelkopf game.

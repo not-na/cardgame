@@ -20,8 +20,8 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = 'Cardgame'
-copyright = '2020, kitfisto, notna'
-author = 'kitfisto, notna'
+copyright = '2020, guenthobald, notna'
+author = 'guenthobald, notna'
 
 # The short X.Y version
 version = '0.1'
@@ -173,7 +173,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'Cardgame.tex', 'Cardgame Documentation',
-     'kitfisto, notna', 'manual'),
+     'guenthobald, notna', 'manual'),
 ]
 
 

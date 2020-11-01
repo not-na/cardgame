@@ -31,6 +31,8 @@ from typing import List
 
 import cgserver
 from .state import *
+from .. import get_card_color, get_trick_winner, get_card_value
+import cg
 
 
 def get_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
@@ -52,8 +54,70 @@ def get_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
     """
     # Reservations are not handled here, only announcements that could be made at any time
     # after the actual game has started
-    # TODO: implement this
-    pass
+    valid_moves = []
+
+    # For the bot himself
+    if gs.current_player == ggs.own_index:
+        # Cards
+        # The bot plays first
+        if len(gs.cards_on_table) == 0:
+            for card in gs.own_hand:
+                valid_moves.append(('card', 1, card))
+        # If the player has to follow suit
+        else:
+            for card in gs.own_hand:
+                if get_card_color(card, ggs.game_type, ggs.gamerules) ==\
+                        get_card_color(gs.cards_on_table[0], ggs.game_type, ggs.gamerules):
+                    valid_moves.append(('card', 1, card))
+        # If the player doesn't have to follow suit
+            if len(valid_moves) == 0:
+                for card in gs.own_hand:
+                    valid_moves.append(('card', 1, card))
+
+        # Announcements
+        if ggs.parties[gs.current_player] in ["re", "unknown"]:
+            if "re" not in gs.announces[0] and gs.current_trick < 2:
+                valid_moves.append(('announce', 0, 're'))
+            elif "re" in gs.announces[0]:
+                if "no90" not in gs.announces[0] and gs.current_trick < 3:
+                    valid_moves.append(('announce', 0, 'no90'))
+                elif "no90" in gs.announces[0]:
+                    if "no60" not in gs.announces[0] and gs.current_trick < 4:
+                        valid_moves.append(('announce', 0, 'no60'))
+                    elif "no60" in gs.announces[0]:
+                        if "no30" not in gs.announces[0] and gs.current_trick < 5:
+                            valid_moves.append(('announce', 0, 'no30'))
+                        elif "no30" in gs.announces[0]:
+                            if "black" not in gs.announces[0] and gs.current_trick < 6:
+                                valid_moves.append(('announce', 0, "black"))
+
+        if ggs.parties[gs.current_player] in ["kontra", "unknown"]:
+            if "kontra" not in gs.announces[1] and gs.current_trick < 2:
+                valid_moves.append(('announce', 0, 'kontra'))
+            elif "re" in gs.announces[1]:
+                if "no90" not in gs.announces[1] and gs.current_trick < 3:
+                    valid_moves.append(('announce', 0, 'no90'))
+                elif "no90" in gs.announces[1]:
+                    if "no60" not in gs.announces[1] and gs.current_trick < 4:
+                        valid_moves.append(('announce', 0, 'no60'))
+                    elif "no60" in gs.announces[1]:
+                        if "no30" not in gs.announces[1] and gs.current_trick < 5:
+                            valid_moves.append(('announce', 0, 'no30'))
+                        elif "no30" in gs.announces[1]:
+                            if "black" not in gs.announces[1] and gs.current_trick < 6:
+                                valid_moves.append(('announce', 0, "black"))
+
+                                # For other players
+
+    # For other players
+    else:
+        # Cards
+        for card, prob in filter(lambda c: c[1] != 0, gs.card_hands[gs.current_player].items()):
+            valid_moves.append(('card', prob, card))
+
+    #cg.c.debug(valid_moves)
+
+    return valid_moves
 
 
 def get_sorted_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
@@ -68,7 +132,10 @@ def get_sorted_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
     :param gs: Current game state
     :return: Sorted list of valid moves
     """
-    return sorted(set(get_valid_moves(ggs, gs)), key=(lambda m: m[1]), reverse=True)
+    a = sorted(set(get_valid_moves(ggs, gs)), key=(lambda m: m[1]), reverse=True)
+
+    #cg.c.debug(a)
+    return a
 
 
 def apply_move(ggs: GlobalGameState, gs: GameState, move: Move) -> GameState:
@@ -86,8 +153,39 @@ def apply_move(ggs: GlobalGameState, gs: GameState, move: Move) -> GameState:
     :param move: 3-tuple of ``(type, score, data)``
     :return: Resulting :py:class:`GameState`
     """
-    # TODO: implement this
-    pass
+    # TODO: Not supported gamerules: Pigs, superpigs
+    cg.c.debug("APPLY_MOVE")
+    new_gs = gs.__copy__()
+    if move[0] == "announce":
+        if ggs.parties[gs.current_player] == "re":
+            new_gs.announces[0].append(move[2])
+        elif ggs.parties[gs.current_player] == "kontra":
+            new_gs.announces[1].append(move[2])
+
+    elif move[0] == "card":
+        # TODO calculate new probabilities
+        if gs.current_player == ggs.own_index:
+            new_gs.own_hand.remove(move[2])
+        new_gs.cards_on_table.append(move[2])
+        new_gs.cards_played.append(move[2])
+
+        new_gs.current_player += 1
+        new_gs.current_player %= 4
+
+        if len(new_gs.cards_on_table) == 4:
+            last_trick = len(new_gs.own_hand) == 0
+            trick_winner = get_trick_winner(new_gs.cards_on_table, last_trick, ggs.game_type, ggs.gamerules)
+
+            new_gs.current_player += trick_winner
+            new_gs.current_player %= 4
+
+            new_gs.points[new_gs.current_player] += sum(list(map(get_card_value, new_gs.cards_on_table)))
+
+            new_gs.trick_depth += 1
+            new_gs.current_trick += 1
+            new_gs.cards_on_table = []
+
+    return new_gs
 
 
 def evaluate_state(ggs: GlobalGameState, gs: GameState) -> float:
@@ -103,5 +201,14 @@ def evaluate_state(ggs: GlobalGameState, gs: GameState) -> float:
     :param gs: Game state
     :return: Score of game state
     """
-    # TODO: implement this
-    pass
+    if ggs.own_party is None:
+        return gs.points[ggs.own_index]
+
+    total_score = 0
+    for player_i, party in ggs.parties:
+        if party is not None and not 'unknown':
+            if party == ggs.own_party:
+                total_score += gs.points[player_i]
+            else:
+                total_score -= gs.points[player_i]
+    return total_score

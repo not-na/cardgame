@@ -105,6 +105,8 @@ class AdvancedDKBot(Bot):
     must be defined in subclasses.
     """
 
+    BOT_NAME = "dk_advanced"
+
     BOT_VERSION: int = 1
 
     MAX_DEPTH: int = 2
@@ -137,6 +139,45 @@ class AdvancedDKBot(Bot):
     
     Note that this timeout is not exact, as some operations cannot be immediately interrupted.
     """
+
+    NAME_POOL = [
+        # Example name schemes:
+        # "BotGLaDOS",
+        # "Somebody (Bot)",
+        # TODO: add more names
+        "botJosua",
+        "botRuth",
+        "botSamuel",
+        "botEsra",
+        "botNehemia",
+        "botEster",
+        "botHiob",
+        "botJesaja",
+        "botJeremia",
+        "botEzechiel",
+        "botDaniel",
+        "botHosea",
+        "botJoel",
+        "botAmos",
+        "botObadja",
+        "botJona",
+        "botMicha",
+        "botNahum",
+        "botHabakuk",
+        "botZefanja",
+        "botHaggai",
+        "botZacharia",
+        "botMaleachi",
+        "botMatthäus",
+        "botMarkus",
+        "botLukas",
+        "botJohannes",
+        "botPaulus",
+        "botTitus",
+        "botPetrus",
+        "botJakobus",
+        "botJudas"
+    ]
 
     players: List[uuid.UUID]
 
@@ -227,7 +268,8 @@ class AdvancedDKBot(Bot):
 
     def init_round(self, data: Dict[str, Any]):
         self.players = uuidify(data["player_list"])
-        self.ggs.own_index = self.players.index(self.bot_id)
+
+        self.cards = {}
 
         self.slots = {
             "stack": [],
@@ -257,9 +299,14 @@ class AdvancedDKBot(Bot):
             points=(0, 0, 0, 0),
             player_missed_colors=([], [], [], []),
             cards_on_table=[],
-            own_index=-1,
+            own_index=self.players.index(self.bot_id),
             own_party=None,
             current_player=0,
+            game_type="normal",
+            gamerules=self.gamerules,
+            parties=[None, None, None, None],
+            announces=([], []),
+            current_trick=0
         )
 
         self.state = "loading"
@@ -280,8 +327,12 @@ class AdvancedDKBot(Bot):
             points=list(self.ggs.points[:]),
             card_hands=cprob,
             current_player=self.ggs.own_index,
-            cards_on_table=self.ggs.cards_on_table.copy(),
+            cards_on_table=list(map(lambda x: x.card_value, self.ggs.cards_on_table)),
             trick_depth=0,
+            own_hand=list(map(lambda x: x.card_value, self.ggs.card_hands[self.ggs.own_index])),
+            announces=tuple(l.copy() for l in self.ggs.announces),
+            cards_played=[],
+            current_trick=self.ggs.current_trick
         )
         return gs
 
@@ -569,8 +620,9 @@ class AdvancedDKBot(Bot):
         best_move: Optional[Move] = None
 
         for move in rules.get_sorted_valid_moves(self.ggs, gs):
+            self.cg.debug(move)
             # No restrictions on branching at top level, only timeout
-            if self._algo_tstart+self.ALGO_TIMEOUT >= time.monotonic():
+            if self._algo_tstart+self.ALGO_TIMEOUT <= time.monotonic():
                 self.cg.warning("Bot algorithm timed out, playing suboptimal move!")
                 break
             ngs = rules.apply_move(self.ggs, gs, move)
@@ -585,7 +637,7 @@ class AdvancedDKBot(Bot):
 
         t, score, data = best_move
 
-        if t == "play_card":
+        if t == "card":
             self.play_card(self.get_card_by_value(data, slot=self.own_hand))
         elif t == "announcement":
             pass  # TODO: implement this
@@ -601,7 +653,7 @@ class AdvancedDKBot(Bot):
         :param gs: Current game state
         :return: Best possible move at this game state
         """
-        if gs.trick_depth >= self.MAX_DEPTH:
+        if gs.trick_depth >= self.MAX_DEPTH or gs.trick_depth + self.ggs.current_trick >= self.max_tricks:
             # Reached maximum depth, evaluate state and return it
             return rules.evaluate_state(self.ggs, gs)
 
@@ -614,7 +666,7 @@ class AdvancedDKBot(Bot):
                 break
             elif move[1] < self.BRANCH_MIN_THRESHOLD:
                 break
-            elif self._algo_tstart+self.ALGO_TIMEOUT >= time.monotonic():
+            elif self._algo_tstart+self.ALGO_TIMEOUT <= time.monotonic():
                 break
 
             ngs = rules.apply_move(self.ggs, gs, move)
@@ -836,6 +888,9 @@ class AdvancedDKBot(Bot):
                 self.announce(self.cache["continue_choice"])
 
     def on_card_transfer(self, data: Dict) -> None:
+        if data["to_slot"] not in self.slots:
+            self.slots[data["to_slot"]] = []
+
         if data["from_slot"] is None:
             if data["card_value"] == "":
                 color = value = ""
@@ -864,27 +919,25 @@ class AdvancedDKBot(Bot):
 
             self.slots[data["from_slot"]].remove(card)
 
-        if data["to_slot"] not in self.slots:
-            self.slots[data["to_slot"]] = []
-
         # TODO: add missed color detection here
 
-        if data["from_slot"].startswith("hand"):
-            fslot = self.ggs.card_hands[int(data["from_slot"][-1])]
-            fslot.remove(card)
-            tslot = self.ggs.cards_played[int(data["from_slot"][-1])]
-            tslot.append(card)
-        elif data["from_slot"].startswith("tricks"):
-            fslot = self.ggs.trick_slots[int(data["from_slot"][-1])]
-            fslot.remove(card)
-        elif data["from_slot"] == "table":
-            self.ggs.cards_on_table.remove(card)
+            if data["from_slot"].startswith("hand"):
+                fslot = self.ggs.card_hands[int(data["from_slot"][-1])]
+                fslot.remove(card)
+                tslot = self.ggs.cards_played[int(data["from_slot"][-1])]
+                tslot.append(card)
+            elif data["from_slot"].startswith("tricks"):
+                fslot = self.ggs.trick_slots[int(data["from_slot"][-1])]
+                fslot.remove(card)
+            elif data["from_slot"] == "table":
+                self.ggs.cards_on_table.remove(card)
 
         if data["to_slot"].startswith("hand"):
-            tslot = self.ggs.card_hands[int(data["from_slot"][-1])]
+            self.cg.debug(data)
+            tslot = self.ggs.card_hands[int(data["to_slot"][-1])]
             tslot.append(card)
         elif data["to_slot"].startswith("tricks"):
-            tslot = self.ggs.trick_slots[int(data["from_slot"][-1])]
+            tslot = self.ggs.trick_slots[int(data["to_slot"][-1])]
             tslot.append(card)
         elif data["to_slot"] == "table":
             self.ggs.cards_on_table.append(card)
@@ -895,6 +948,7 @@ class AdvancedDKBot(Bot):
 
     def on_turn(self, data: Dict) -> None:
         self.ggs.current_player = self.players.index(uuidify(data["current_player"]))
+        self.ggs.current_trick = data["current_trick"]
 
         if self.ggs.current_player == self.ggs.own_index:
             self.do_move()

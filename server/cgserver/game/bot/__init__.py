@@ -34,7 +34,9 @@ import cg
 def register_bots(reg: Callable):
     from . import doppelkopf
     from .doppelkopf import dumb  # TODO: make this better
+    from .doppelkopf import advanced
     reg("dk_dumb", doppelkopf.dumb.DumbDoppelkopfBot)
+    reg("dk_advanced", doppelkopf.advanced.AdvancedDKBot)
 
 
 class Bot(object, metaclass=abc.ABCMeta):

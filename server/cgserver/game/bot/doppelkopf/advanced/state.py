@@ -91,6 +91,13 @@ Ordered list of cards.
 The order is typically determined by the insertion order of the cards.
 """
 
+CardValueList = List[str]
+"""
+Ordered list of card values.
+
+Similar to CardStack, but instead of containing card objects, it only contains their values
+"""
+
 CardProbabilities = Dict[str, float]
 """
 Probability of each card existing in this context, usually a hand.
@@ -108,6 +115,14 @@ A 3-tuple of ``(type, score, data)`` describing a particular move.
 Only valid moves should be generated, though their validity is usually bound to their context.
 """
 
+Party = Optional[str]
+"""
+String, either ``re`` or ``kontra`` if clear from the bot's perspective, otherwise ``unknown``. None if not even clear
+for the concerned player.
+
+Specifies a player's party from the bot's perspective.
+"""
+
 
 @dataclass
 class GlobalGameState:
@@ -116,6 +131,20 @@ class GlobalGameState:
 
     This class is mostly used to record which cards are held by which player and what
     the teams are.
+    """
+
+    game_type: str
+    """
+    Game type.
+    
+    Will be updated after all reservations have been handled.
+    """
+
+    gamerules: Dict
+    """
+    Game rules after which is played.
+    
+    Remain constant during the complete game.
     """
 
     points: Tuple[int, int, int, int]
@@ -170,11 +199,16 @@ class GlobalGameState:
     Should always be between 0 and 3.
     """
 
-    own_party: Optional[str]
+    own_party: Party
     """
     Own party.
     
-    None if unknown and either ``re`` or ``kontra`` otherwise.
+    None if not clear yet and either ``re`` or ``kontra`` otherwise.
+    """
+
+    parties: List[Party]
+    """
+    Current distribution of parties from the bot's perspective.
     """
 
     current_player: int
@@ -191,6 +225,17 @@ class GlobalGameState:
     Important for calculating more accurate probabilities of cards.
     """
 
+    announces: Tuple[List[str], ...]
+    """
+    List containing all announces that have been made.
+    
+    Contains one list for re announcements and one for kontra announcements.
+    """
+
+    current_trick: int
+    """
+    Current number of tricks that have been completed.
+    """
     # TODO: add more stuff for weddings
 
 
@@ -203,7 +248,7 @@ class GameState:
     has been collected.
     """
 
-    points: List[int, ...]
+    points: List[int]
     """
     Current points all players would have if the game was ended at this moment in time.
     
@@ -220,6 +265,11 @@ class GameState:
     it have already been played or are in the hand visible to the bot.
     """
 
+    own_hand: CardValueList
+    """
+    All the cards the bot himself possesses.
+    """
+
     current_player: int
     """
     Index of the player whose turn it is.
@@ -227,7 +277,7 @@ class GameState:
     Always between 0 and 3.
     """
 
-    cards_on_table: CardStack
+    cards_on_table: CardValueList
     """
     Cards currently on the table.
     """
@@ -238,3 +288,26 @@ class GameState:
     
     Stores how many tricks were completed for this state to be reached.
     """
+
+    current_trick: int
+    """
+    Current number of tricks that have been completed.
+    """
+
+    announces: Tuple[List[str], ...]
+    """
+    List containing all announces that have been made.
+
+    Contains one list for re announcements and one for kontra announcements.
+    """
+
+    cards_played: CardValueList
+    """
+    List containing all cards that have been played since the simulation's creation
+    """
+
+    def __copy__(self):
+        return GameState(self.points.copy(), tuple(d.copy() for d in self.card_hands), self.own_hand.copy(),
+                         self.current_player, self.cards_on_table.copy(),
+                         self.trick_depth, self.current_trick, tuple(l.copy() for l in self.announces),
+                         self.cards_played.copy())
