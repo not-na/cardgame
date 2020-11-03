@@ -336,9 +336,11 @@ def get_trick_winner(trick: List[str], last_trick: bool, game_type: str, gamerul
 def get_card_sort_key(card: str, trick: List[str], game_type: str, gamerules: Dict) -> int:
     first_card = trick[0]
 
-    if get_card_color(card, game_type, gamerules) != "trump":
+    color = get_card_color(card, game_type, gamerules)
+
+    if color != "trump":
         # Card is of same color -> color was served
-        if get_card_color(card, game_type, gamerules) == get_card_color(first_card, game_type, gamerules):
+        if color == get_card_color(first_card, game_type, gamerules):
             if card.endswith("9"):
                 return 1
             elif card.endswith("j"):
@@ -353,10 +355,10 @@ def get_card_sort_key(card: str, trick: List[str], game_type: str, gamerules: Di
                 return 7
 
         # Card is neither of same color nor trump -> card was dropped
-        elif get_card_color(card, game_type, gamerules) != get_card_color(first_card, game_type, gamerules):
+        else:
             return 0
 
-    elif get_card_color(card, game_type, gamerules) == "trump":
+    else:
         # 9, king, 10, ace of diamonds in normal version
         if game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
                               "ramsch", "solo_diamonds", "solo_null"]:
@@ -566,17 +568,18 @@ def get_card_sort_key(card: str, trick: List[str], game_type: str, gamerules: Di
 
 
 def get_card_value(card: str):
-    if card.startswith("j") or card.endswith("9"):
-        return 0
-    if card.endswith("j"):
-        return 2
-    if card.endswith("q"):
-        return 3
-    if card.endswith("k"):
-        return 4
     if card.endswith("10"):
         return 10
-    if card.endswith("a"):
+    lc = card[-1]
+    if card[0] == "j" or lc == "9":
+        return 0
+    elif lc == "j":
+        return 2
+    elif lc == "q":
+        return 3
+    elif lc == "k":
+        return 4
+    elif lc == "a":
         return 11
 
 

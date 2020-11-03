@@ -70,6 +70,8 @@ from .. import get_card_color
 from . import rules
 from .state import *
 
+import cProfile
+
 
 def gen_card_probs(gamerules, val=0.0) -> CardProbabilities:
     # Based on create_dk_deck()
@@ -139,6 +141,8 @@ class AdvancedDKBot(Bot):
     
     Note that this timeout is not exact, as some operations cannot be immediately interrupted.
     """
+
+    MIN_TIME: float = 1.0
 
     NAME_POOL = [
         # Example name schemes:
@@ -599,6 +603,17 @@ class AdvancedDKBot(Bot):
             self.cg.error(f"do_announce() called during unsupported phase '{self.state}', ignoring")
 
     def do_move(self) -> None:
+        if False:
+            cProfile.runctx(
+                "self._do_move()",
+                locals=locals(),
+                globals=globals(),
+                filename=f"profiles/profile_{self.ggs.own_index}_{self.ggs.current_trick}.pyprof",
+            )
+        else:
+            self._do_move()
+
+    def _do_move(self) -> None:
         """
         Evaluate the best possible move and execute it.
 
@@ -619,17 +634,22 @@ class AdvancedDKBot(Bot):
         best_score: float = -math.inf
         best_move: Optional[Move] = None
 
-        for move in rules.get_sorted_valid_moves(self.ggs, gs):
-            self.cg.debug(move)
-            # No restrictions on branching at top level, only timeout
-            if self._algo_tstart+self.ALGO_TIMEOUT <= time.monotonic():
-                self.cg.warning("Bot algorithm timed out, playing suboptimal move!")
-                break
-            ngs = rules.apply_move(self.ggs, gs, move)
-            score = self._evaluate_node(ngs)
-            if score > best_score:
-                best_score = score
-                best_move = move
+        moves = rules.get_sorted_valid_moves(self.ggs, gs)
+        if len(moves) == 1:
+            # If only one move is available at the top level, take it immediately
+            best_move = moves[0]
+        else:
+            for move in moves:
+                self.cg.debug(move)
+                # No restrictions on branching at top level, only timeout
+                if self._algo_tstart+self.ALGO_TIMEOUT <= time.monotonic():
+                    self.cg.warning("Bot algorithm timed out, playing suboptimal move!")
+                    break
+                ngs = rules.apply_move(self.ggs, gs, move)
+                score = self._evaluate_node(ngs)
+                if score > best_score:
+                    best_score = score
+                    best_move = move
 
         if best_move is None:
             self.cg.critical("Bot could not find any valid move! Game will hang")
@@ -637,9 +657,16 @@ class AdvancedDKBot(Bot):
 
         t, score, data = best_move
 
+        self.cg.info(f"Took {(time.monotonic()-self._algo_tstart):.4f}s to select move {best_move} for #{self.ggs.own_index}")
+
+        # Wait a minimum amount of time
+        tim = self.MIN_TIME-(time.monotonic()-self._algo_tstart)
+        if tim > 0:
+            time.sleep(tim)
+
         if t == "card":
             self.play_card(self.get_card_by_value(data, slot=self.own_hand))
-        elif t == "announcement":
+        elif t == "announce":
             pass  # TODO: implement this
         else:
             self.cg.critical(f"Invalid move type '{t}', Game will hang!")
@@ -821,6 +848,13 @@ class AdvancedDKBot(Bot):
             # TODO: do some error logging if an error occured
             # TODO: figure out what to do if a bot tries to play an invalid card
             self.on_status_message(data)
+        elif packet in [
+            "cg:game.save",
+            "cg:lobby.change",
+            "cg:status.user",
+        ]:
+            # Ignore these packets
+            pass
         # Add more packets here
         else:
             self.cg.warn(f"Bot {self.bot_id} could not handle packet type {packet} with data {data}")

@@ -154,7 +154,6 @@ def apply_move(ggs: GlobalGameState, gs: GameState, move: Move) -> GameState:
     :return: Resulting :py:class:`GameState`
     """
     # TODO: Not supported gamerules: Pigs, superpigs
-    cg.c.debug("APPLY_MOVE")
     new_gs = gs.__copy__()
     if move[0] == "announce":
         if ggs.parties[gs.current_player] == "re":

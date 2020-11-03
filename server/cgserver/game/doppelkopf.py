@@ -929,7 +929,8 @@ class DoppelkopfRound(object):
         self.move_counter += 1
 
     def transfer_card(self, card: Card, from_slot: Optional[str], to_slot: str):
-        self.game.cg.info(f"Transfer card {card.card_value} from {from_slot} to {to_slot}")
+        if from_slot is not None:
+            self.game.cg.info(f"Transfer card {card.card_value} from {from_slot} to {to_slot}")
         if from_slot is None:
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
@@ -3648,6 +3649,7 @@ class DoppelkopfRound(object):
                     self.buckround_events += 1
 
         # Transfer the trick to the winners trick stack
+        # TODO: delay the rest of the function
         for i in reversed(self.current_trick):
             self.transfer_card(self.cards[i[1]],
                                "table",
