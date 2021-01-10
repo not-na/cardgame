@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  dumb.py
+#  hard.py
 #  
 #  Copyright 2020 contributors of cardgame
 #  
@@ -20,56 +20,26 @@
 #  You should have received a copy of the GNU General Public License
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import Dict, Any
+from typing import Dict, Any, List, Union
 
 from . import DoppelkopfBot
 
 
-class DumbDoppelkopfBot(DoppelkopfBot):
+class HardDoppelkopfBot(DoppelkopfBot):
     NAME_POOL = [
-        "botJosua",
-        "botRuth",
-        "botSamuel",
-        "botEsra",
-        "botNehemia",
-        "botEster",
-        "botHiob",
-        "botJesaja",
-        "botJeremia",
-        "botEzechiel",
-        "botDaniel",
-        "botHosea",
-        "botJoel",
-        "botAmos",
-        "botObadja",
-        "botJona",
-        "botMicha",
-        "botNahum",
-        "botHabakuk",
-        "botZefanja",
-        "botHaggai",
-        "botZacharia",
-        "botMaleachi",
-        "botMatthäus",
-        "botMarkus",
-        "botLukas",
-        "botJohannes",
-        "botPaulus",
-        "botTitus",
-        "botPetrus",
-        "botJakobus",
-        "botJudas"
+        "botA",
+        "botB",
+        "botC",
+        "botD"
     ]
 
     # Required for serialization and deserialization
-    BOT_NAME = "dk_dumb"
+    BOT_NAME = "dk_hard"
+
+    move_priority: List[Dict[str, Union[str, Dict[str, Any]]], int]
 
     def select_move(self):
-        #super().select_move()
-        if self.state in ["tricks"]:
-            return self.get_valid_moves(allowed_types=["play_card"])[0]
-        else:
-            return self.get_valid_moves()[0]
+        moves = self.get_valid_moves()
 
     def serialize(self) -> Dict[str, Any]:
         sdat = super().serialize()
@@ -83,8 +53,8 @@ class DumbDoppelkopfBot(DoppelkopfBot):
         return sdat
 
     @classmethod
-    def deserialize(cls, cg, lobby, data) -> "DumbDoppelkopfBot":
-        bot = super(DumbDoppelkopfBot, cls).deserialize(cg, lobby, data)
+    def deserialize(cls, cg, lobby, data) -> "HardDoppelkopfBot":
+        bot = super(HardDoppelkopfBot, cls).deserialize(cg, lobby, data)
 
         # TODO
 

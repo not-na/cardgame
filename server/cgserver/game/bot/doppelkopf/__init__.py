@@ -31,7 +31,6 @@ from cg import CardGame
 from cg.util import uuidify
 from .. import Bot
 
-
 RANDOMIZE_DELAYS = True
 
 
@@ -661,6 +660,277 @@ class DoppelkopfBot(Bot):
     def get_card_color(self, card: Card) -> str:
         return get_card_color(card, self.game_type, self.gamerules)
 
+    def get_card_power(self, card: Card) -> int:
+        first_card = self.slots["table"][0]
+
+        if self.get_card_color(card) != "trump":
+            # Card is of same color -> color was served
+            if self.get_card_color(card) == self.get_card_color(first_card):
+                if card.value == "9":
+                    return 1
+                elif card.value == "j":
+                    return 3
+                elif card.value == "q":
+                    return 4
+                elif card.value == "k":
+                    return 5
+                elif card.value == "10":
+                    return 6
+                elif card.value == "a":
+                    return 7
+
+            # Card is neither of same color nor trump -> card was dropped
+            elif self.get_card_color(card) != self.get_card_color(first_card):
+                return 0
+
+        elif self.get_card_color(card) == "trump":
+            # 9, king, 10, ace of diamonds in normal version
+            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow",
+                                  "ramsch", "solo_diamonds", "solo_null"]:
+                if card.card_value == "d9" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 10
+                elif card.card_value == "dk" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 11
+                elif card.card_value == "d10":
+                    return 12
+                elif card.card_value == "da" and not self.cache.get("pigs", False):
+                    return 13
+
+                elif card.card_value == "h10" and self.gamerules["dk.heart10"]:
+                    return 100
+                elif card.card_value == "da" and self.cache.get("pigs", False):
+                    return 200
+                elif card.card_value == "d9" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 300
+                elif card.card_value == "dk" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 300
+
+            # 9, king, 10, ace of hearts in hearts solo
+            elif self.game_type == "solo_hearts":
+                if card.card_value == "h9" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 10
+                elif card.card_value == "hk" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 11
+                elif card.card_value == "h10" and not self.gamerules["dk.heart10"]:
+                    return 12
+                elif card.card_value == "ha" and not self.cache.get("pigs", False):
+                    return 13
+
+                elif card.card_value == "h10" and self.gamerules["dk.heart10"] and not self.gamerules[
+                    "dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "s10" and self.gamerules["dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "ha" and self.cache.get("pigs", False):
+                    return 200
+                elif card.card_value == "h9" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 300
+                elif card.card_value == "hk" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 300
+
+            # 9, king, 10, ace of spades in spades solo
+            elif self.game_type == "solo_spades":
+                if card.card_value == "s9" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 10
+                elif card.card_value == "sk" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 11
+                elif card.card_value == "s10":
+                    return 12
+                elif card.card_value == "sa" and not self.cache.get("pigs", False):
+                    return 13
+
+                elif card.card_value == "h10" and self.gamerules["dk.heart10"] and not self.gamerules[
+                    "dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "c10" and self.gamerules["dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "sa" and self.cache.get("pigs", False):
+                    return 200
+                elif card.card_value == "s0" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 300
+                elif card.card_value == "sk" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 300
+
+            # 9, king, 10, ace of clubs in clubs solo
+            elif self.game_type == "solo_clubs":
+                if card.card_value == "c9" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 10
+                elif card.card_value == "ck" and not (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 11
+                elif card.card_value == "c10":
+                    return 12
+                elif card.card_value == "ca" and not self.cache.get("pigs", False):
+                    return 13
+
+                elif card.card_value == "h10" and self.gamerules["dk.heart10"] and not self.gamerules[
+                    "dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "d10" and self.gamerules["dk.solo_shift_h10"]:
+                    return 100
+                elif card.card_value == "ca" and self.cache.get("pigs", False):
+                    return 200
+                elif card.card_value == "c9" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] == "with_all"):
+                    return 300
+                elif card.card_value == "ck" and (
+                        self.cache.get("superpigs", False) and self.gamerules["dk.without9"] != "with_all"):
+                    return 300
+
+            # Jacks in normal version and solos with jack trumps
+            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_jack",
+                                  "solo_brothel", "solo_monastery", "solo_picture", "solo_null"]:
+                if card.card_value == "dj":
+                    return 20
+                elif card.card_value == "hj":
+                    return 21
+                elif card.card_value == "sj":
+                    return 22
+                elif card.card_value == "cj":
+                    return 23
+
+            # Queens in normal version and solos with queen trumps
+            if self.game_type in ["normal", "wedding", "silent_wedding", "poverty", "black_sow", "ramsch",
+                                  "solo_diamonds", "solo_hearts", "solo_spades", "solo_clubs", "solo_queen",
+                                  "solo_brothel", "solo_noble_brothel", "solo_picture", "solo_null"]:
+                if card.card_value == "dq":
+                    return 30
+                elif card.card_value == "hq":
+                    return 31
+                elif card.card_value == "sq":
+                    return 32
+                elif card.card_value == "cq":
+                    return 33
+
+            # Kings in solos with king trumps
+            if self.game_type in ["solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
+                if card.card_value == "dk":
+                    return 40
+                elif card.card_value == "hk":
+                    return 41
+                elif card.card_value == "sk":
+                    return 42
+                elif card.card_value == "ck":
+                    return 43
+
+            # 9, jack, queen, king, 10, ace of diamonds in pure diamonds solo
+            if self.game_type == "solo_pure_diamonds":
+                if card.card_value == "d9":
+                    return 10
+                elif card.card_value == "dj":
+                    return 12
+                elif card.card_value == "dq":
+                    return 13
+                elif card.card_value == "dk":
+                    return 14
+                elif card.card_value == "d10":
+                    return 15
+                elif card.card_value == "da":
+                    return 16
+
+            # 9, jack, queen, king, 10, ace of hearts in pure hearts solo
+            if self.game_type == "solo_pure_hearts":
+                if card.card_value == "h9":
+                    return 10
+                elif card.card_value == "hj":
+                    return 12
+                elif card.card_value == "hq":
+                    return 13
+                elif card.card_value == "hk":
+                    return 14
+                elif card.card_value == "h10":
+                    return 15
+                elif card.card_value == "ha":
+                    return 16
+
+            # 9, jack, queen, king, 10, ace of spades in pure spades solo
+            if self.game_type == "solo_pure_spades":
+                if card.card_value == "s9":
+                    return 10
+                elif card.card_value == "sj":
+                    return 12
+                elif card.card_value == "sq":
+                    return 13
+                elif card.card_value == "sk":
+                    return 14
+                elif card.card_value == "s10":
+                    return 15
+                elif card.card_value == "sa":
+                    return 16
+
+            # 9, jack, queen, king, 10, ace of clubs in pure clubs solo
+            if self.game_type == "solo_pure_clubs":
+                if card.card_value == "c9":
+                    return 10
+                elif card.card_value == "cj":
+                    return 12
+                elif card.card_value == "cq":
+                    return 13
+                elif card.card_value == "ck":
+                    return 14
+                elif card.card_value == "c10":
+                    return 15
+                elif card.card_value == "ca":
+                    return 16
+
+            # Aces in aces solo
+            if self.game_type == "solo_aces":
+                if card.card_value == "da":
+                    return 10
+                elif card.card_value == "ha":
+                    return 11
+                elif card.card_value == "sa":
+                    return 12
+                elif card.card_value == "ca":
+                    return 13
+
+            # 10s in tens solo
+            if self.game_type == "solo_10s":
+                if card.card_value == "d10":
+                    return 10
+                elif card.card_value == "h10":
+                    return 11
+                elif card.card_value == "s10":
+                    return 12
+                elif card.card_value == "c10":
+                    return 13
+
+            # 9s in nines solo
+            if self.game_type == "solo_9s":
+                if card.card_value == "d9":
+                    return 10
+                elif card.card_value == "h9":
+                    return 11
+                elif card.card_value == "s9":
+                    return 12
+                elif card.card_value == "c9":
+                    return 13
+
+            # Jolly Joker
+            if card.card_value in ["j0", "j1", "j2"]:
+                if self.gamerules["dk.joker"] == "over_h10":
+                    return 150
+                elif self.gamerules["dk.joker"] == "over_pigs":
+                    return 250
+                elif self.gamerules["dk.joker"] == "over_superpigs":
+                    return 350
+
+            return 0
+
     def update_party(self, player: uuid.UUID, party: str) -> None:
         self.parties[party].add(player)
         if self.game_type in ["normal", "poverty", "ramsch", "wedding"]:
@@ -682,9 +952,6 @@ class DoppelkopfBot(Bot):
     @abc.abstractmethod
     def select_move(self) -> Optional[Dict[str, Dict]]:
         pass
-        # moves = self.get_valid_moves()
-        # if len(moves) == 0:
-        #     return
 
     def do_move(self) -> None:
         move = self.select_move()
@@ -930,7 +1197,7 @@ class DoppelkopfBot(Bot):
 
         self.cache.clear()
 
-    def get_valid_moves(self, allowed_types=None) -> List[Dict[str, Dict]]:
+    def get_valid_moves(self, allowed_types=None) -> List[Dict[str, Union[str, Dict[str, Any]]]]:
         """
         Returns a list of cards that could be played.
 
@@ -1754,4 +2021,5 @@ class DoppelkopfBot(Bot):
             self.cache["wedding_find_trick"] = data["wedding_find_trick"]
 
     def on_status_message(self, data: Dict) -> None:
-        self.cg.warn(f"Bot got status message {data['message']} of type {data['type']} with data {data.get('data', None)}")
+        self.cg.warn(
+            f"Bot got status message {data['message']} of type {data['type']} with data {data.get('data', None)}")

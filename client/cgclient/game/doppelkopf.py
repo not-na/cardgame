@@ -82,5 +82,6 @@ class DoppelkopfGame(CGame):
         order = ['h9', 'hk', 'ha', 's9', 'sk', 's10', 'sa', 'c9', 'ck', 'c10', 'ca',
                  'd9', 'dk', 'd10', 'da', 'dj', 'hj', 'sj', 'cj', 'dq', 'hq', 'sq', 'cq', 'h10', 'j0', ""]
         self.slots[self.own_hand].sort(key=lambda x: order.index(x.value))
+
         for c in self.slots[self.own_hand]:
             c.start_anim(self.own_hand, self.own_hand)

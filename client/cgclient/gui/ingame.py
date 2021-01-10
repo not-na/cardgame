@@ -343,7 +343,8 @@ class GameLayer(peng3d.layer.Layer):
                         if cid is not None:
                             co = self.game.cards[cid]
                             co.hovered = False
-                            co.start_anim(co.slot, co.slot, 0.2)
+                            if co.slot == self.game.own_hand:
+                                co.start_anim(co.slot, co.slot, 0.2)
 
                         # Update mouse_color
                         self.mouse_color = o
@@ -353,7 +354,7 @@ class GameLayer(peng3d.layer.Layer):
                             cid = self.get_card_at_mouse()
                             if cid is not None:
                                 co = self.game.cards[cid]
-                                if co.slot == self.game.own_hand:
+                                if co.slot == self.game.own_hand and co.anim_fromslot == self.game.own_hand:
                                     co.hovered = True
                                     co.start_anim(co.slot, co.slot, 0.2)
 

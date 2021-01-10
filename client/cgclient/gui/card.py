@@ -394,7 +394,7 @@ class Card(object):
         self.should_redraw = True
 
     def draw(self):
-        if self.anim_state != "done":
+        if self.anim_state != ANIM_STATE_DONE:
             self.update_anim()
 
         if self.should_redraw:

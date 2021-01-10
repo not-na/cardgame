@@ -369,9 +369,8 @@ gui.menu.smain.lobby.invite_cancelbtn.label=Abbrechen
 gui.menu.smain.lobby.add_bot.label={bot_name} hinzufügen
 
 gui.menu.smain.lobby.bot_name.dk_dumb=Einfachen Bot
-gui.menu.smain.lobby.bot_name.dk_random=Mittleren Bot
-gui.menu.smain.lobby.bot_name.dk_hard=Schwierigen Bot
-gui.menu.smain.lobby.bot_name.dk_ki=Sehr schwierigen Bot
+gui.menu.smain.lobby.bot_name.dk_advanced=Fortgeschrittenen Bot
+gui.menu.smain.lobby.bot_name.dk_ki=Schwierigen Bot
 
 gui.menu.smain.lobby_inv.label_main=Du wurdest von {username} in eine Lobby eingeladen. Möchtest du die Einladung annehmen?
 gui.menu.smain.lobby_inv.confirm=Annehmen
