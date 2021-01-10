@@ -83,6 +83,7 @@ class Card(object):
 
 
 def get_card_color(card: Union[Card, str], game_type, gamerules) -> str:
+    # TODO: optimize this by "flipping" the if statements
     # Clubs
     if isinstance(card, Card):
         card = card.card_value

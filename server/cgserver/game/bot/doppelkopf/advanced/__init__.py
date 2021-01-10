@@ -55,10 +55,11 @@ played or one has been played and the other is in the hand of the bot. Additiona
 players are forced to play a matching card if available, playing a mismatched card allows
 the bot to rule out an entire suit of cards.
 """
+import collections
 import math
 import time
 import uuid
-from typing import Dict, Any, List, Optional, Set, Union, Iterable
+from typing import Dict, Any, List, Optional, Set, Union, Iterable, Tuple
 
 import cg
 from cg import CardGame
@@ -71,32 +72,6 @@ from . import rules
 from .state import *
 
 import cProfile
-
-
-def gen_card_probs(gamerules, val=0.0) -> CardProbabilities:
-    # Based on create_dk_deck()
-    with9 = gamerules["dk.without9"]
-    with9 = 0 if with9 == "without" else 4 if with9 == "with_four" else 8
-
-    joker = gamerules["dk.joker"]
-    joker = joker != "None"
-
-    out: CardProbabilities = {}
-
-    if with9 not in [0, 4, 8]:
-        raise ValueError("with9 cannot be", with9)
-
-    i = 0
-    for color in ["c", "s", "h", "d"]:
-        for value in ["a", "k", "q", "j", "10", "9"]:
-            if value == "9" and (with9 == 0 or (with9 == 4 and i == 1)):
-                continue
-            card = "j0" if joker and color == "d" and i == 0 and (
-                (with9 == 0 and value == "k") or (with9 in [4, 8] and value == "9")
-            ) else color+value
-            out[card] = val
-
-    return out
 
 
 class AdvancedDKBot(Bot):
@@ -294,12 +269,6 @@ class AdvancedDKBot(Bot):
             card_hands=([], [], [], []),
             trick_slots=([], [], [], []),
             cards_played=([], [], [], []),
-            card_hands_probabilities=(
-                gen_card_probs(self.gamerules),
-                gen_card_probs(self.gamerules),
-                gen_card_probs(self.gamerules),
-                gen_card_probs(self.gamerules),
-            ),
             points=(0, 0, 0, 0),
             player_missed_colors=([], [], [], []),
             cards_on_table=[],
@@ -326,10 +295,9 @@ class AdvancedDKBot(Bot):
         self.cache.clear()
 
     def get_current_state(self) -> GameState:
-        cprob = tuple((p.copy() for p in self.ggs.card_hands_probabilities))
         gs = GameState(
             points=list(self.ggs.points[:]),
-            card_hands=cprob,
+            card_hands=({}, {}, {}, {}),
             current_player=self.ggs.own_index,
             cards_on_table=list(map(lambda x: x.card_value, self.ggs.cards_on_table)),
             trick_depth=0,
@@ -337,6 +305,9 @@ class AdvancedDKBot(Bot):
             announces=tuple(l.copy() for l in self.ggs.announces),
             cards_played=[],
             current_trick=self.ggs.current_trick
+        )
+        self.update_probabilities(
+            gs.card_hands,
         )
         return gs
 
@@ -626,12 +597,12 @@ class AdvancedDKBot(Bot):
 
         self._algo_tstart = time.monotonic()
 
-        self.update_probabilities()
+        #self.update_probabilities()
 
         gs = self.get_current_state()
 
         # Initialize with worst case
-        best_score: float = -math.inf
+        best_score: Optional[float] = None
         best_move: Optional[Move] = None
 
         moves = rules.get_sorted_valid_moves(self.ggs, gs)
@@ -640,19 +611,26 @@ class AdvancedDKBot(Bot):
             best_move = moves[0]
         else:
             for move in moves:
-                self.cg.debug(move)
                 # No restrictions on branching at top level, only timeout
                 if self._algo_tstart+self.ALGO_TIMEOUT <= time.monotonic():
                     self.cg.warning("Bot algorithm timed out, playing suboptimal move!")
                     break
                 ngs = rules.apply_move(self.ggs, gs, move)
+                self.update_probabilities(
+                    ngs.card_hands,
+                    ngs.cards_played,
+                    ngs.own_hand,
+                )
                 score = self._evaluate_node(ngs)
-                if score > best_score:
+                self.cg.info(f"Score: {score} for move {move}")
+                if best_score is None or score > best_score:
                     best_score = score
                     best_move = move
 
         if best_move is None:
             self.cg.critical("Bot could not find any valid move! Game will hang")
+            self.cg.info(f"Moves: {moves}")
+            self.cg.info(f"Own hand: {gs.own_hand}")
             return
 
         t, score, data = best_move
@@ -686,7 +664,7 @@ class AdvancedDKBot(Bot):
 
         moves = rules.get_sorted_valid_moves(self.ggs, gs)
 
-        best_score: float = -math.inf
+        best_score: Optional[float] = None
 
         for i, move in enumerate(moves):
             if i > self.MAX_BRANCHES:
@@ -697,8 +675,26 @@ class AdvancedDKBot(Bot):
                 break
 
             ngs = rules.apply_move(self.ggs, gs, move)
-            # TODO: check if we need to mini-max this or not
-            best_score = max(best_score, self._evaluate_node(ngs))
+            self.update_probabilities(
+                ngs.card_hands,
+                ngs.cards_played,
+                ngs.own_hand,
+            )
+
+            nscore = self._evaluate_node(ngs)
+
+            if best_score is None:
+                best_score = nscore
+            elif gs.current_player == self.ggs.own_index:
+                # We are playing ourselves, maximize
+                best_score = max(best_score, nscore)
+            elif self.ggs.own_party == self.ggs.parties[gs.current_player]:
+                # Teammate is maximizing
+                # TODO: properly check if teammate knows we are in the same party
+                best_score = max(best_score, nscore)
+            else:
+                # TODO: figure out the best option for wedding clarification tricks
+                best_score = min(best_score, nscore)
 
         return best_score
 
@@ -727,7 +723,11 @@ class AdvancedDKBot(Bot):
                         },
                         )
 
-    def update_probabilities(self) -> None:
+    def update_probabilities(self,
+                             target: Tuple[CardProbabilities, ...],
+                             known: Optional[Iterable[str]] = None,
+                             own: Optional[Iterable[str]] = None
+                             ) -> None:
         """
         Updates the probabilities stored in the global game state.
 
@@ -739,12 +739,20 @@ class AdvancedDKBot(Bot):
 
         :return: None
         """
-        for card in set(self.ggs.card_hands_probabilities[0].keys()):
+        #t = time.monotonic_ns()
+        c = collections.Counter(c.card_value for c in self.cards.values())
+        if known is not None:
+            c.update(known)
+
+        if own is not None:
+            oc = collections.Counter(own)
+        else:
+            oc = collections.Counter(c.card_value for c in self.own_hand)
+
+        for card, apcs in c.items():
             # Known cards cannot be played, except when they are in our own hand
-            pcs = self.find_cards_in_slot(card, list(self.cards.values()))  # All cards with this value that are known
-            apcs = len(list(pcs))  # Amount of cards with this value that are known
-            scs = self.find_cards_in_slot(card, self.own_hand)  # All cards with this value we have
-            ascs = len(list(scs))  # Amount of cards with this value we have
+            # apcs is the amount of cards with this value that are known
+            ascs = oc[card]  # Amount of cards with this value we have
 
             arcs = 2-apcs  # Amount of remaining cards we do not know about
 
@@ -769,12 +777,15 @@ class AdvancedDKBot(Bot):
 
             for p in range(4):
                 if p == self.ggs.own_index:
-                    self.ggs.card_hands_probabilities[p][card] = min(1, ascs)  # Probability we have it
+                    target[p][card] = min(1, ascs)  # Probability we have it
                 elif color in self.ggs.player_missed_colors[p]:
                     # Player cannot have a card of this color anymore
-                    self.ggs.card_hands_probabilities[p][card] = 0.0
+                    target[p][card] = 0.0
                 else:
-                    self.ggs.card_hands_probabilities[p][card] = po
+                    target[p][card] = po
+
+        #t2 = time.monotonic_ns()
+        #self.cg.info(f"Card probabilities took {(t2-t)/1000:06.4f}us")
 
     def serialize(self) -> Dict[str, Any]:
         return {
@@ -1008,9 +1019,8 @@ class AdvancedDKBot(Bot):
 
             elif data["phase"] == "w_for_ready":
                 self.state = "w_for_ready"
-                self.do_move()
+                self.do_announce()
                 self.start_hand = self.own_hand.copy()
-                self.update_probabilities()
 
             elif data["phase"] == "tricks":
                 self.state = "tricks"

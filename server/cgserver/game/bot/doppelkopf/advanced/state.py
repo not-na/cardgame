@@ -95,7 +95,7 @@ CardValueList = List[str]
 """
 Ordered list of card values.
 
-Similar to CardStack, but instead of containing card objects, it only contains their values
+Similar to CardStack, but instead of containing card objects, it only contains their values.
 """
 
 CardProbabilities = Dict[str, float]
@@ -162,14 +162,6 @@ class GlobalGameState:
     
     Note that the values of cards of all other players should always be an empty string
     since we cannot see them.
-    """
-
-    card_hands_probabilities: Tuple[CardProbabilities, ...]
-    """
-    Current probabilities that a player has a certain card.
-    
-    A value of zero indicates that the player cannot have that card, as all instances of
-    it have already been played or are in the hand visible to the bot.
     """
 
     trick_slots: Tuple[CardStack, ...]
@@ -303,7 +295,7 @@ class GameState:
 
     cards_played: CardValueList
     """
-    List containing all cards that have been played since the simulation's creation
+    List containing all cards that have been played since the start of this simulation.
     """
 
     def __copy__(self):

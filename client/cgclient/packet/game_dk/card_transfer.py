@@ -83,9 +83,6 @@ class CardTransferPacket(CGPacket):
             # Get the card
             card: cgclient.gui.card.Card = self.cg.client.game.cards[card_id]
 
-            if msg["to_slot"] == "table":
-                self.cg.info(f"TT: {card.value=}->{msg['card_value']} from={msg['from_slot']}")
-
             # Only immediately update if changing to a real value
             # Keep old value if new value is blank until animation ends
             if card.value == "" or msg["card_value"] != "":

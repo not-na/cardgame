@@ -435,7 +435,7 @@ class Card(object):
         self.vlist_back.vertices = vb
 
     def get_card_pos_rot(self, slot: str, index: int, count: int = 1):
-        open_card = self.game.lobby.gamerules.get("dk.open_cards", False) * 180 or OPEN_CARDS
+        open_card = self.game.lobby.gamerules.get("dk.open_cards", False) * 180
 
         ar = self.cg.client.gui.window.width / self.cg.client.gui.window.height
 
@@ -497,20 +497,20 @@ class Card(object):
             return pos, [0, 180, r]
         elif slot == "player_left":
             pos, r = self.get_radial_pos_rot([-(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 90, 180, 3)
-            return pos, [0, OPEN_CARDS, r]
+            return pos, [0, open_card, r]
         elif slot == "player_right":
             pos, r = self.get_radial_pos_rot([(1.838 * ar + 2.475), 0.1, 0], index, count, CARD_ANGLE, 270, 180, 3)
-            return pos, [0, OPEN_CARDS, r]
+            return pos, [0, open_card, r]
         elif slot == "player_top":
             pos, r = self.get_radial_pos_rot([0, 0.1, -4.3], index, count, CARD_ANGLE, 0, 180, 3)
-            return pos, [0, OPEN_CARDS, r]
+            return pos, [0, open_card, r]
         elif slot == "ptrick_self":
             if DEBUG_CARDS:
                 return [-2.5 - 0.1 * index, 0.5 + 0.001 * index, 0], [0, 180, 0]
             else:
                 return [
                     [(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
-                    [0, OPEN_CARDS, 0],
+                    [0, open_card, 0],
                 ]
         elif slot == "ptrick_left":
             if DEBUG_CARDS:
@@ -518,7 +518,7 @@ class Card(object):
             else:
                 return [
                     [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, 1.4],
-                    [0, OPEN_CARDS, 90],
+                    [0, open_card, 90],
                 ]
         elif slot == "ptrick_right":
             if DEBUG_CARDS:
@@ -526,7 +526,7 @@ class Card(object):
             else:
                 return [
                     [(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
-                    [0, OPEN_CARDS, 90],
+                    [0, open_card, 90],
                 ]
         elif slot == "ptrick_top":
             if DEBUG_CARDS:
@@ -534,7 +534,7 @@ class Card(object):
             else:
                 return [
                     [-(1.838 * ar - 0.425), 0.01 + 0.001 * index, -1.4],
-                    [0, OPEN_CARDS, 0],
+                    [0, open_card, 0],
                 ]
         else:
             self.cg.crash(f"Unknown card slot {slot}")

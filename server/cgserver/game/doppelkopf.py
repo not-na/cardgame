@@ -39,6 +39,9 @@ import uuid
 
 from cg.constants import STATE_GAME_DK
 
+RANDOM_SEED = 1
+
+OPEN_CARD = True
 
 class DoppelkopfGame(CGame):
     GAMERULES = {
@@ -376,7 +379,7 @@ class DoppelkopfGame(CGame):
         },
         "dk.open_cards": {
             "type": "bool",
-            "default": False,
+            "default": OPEN_CARD,
             "requirements": {}
         }
     }
@@ -775,6 +778,9 @@ class DoppelkopfRound(object):
         CARD_DEAL_DELAY = 0.3
     else:
         CARD_DEAL_DELAY = 1.0
+    CARD_DEAL_DELAY = 0.2
+
+    FIXED_SEED = True
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game
@@ -856,7 +862,10 @@ class DoppelkopfRound(object):
         self.deal_counter = 0
         self.players_loaded = set()
 
-        self.random_seed = secrets.randbits(128)
+        if not self.FIXED_SEED:
+            self.random_seed = secrets.randbits(128)
+        else:
+            self.random_seed = RANDOM_SEED
         self.random = random.Random(self.random_seed)
 
     @property
@@ -935,7 +944,7 @@ class DoppelkopfRound(object):
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not self.game.DEV_MODE else card.card_value,
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot,
                 })
@@ -948,15 +957,15 @@ class DoppelkopfRound(object):
                 receiver = self.players[int(to_slot.strip("hand"))]
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
-                    "to_slot": to_slot
+                    "to_slot": to_slot,
                 }, exclude=[receiver])
                 self.game.send_to_user(receiver, "cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
                     "card_value": card.card_value,
                     "from_slot": from_slot,
-                    "to_slot": to_slot
+                    "to_slot": to_slot,
                 })
             else:
                 raise CardTransferError(f"Cannot transfer card from {from_slot} to {to_slot}")
@@ -971,7 +980,7 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -996,7 +1005,7 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -1010,7 +1019,7 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -1022,7 +1031,7 @@ class DoppelkopfRound(object):
             if "tricks" in to_slot:
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "",
+                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
