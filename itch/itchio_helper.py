@@ -79,7 +79,7 @@ def compile_dist(server, beta):
         shutil.rmtree(OUTPUT_DIR)
     os.makedirs(OUTPUT_DIR)
 
-    print("Compiling Client with PyInstaller...")
+    print("Compiling with PyInstaller...")
 
     # Create channel file
     with open(f"{OUTPUT_DIR_BASE}/channel.txt", "w") as f:

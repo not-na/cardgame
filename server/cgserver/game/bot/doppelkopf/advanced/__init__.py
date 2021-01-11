@@ -90,7 +90,7 @@ class AdvancedDKBot(Bot):
     """
     Maximum depth in tricks.
     
-    This determines the maximum depth the algorithm will search in completed tricks.
+    This determines the maximum depth the algorithm will search in units of completed tricks.
     """
 
     MAX_BRANCHES: int = 4
@@ -110,7 +110,7 @@ class AdvancedDKBot(Bot):
     This limit allows reducing time spent evaluating very unlikely moves.
     """
 
-    ALGO_TIMEOUT: float = 5.0
+    ALGO_TIMEOUT: float = 7.0
     """
     Timeout for the card-playing algorithm in seconds.
     
@@ -203,7 +203,12 @@ class AdvancedDKBot(Bot):
         return self.ggs.card_hands[self.ggs.own_index]
 
     def get_card_color(self, card: Card) -> str:
-        return get_card_color(card, self.game_type, self.gamerules)
+        #return get_card_color(card, self.game_type, self.gamerules)
+        return self.ggs.card_colors[card]
+
+    def update_card_colors(self):
+        for c in self.cards.values():
+            self.ggs.card_colors[c] = get_card_color(c, self.game_type, self.gamerules)
 
     def get_card_by_value(self, cardval: str, slot=None) -> Card:
         if slot is None:
@@ -279,8 +284,10 @@ class AdvancedDKBot(Bot):
             gamerules=self.gamerules,
             parties=[None, None, None, None],
             announces=([], []),
-            current_trick=0
+            current_trick=0,
+            card_colors={},
         )
+        self.update_card_colors()
 
         self.state = "loading"
         self.game_type = "normal"
@@ -628,7 +635,7 @@ class AdvancedDKBot(Bot):
                     best_move = move
 
         if best_move is None:
-            self.cg.critical("Bot could not find any valid move! Game will hang")
+            self.cg.critical("Bot could not find any valid move! Game may hang")
             self.cg.info(f"Moves: {moves}")
             self.cg.info(f"Own hand: {gs.own_hand}")
             return
@@ -696,7 +703,7 @@ class AdvancedDKBot(Bot):
                 # TODO: figure out the best option for wedding clarification tricks
                 best_score = min(best_score, nscore)
 
-        return best_score
+        return best_score if best_score is not None else 0
 
     def play_card(self, card: Card) -> None:
         """
@@ -902,7 +909,9 @@ class AdvancedDKBot(Bot):
             self.modifiers[data["data"]["party"]].append(data["type"])
             if player == self.bot_id:
                 self.do_move()
-
+        elif data["type"] == "solo_yes":
+            self.ggs.game_type = data["data"]["type"]
+            self.update_card_colors()
         elif data["type"] == "poverty_yes":
             self.cache["poverty_player"] = player
         elif data["type"] == "poverty_accept":

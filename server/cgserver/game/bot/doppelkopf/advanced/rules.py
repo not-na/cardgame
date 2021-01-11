@@ -31,7 +31,7 @@ from typing import List
 
 import cgserver
 from .state import *
-from .. import get_card_color, get_trick_winner, get_card_value
+from .. import get_trick_winner, get_card_value
 import cg
 
 
@@ -66,9 +66,8 @@ def get_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
         # If the player has to follow suit
         else:
             for card in gs.own_hand:
-                # TODO: optimize this by adding a special card color equality check function
-                if get_card_color(card, ggs.game_type, ggs.gamerules) ==\
-                        get_card_color(gs.cards_on_table[0], ggs.game_type, ggs.gamerules):
+                if ggs.card_colors[card] ==\
+                        ggs.card_colors[gs.cards_on_table[0]]:
                     valid_moves.append(('card', 1, card))
         # If the player doesn't have to follow suit
             if len(valid_moves) == 0:

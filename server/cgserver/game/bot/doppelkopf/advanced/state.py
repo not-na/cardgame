@@ -230,6 +230,11 @@ class GlobalGameState:
     """
     # TODO: add more stuff for weddings
 
+    card_colors: Dict[str, str]
+    """
+    Mapping of cards to card colors.
+    """
+
 
 @dataclass
 class GameState:

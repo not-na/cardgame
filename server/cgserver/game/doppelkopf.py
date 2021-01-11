@@ -41,7 +41,7 @@ from cg.constants import STATE_GAME_DK
 
 RANDOM_SEED = 1
 
-OPEN_CARD = True
+OPEN_CARD = False
 
 class DoppelkopfGame(CGame):
     GAMERULES = {
@@ -780,7 +780,7 @@ class DoppelkopfRound(object):
         CARD_DEAL_DELAY = 1.0
     CARD_DEAL_DELAY = 0.2
 
-    FIXED_SEED = True
+    FIXED_SEED = False
 
     def __init__(self, game: DoppelkopfGame, players: List[uuid.UUID]):
         self.game: DoppelkopfGame = game

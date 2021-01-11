@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-DEV_MODE = True
+DEV_MODE = False
 
 from . import version
 from . import command
