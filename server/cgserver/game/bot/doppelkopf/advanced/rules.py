@@ -69,6 +69,7 @@ def get_valid_moves(ggs: GlobalGameState, gs: GameState) -> List[Move]:
                 if ggs.card_colors[card] ==\
                         ggs.card_colors[gs.cards_on_table[0]]:
                     valid_moves.append(('card', 1, card))
+
         # If the player doesn't have to follow suit
             if len(valid_moves) == 0:
                 for card in gs.own_hand:

@@ -57,6 +57,7 @@ class GameStartPacket(CGPacket):
                 [uuidify(p) for p in msg["player_list"]],
                 self.cg.client.lobby
             )
+            self.cg.client.game.gamerules = msg.get("gamerules", dict())
             self.cg.client.game.start()
 
             self.cg.info(f"Joined game {self.cg.client.game.game_id} of type doppelkopf")

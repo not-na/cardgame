@@ -56,12 +56,17 @@ class SettingsMenu(peng3d.gui.GUIMenu):
 
         self.changeSubMenu("settings")
 
+    def on_exit(self, new):
+        self.s_settings.on_exit(new)
+
 
 class SettingsSubMenu(peng3d.gui.SubMenu):
     menu: SettingsMenu
 
     def __init__(self, name, menu, window, peng):
         super().__init__(name, menu, window, peng, font_size=30)
+
+        self.resort = False
 
         self.grid = peng3d.gui.layout.GridLayout(self.peng, self, [8, 10], [20, 20])
 
@@ -249,7 +254,8 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
         self.sortbtn = peng3d.gui.ToggleButton(
             "sortlabel", self, self.window, self.peng,
             pos=self.grid.get_cell([3, 5], [4, 1]),
-            label=self.peng.tl("cg:gui.menu.settings.sort.label.0"),
+            label=self.peng.tl(
+            f"cg:gui.menu.settings.sort.label.{int(self.menu.cg.client.settings['dk.sort_cards'])}"),
         )
         self.sortbtn.setBackground(cgclient.gui.CGButtonBG(self.sortbtn))
         self.addWidget(self.sortbtn)
@@ -258,7 +264,9 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
 
         def f():
             self.menu.cg.client.settings["dk.sort_cards"] = not self.menu.cg.client.settings.get("dk.sort_cards", False)
-            self.sortbtn.label = self.peng.tl(f"cg:gui.menu.settings.sort.label.{int(self.menu.cg.client.settings['dk.sort_cards'])}")
+            self.sortbtn.label = self.peng.tl(
+                f"cg:gui.menu.settings.sort.label.{int(self.menu.cg.client.settings['dk.sort_cards'])}")
+            self.resort = self.menu.cg.client.settings.get("dk.sort_cards", False)
         self.sortbtn.addAction("click", f)
 
         # TODO: maybe add UI for cursor type
@@ -269,3 +277,10 @@ class SettingsSubMenu(peng3d.gui.SubMenu):
 
         self.peng.cg.info(f"Found {len(self.langlist)} languages")
         self.peng.cg.debug(f"Available languages: {self.langlist}")
+
+        self.resort = False
+
+    def on_exit(self, new):
+        if new == "ingame" and self.resort:
+            self.resort = False
+            self.peng.cg.client.game.sort_cards()

@@ -1144,6 +1144,8 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                         self.menu.cg.error(f"Missing key players while loading savegame")
                     elif "data" not in d:
                         self.menu.cg.error(f"Missing key data while loading savegame")
+                    elif d["server"] != self.menu.cg.client.server_id:
+                        self.menu.cg.info(f"Found savegame from different server")
                     else:
                         data[d["id"]] = d
                 except Exception:
@@ -1195,15 +1197,16 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                     btn.date_layer.label = time.strftime(
                         "%d.%m.%Y, %X", time.localtime(sg["creation_time"]))
                     btn.pressed = False
+                    btn.bg_layer.switchImage("idle")
 
                     users_match = sorted(map(uuidify, sg["players"])) == sorted(self.peng.cg.client.lobby.users)
                     server_match = sg["server"] == self.menu.cg.client.server_id
 
                     self.save_btns[i].match = users_match and server_match
-                    # if not (users_match and server_match):
-                    #     self.save_btns[i].enabled = False
-                    #     self.save_btns[i].bg_layer.switchImage("disabled")
-                    #     self.save_btns[i].redraw()
+                    if not (users_match and server_match):
+                        self.save_btns[i].enabled = False
+                        self.save_btns[i].bg_layer.switchImage("disabled")
+                        self.save_btns[i].redraw()
                 except Exception:
                     self.menu.cg.exception(f"Exception while rendering saved game")
             else:
@@ -1887,8 +1890,18 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         )
         self.addLayer(self.bg_layer)
 
-        # TODO Fix this in peng3d or whereever
-        self.addAction("statechanged", lambda: self.bg_layer.switchImage(self.getState()))
+        def f():
+            if not self.pressed:
+                self.bg_layer.switchImage("hover")
+        self.addAction("hover_start", f)
+
+        def f():
+            if not self.pressed:
+                self.bg_layer.switchImage("idle")
+        self.addAction("hover_end", f)
+
+        self.addAction("press_down", self.bg_layer.switchImage, "pressed")
+        self.addAction("press_up", self.bg_layer.switchImage, "hover")
 
         h = pyglet.font.load("Times New Roman", 30).ascent / 2
         self.date_layer = peng3d.gui.LabelWidgetLayer(
@@ -1906,36 +1919,6 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
             font_size=20
         )
         self.addLayer(self.player_layer)
-
-        # Match icon
-        def b(bx, by, bw, bh):
-            # We want to be sized 0.1*bh
-            # Since the icon is square, the border is a bit weird
-            return [
-                (bw-(0.1*bh))/2,
-                (bh-(0.1*bh))/2
-            ]
-
-        def o(bx, by, bw, bh):
-            return [
-                -(bw-(0.1*bh))/2+10,
-                (bh-(0.1*bh))/2-10
-            ]
-
-        self.matchicon = peng3d.gui.DynImageWidgetLayer(
-            "matchicon", self,
-            z_index=3,
-            # We want a square in the top-left corner
-            border=b,
-            offset=o,
-            imgs={
-                # TODO: use proper icons instead of the kick and ready icons
-                "nomatch": ("cg:img.btn.kick", "gui"),
-                "match": ("cg:img.btn.ok", "gui")
-            },
-        )
-        self.matchicon.switchImage("nomatch")
-        self.addLayer(self.matchicon)
 
         self.players = []
         self.player_names = []
@@ -1969,10 +1952,6 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
     @match.setter
     def match(self, value):
         self._match = value
-        if value:
-            self.matchicon.switchImage("match")
-        else:
-            self.matchicon.switchImage("nomatch")
 
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.clickable:

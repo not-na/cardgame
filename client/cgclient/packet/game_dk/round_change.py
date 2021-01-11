@@ -35,6 +35,7 @@ class RoundChangePacket(CGPacket):
         "phase",
         "player_list",
         "game_type",
+        "solist",
         "modifiers",
         "winner",
         "eyes",
@@ -143,6 +144,13 @@ class RoundChangePacket(CGPacket):
                 if self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.should_visible:
                     self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = True
                 self.cg.client.gui.ingame.popup_layer.changeSubMenu("empty")
+
+                if "game_type" in msg:
+                    self.cg.client.game.game_type = msg["game_type"]
+                    if self.cg.client.settings.get("dk.sort_cards", False):
+                        self.cg.client.game.sort_cards()
+                else:
+                    self.cg.client.game.game_type = "normal"
 
             elif msg["phase"] == "counting":
                 pass
