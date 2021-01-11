@@ -235,6 +235,11 @@ class GlobalGameState:
     Mapping of cards to card colors.
     """
 
+    card_values: CardValueList
+    """
+    List of all card values in this game.
+    """
+
 
 @dataclass
 class GameState:

@@ -67,6 +67,7 @@ from cg.util import uuidify
 
 from ... import Bot
 from .. import get_card_color
+import cgserver.game
 
 from . import rules
 from .state import *
@@ -207,7 +208,7 @@ class AdvancedDKBot(Bot):
         return self.ggs.card_colors[card]
 
     def update_card_colors(self):
-        for c in self.cards.values():
+        for c in self.ggs.card_values:
             self.ggs.card_colors[c] = get_card_color(c, self.game_type, self.gamerules)
 
     def get_card_by_value(self, cardval: str, slot=None) -> Card:
@@ -270,6 +271,13 @@ class AdvancedDKBot(Bot):
         }
         self.moves = []
 
+        # Create card deck
+        with9 = self.gamerules["dk.without9"]
+        with9 = 0 if with9 == "without" else 4 if with9 == "with_four" else 8
+
+        joker = self.gamerules["dk.joker"]
+        joker = joker != "None"
+
         self.ggs = GlobalGameState(
             card_hands=([], [], [], []),
             trick_slots=([], [], [], []),
@@ -286,6 +294,7 @@ class AdvancedDKBot(Bot):
             announces=([], []),
             current_trick=0,
             card_colors={},
+            card_values=cgserver.game.card.create_dk_deck(with9=with9, joker=joker),
         )
         self.update_card_colors()
 
