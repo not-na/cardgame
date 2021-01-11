@@ -1189,6 +1189,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                     btn.visible = True
                     btn.game_id = sg["id"]
                     btn.players = list(map(uuidify, sg["players"]))
+                    btn.player_names = sg.get("player_names", [])
                     btn.update_players()
                     #self.menu.cg.info(f"{i=} {sg['creation_time']=}")
                     btn.date_layer.label = time.strftime(
@@ -1937,6 +1938,7 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
         self.addLayer(self.matchicon)
 
         self.players = []
+        self.player_names = []
 
         self._match = False
 
@@ -1947,10 +1949,15 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
 
     def update_players(self):
         players = ""
-        for p in self.players:
+        for i, p in enumerate(self.players):
             username = self.peng.cg.client.get_user_name(p)
             if username == "<UNKNOWN>":
                 self.peng.cg.client.send_message("cg:status.user", {"uuid": p.hex})
+                try:
+                    username = self.player_names[i]
+                except IndexError:
+                    # Doesn't matter, just don't throw an exception
+                    self.peng.cg.warn(f"Could not find fallback name for adjourned game at index {i} for UUID {p}")
             players += username + "\n"
         players = players.strip("\n")
         self.player_layer.label = players

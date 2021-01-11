@@ -717,6 +717,7 @@ class DoppelkopfGame(CGame):
             "bots": [
                 self.cg.server.users_uuid[i].bot.serialize() for i in self.players if isinstance(self.cg.server.users_uuid[i], user.BotUser)
             ],
+            "player_names": [self.cg.server.users_uuid[i].username for i in self.players if not isinstance(self.cg.server.users_uuid[i], user.BotUser)],
             "player_order": [i.hex for i in self.players],
             "gamerules": self.gamerules,
             "round_num": self.round_num,
