@@ -37,7 +37,8 @@ class TurnPacket(CGPacket):
     allowed_keys = [
         "current_trick",
         "total_tricks",
-        "current_player"
+        "current_player",
+        "rebtn_state",
     ]
     side = SIDE_CLIENT
 
@@ -64,3 +65,15 @@ class TurnPacket(CGPacket):
             sidx = self.cg.client.game.player_list.index(self.cg.client.user_id)
             offset = cidx-sidx-1
             self.cg.client.game.table_index_shift = offset
+
+        if "rebtn_state" in msg:
+            if msg["rebtn_state"] == "invis":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
+            elif msg["rebtn_state"] == "enabled":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.enabled = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose != "none"
+            elif msg["rebtn_state"] == "disabled":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose != "none"
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.enabled = False

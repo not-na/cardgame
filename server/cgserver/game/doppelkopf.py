@@ -43,6 +43,7 @@ RANDOM_SEED = 1
 
 OPEN_CARD = False
 
+
 class DoppelkopfGame(CGame):
     GAMERULES = {
         # "general.wrongmove": {
@@ -1656,11 +1657,7 @@ class DoppelkopfRound(object):
         self.current_player = self.players[0]
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def start_solo(self, solist: uuid.UUID, pigs_handled=True):
         self.reserv_state = "finished"
@@ -1726,11 +1723,7 @@ class DoppelkopfRound(object):
 
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def start_poverty(self, accepter: uuid.UUID):
         self.reserv_state = "finished"
@@ -1766,11 +1759,7 @@ class DoppelkopfRound(object):
         self.current_player = self.players[0]
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def start_black_sow(self):
         self.reserv_state = "finished"
@@ -1791,11 +1780,7 @@ class DoppelkopfRound(object):
         self.current_player = self.players[0]
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def start_ramsch(self):
         self.reserv_state = "finished"
@@ -1833,11 +1818,7 @@ class DoppelkopfRound(object):
         self.current_player = self.players[0]
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def start_wedding(self, bride: uuid.UUID, trick: Optional[str] = None):
         self.reserv_state = "finished"
@@ -1866,11 +1847,7 @@ class DoppelkopfRound(object):
         self.current_player = self.players[0]
         self.trick_num = 1
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": 1,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet()
 
     def end_round(self, dt):
         self.game_state = "counting"
@@ -3453,11 +3430,7 @@ class DoppelkopfRound(object):
 
         # Signalise him to play the next card, if the trick is not full
         if len(self.current_trick) < 4:
-            self.game.send_to_all("cg:game.dk.turn", {
-                "current_trick": self.trick_num,
-                "total_tricks": self.max_tricks,
-                "current_player": self.current_player.hex
-            })
+            self.send_turn_packet(self.trick_num)
 
         # Trick is full
         elif len(self.current_trick) == 4:
@@ -3696,11 +3669,7 @@ class DoppelkopfRound(object):
                     })
                     return
 
-            self.game.send_to_all("cg:game.dk.turn", {
-                "current_trick": self.trick_num,
-                "total_tricks": self.max_tricks,
-                "current_player": self.current_player.hex
-            })
+            self.send_turn_packet(self.trick_num)
 
         # Last Round
         elif self.trick_num == self.max_tricks:
@@ -4024,7 +3993,7 @@ class DoppelkopfRound(object):
         # Add the denial
         self.modifiers[party].append(rtype)
         for p in self.parties[party]:
-            new = "invis"
+            new = "none"
             if rtype == "no90":
                 new = "no60"
             elif rtype == "no60":
@@ -4094,11 +4063,7 @@ class DoppelkopfRound(object):
         self.obvious_parties["kontra"] = self.parties["kontra"]
         self.obvious_parties["unknown"].clear()
 
-        self.game.send_to_all("cg:game.dk.turn", {
-            "current_trick": self.trick_num,
-            "total_tricks": self.max_tricks,
-            "current_player": self.current_player.hex
-        })
+        self.send_turn_packet(self.trick_num)
 
     def handle_command(self, event: str, data: Dict):
         return
@@ -4230,6 +4195,101 @@ class DoppelkopfRound(object):
                 "player": player.hex,
                 "type": data["type"]
             })
+
+    def send_turn_packet(self, trick_num=1):
+        for p in self.players:
+            state = "enabled"
+            if p != self.current_player:
+                state = "disabled"
+            if not self.check_announce(p):
+                state = "invis"
+
+            self.game.send_to_user(p, "cg:game.dk.turn", {
+                "current_trick": trick_num,
+                "total_tricks": self.max_tricks,
+                "current_player": self.current_player.hex,
+                "rebtn_state": state
+            })
+
+    def check_announce(self, player: uuid.UUID):
+        # Determine which call the player could make
+        if player in self.parties["re"]:
+            party = btn_option = "re"
+        elif player in self.parties["kontra"]:
+            party = btn_option = "kontra"
+        else:
+            party = btn_option = "none"
+
+        if party != "none":
+            if "black" in self.modifiers[party]:
+                btn_option = "none"
+            elif "no30" in self.modifiers[party]:
+                btn_option = "black"
+            elif "no60" in self.modifiers[party]:
+                btn_option = "no30"
+            elif "no90" in self.modifiers[party]:
+                btn_option = "no60"
+            elif btn_option in self.modifiers[party]:
+                btn_option = "no90"
+
+        # Determine whether the player is allowed to make this call right now
+        legal_call = False
+
+        # For Re
+        if btn_option == "re":
+            legal_re = len(self.hands[player]) >= (
+                    self.max_tricks - self.wedding_find_trick)  # Only one card played, wedding_find_trick is 1 by default
+            legal_re = legal_re or (  # Answering to a kontra
+                    (len(self.hands[player]) >= (self.max_tricks - 1 - self.wedding_find_trick))
+                    and ("kontra" in self.modifiers["kontra"]))
+            legal_re = legal_re or (  # Answering to no90
+                    (len(self.hands[player]) >= (self.max_tricks - 2 - self.wedding_find_trick))
+                    and ("no90" in self.modifiers["kontra"]))
+            legal_re = legal_re or (  # Answering to no60
+                    (len(self.hands[player]) >= (self.max_tricks - 3 - self.wedding_find_trick))
+                    and ("no60" in self.modifiers["kontra"]))
+            legal_re = legal_re or (  # Answering to no30
+                    (len(self.hands[player]) >= (self.max_tricks - 4 - self.wedding_find_trick))
+                    and ("no30" in self.modifiers["kontra"]))
+            legal_re = legal_re or (  # Answering to black
+                    (len(self.hands[player]) >= (self.max_tricks - 5 - self.wedding_find_trick))
+                    and ("black" in self.modifiers["kontra"]))
+
+            legal_call = legal_re
+
+        # For Kontra
+        elif btn_option == "kontra":
+            legal_kontra = len(self.hands[player]) >= (
+                    self.max_tricks - self.wedding_find_trick)  # Only one card played, wedding_find_trick is 1 by default
+            legal_kontra = legal_kontra or (  # Answering to a re
+                    (len(self.hands[player]) >= (self.max_tricks - 1 - self.wedding_find_trick))
+                    and ("re" in self.modifiers["re"]))
+            legal_kontra = legal_kontra or (  # Answering to no90
+                    (len(self.hands[player]) >= (self.max_tricks - 2 - self.wedding_find_trick))
+                    and ("no90" in self.modifiers["re"]))
+            legal_kontra = legal_kontra or (  # Answering to no60
+                    (len(self.hands[player]) >= (self.max_tricks - 3 - self.wedding_find_trick))
+                    and ("no60" in self.modifiers["re"]))
+            legal_kontra = legal_kontra or (  # Answering to no30
+                    (len(self.hands[player]) >= (self.max_tricks - 4 - self.wedding_find_trick))
+                    and ("no30" in self.modifiers["re"]))
+            legal_kontra = legal_kontra or (  # Answering to black
+                    (len(self.hands[player]) >= (self.max_tricks - 5 - self.wedding_find_trick))
+                    and ("black" in self.modifiers["re"]))
+
+            legal_call = legal_kontra
+
+        # For Denials
+        if btn_option == "no90":
+            legal_call = len(self.hands[player]) >= (self.max_tricks - 1 - self.wedding_find_trick)
+        elif btn_option == "no60":
+            legal_call = len(self.hands[player]) >= (self.max_tricks - 2 - self.wedding_find_trick)
+        elif btn_option == "no30":
+            legal_call = len(self.hands[player]) >= (self.max_tricks - 3 - self.wedding_find_trick)
+        elif btn_option == "black":
+            legal_call = len(self.hands[player]) >= (self.max_tricks - 4 - self.wedding_find_trick)
+
+        return legal_call
 
     def do_autoplay(self):
         return

@@ -330,6 +330,8 @@ class Bot(object, metaclass=abc.ABCMeta):
 
     def delete(self):
         self.should_run = False
+
+        self.cg.server.lobbies[self.cg.server.users_uuid[self.bot_id].lobby].remove_user(self.bot_id)
         self.cg.event_manager.del_group(self.bot_id)
 
         del self.cg.server.users_uuid[self.bot_id].bot

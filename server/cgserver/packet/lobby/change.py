@@ -106,7 +106,9 @@ class ChangePacket(CGPacket):
                 })
                 return
 
-            lobby.game_data = None
+            if lobby.game_data is not None:
+                lobby.game_data = None
+                self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.load_game.reset")
             lobby.update_gamerules(msg["gamerules"])
 
         if "user_roles" in msg:

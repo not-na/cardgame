@@ -278,6 +278,10 @@ class AdvancedDKBot(Bot):
         joker = self.gamerules["dk.joker"]
         joker = joker != "None"
 
+        card_values = cgserver.game.card.create_dk_deck(with9=with9, joker=joker)
+        card_values = [v.card_value for v in card_values.values()]
+        card_values = card_values[:len(card_values)//2]
+
         self.ggs = GlobalGameState(
             card_hands=([], [], [], []),
             trick_slots=([], [], [], []),
@@ -294,7 +298,7 @@ class AdvancedDKBot(Bot):
             announces=([], []),
             current_trick=0,
             card_colors={},
-            card_values=cgserver.game.card.create_dk_deck(with9=with9, joker=joker),
+            card_values=card_values
         )
         self.update_card_colors()
 
@@ -919,7 +923,7 @@ class AdvancedDKBot(Bot):
             if player == self.bot_id:
                 self.do_move()
         elif data["type"] == "solo_yes":
-            self.ggs.game_type = data["data"]["type"]
+            self.ggs.game_type = self.game_type = data["data"]["type"]
             self.update_card_colors()
         elif data["type"] == "poverty_yes":
             self.cache["poverty_player"] = player
@@ -1023,13 +1027,14 @@ class AdvancedDKBot(Bot):
         if "game_type" in data:
             self.game_type = data["game_type"]
 
-            if self.game_type == "poverty":
-                self.update_party(self.cache["poverty_player"], "re")
-                self.update_party(self.cache["poverty_acceptant"], "re")
-            elif self.game_type == "wedding":
-                self.update_party(self.cache["wedding_player"], "re")
-            elif self.game_type not in ["normal", "ramsch"]:
-                self.update_party(uuidify(data["solist"]), "re")
+            if data.get("phase", "") != "end":
+                if self.game_type == "poverty":
+                    self.update_party(self.cache["poverty_player"], "re")
+                    self.update_party(self.cache["poverty_acceptant"], "re")
+                elif self.game_type == "wedding":
+                    self.update_party(self.cache["wedding_player"], "re")
+                elif self.game_type not in ["normal", "ramsch"]:
+                    self.update_party(uuidify(data["solist"]), "re")
 
         if "phase" in data:
             if data["phase"] == "loading":

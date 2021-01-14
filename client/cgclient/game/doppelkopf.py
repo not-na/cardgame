@@ -96,7 +96,9 @@ class DoppelkopfGame(CGame):
             if self.game_type != "solo_spades":
                 order = order[:4] + ['s9', 'sk', 's10', 'sa'] + order[4:]
             if self.game_type != "solo_hearts":
-                order = order[:4] + ['s9', 'sk', 's10', 'sa'] + order[4:]#
+                order = order[:4] + ['h9', 'hk', 'h10', 'ha'] + order[4:]
+            for i in ["a", "10", "k", "9"]:
+                order.insert(12, self.game_type[5]+i)
 
             if self.gamerules["dk.heart10"]:
                 if not self.gamerules["dk.solo_shift_h10"]:
@@ -138,15 +140,15 @@ class DoppelkopfGame(CGame):
             elif self.game_type == "solo_pure_spades":
                 order = order[:12] + order[18:-2] + order[12:18] + order[-2:]
             else:  # picture solos and fleshless / boneless / pure clubs
-                if self.game_type in ["solo_jacks", "solo_brothel", "solo_monastery", "solo_picture"]:
+                if self.game_type in ["solo_jack", "solo_brothel", "solo_monastery", "solo_picture"]:
                     for c in ['dj', 'hj', 'sj', 'cj']:
                         order.remove(c)
                     order = order[:-2] + ['dj', 'hj', 'sj', 'cj'] + order[-2:]
-                if self.game_type in ["solo_queens", "solo_brothel", "solo_noble_brothel", "solo_picture"]:
+                if self.game_type in ["solo_queen", "solo_brothel", "solo_noble_brothel", "solo_picture"]:
                     for c in ['dq', 'hq', 'sq', 'cq']:
                         order.remove(c)
                     order = order[:-2] + ['dq', 'hq', 'sq', 'cq'] + order[-2:]
-                if self.game_type in ["solo_kings", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
+                if self.game_type in ["solo_king", "solo_monastery", "solo_noble_brothel", "solo_picture"]:
                     for c in ['dk', 'hk', 'sk', 'ck']:
                         order.remove(c)
                     order = order[:-2] + ['dk', 'hk', 'sk', 'ck'] + order[-2:]

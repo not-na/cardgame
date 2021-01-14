@@ -31,11 +31,12 @@ class TurnPacket(CGPacket):
     required_keys = [
         "current_trick",
         "total_tricks",
-        "current_player"
+        "current_player",
     ]
     allowed_keys = [
         "current_trick",
         "total_tricks",
-        "current_player"
+        "current_player",
+        "rebtn_change",
     ]
     side = SIDE_CLIENT

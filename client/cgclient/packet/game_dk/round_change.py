@@ -172,12 +172,11 @@ class RoundChangePacket(CGPacket):
 
         if "rebtn_lbl" in msg:
             self.cg.client.gui.ingame.hud_layer.s_main.self_img.redraw()
-            if msg["rebtn_lbl"] == "invis":
-                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = False
-                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = "None"
+            self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = msg["rebtn_lbl"] != "none"
+            self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = msg["rebtn_lbl"]
+            if msg["rebtn_lbl"] == "none":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.label = ""
             else:
-                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = True
-                self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose = msg["rebtn_lbl"]
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.label = self.cg.client.gui.peng.tl(
                     f"cg:gui.menu.ingame.ingamegui.rebtn.{msg['rebtn_lbl']}"
                 )

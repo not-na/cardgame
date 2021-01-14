@@ -66,7 +66,7 @@ class CGame(object):
         self.cur_intent: str = "play"
 
     def uuid_to_side(self, u: uuid.UUID, offset=0):
-        cidx = self.player_list.index(u)
+        cidx = self.cg.client.gui.ingame.game_layer.player_list.index(u)
         return self.cg.client.gui.ingame.game_layer.hand_to_player[(cidx+offset) % 4]
 
     def start(self):
