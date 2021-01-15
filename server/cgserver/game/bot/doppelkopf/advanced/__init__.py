@@ -227,6 +227,7 @@ class AdvancedDKBot(Bot):
     def update_party(self, player: Union[uuid.UUID, int], party: str) -> None:
         pid = self.players.index(player) if isinstance(player, uuid.UUID) else player
         self.parties[party].add(pid)
+        self.ggs.parties[pid] = party
         if self.game_type in ["normal", "poverty", "ramsch", "wedding"]:
             counterparty = "re" if party == "kontra" else "kontra"
             if len(self.parties[party]) == 2:
@@ -707,14 +708,14 @@ class AdvancedDKBot(Bot):
                 best_score = nscore
             elif gs.current_player == self.ggs.own_index:
                 # We are playing ourselves, maximize
-                best_score = max(best_score, nscore)
+                best_score = min(best_score, nscore)
             elif self.ggs.own_party == self.ggs.parties[gs.current_player]:
                 # Teammate is maximizing
                 # TODO: properly check if teammate knows we are in the same party
-                best_score = max(best_score, nscore)
+                best_score = min(best_score, nscore)
             else:
                 # TODO: figure out the best option for wedding clarification tricks
-                best_score = min(best_score, nscore)
+                best_score = max(best_score, nscore)
 
         return best_score if best_score is not None else 0
 
@@ -924,6 +925,14 @@ class AdvancedDKBot(Bot):
                 self.do_move()
         elif data["type"] == "solo_yes":
             self.ggs.game_type = self.game_type = data["data"]["type"]
+
+            self.update_party(player, "re")
+
+            pid = self.players.index(player)
+            for p in range(4):
+                if p != pid:
+                    self.update_party(p, "kontra")
+
             self.update_card_colors()
         elif data["type"] == "poverty_yes":
             self.cache["poverty_player"] = player
@@ -931,6 +940,7 @@ class AdvancedDKBot(Bot):
             self.cache["poverty_acceptant"] = player
         elif data["type"] == "wedding_yes":
             self.cache["wedding_player"] = player
+            self.update_party(player, "re")
             if self.gamerules["dk.wedding"] == "3_trick":
                 self.cache["wedding_clarification_trick"] = "foreign"
         elif data["type"] == "wedding_clarification_trick":
@@ -1021,7 +1031,13 @@ class AdvancedDKBot(Bot):
             self.do_move()
 
     def on_scoreboard(self, data: Dict) -> None:
-        pass
+        if "wedding_find_trick" in self.cache:
+            pid = self.players.index(uuidify(data["player"]))
+            self.update_party(pid, "re")
+
+            for i in range(4):
+                if i != pid and i not in self.parties["re"]:
+                    self.update_party(i, "kontra")
 
     def on_round_change(self, data: Dict) -> None:
         if "game_type" in data:

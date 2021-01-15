@@ -739,6 +739,8 @@ class DoppelkopfGame(CGame):
             },
         }
 
+        data["rounds"].update(self.move_history)
+
         return data
 
     @classmethod
@@ -780,7 +782,7 @@ class DoppelkopfRound(object):
         CARD_DEAL_DELAY = 0.3
     else:
         CARD_DEAL_DELAY = 1.0
-    CARD_DEAL_DELAY = 0.2
+    CARD_DEAL_DELAY = 1.0
 
     FIXED_SEED = False
 
