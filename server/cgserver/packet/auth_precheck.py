@@ -26,7 +26,7 @@ from cg.constants import STATE_AUTH
 from cg.packet import CGPacket
 
 
-USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]{2,15}")
+USER_PATTERN = re.compile("[a-zA-Z][a-zA-Z0-9_]{2,63}")
 
 
 class AuthPrecheckPacket(CGPacket):

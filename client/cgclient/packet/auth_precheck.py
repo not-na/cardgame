@@ -58,5 +58,9 @@ class AuthPrecheckPacket(CGPacket):
             self.cg.client.gui.servermain.d_create_acc.activate()
         else:
             # Account totally invalid, show error
-            # TODO: implement error message
-            pass
+            self.cg.info("Invalid username, redirecting to login")
+            self.cg.client.gui.servermain.changeSubMenu("login")
+            self.cg.client.gui.servermain.d_login_err.label_main = self.cg.client.gui.peng.tl(
+                "cg:gui.menu.smain.loginerr.invname"
+            )
+            self.cg.client.gui.servermain.d_login_err.activate()

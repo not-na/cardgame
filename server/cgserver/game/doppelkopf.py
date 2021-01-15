@@ -1917,11 +1917,17 @@ class DoppelkopfRound(object):
 
         # Determine the winner
         winner = None
-        if re_eyes >= re_win:
-            winner = "re"
+        if self.game_type in ["solo_null", "solo_boneless"]:
+            winner = "re" if re_eyes == 0 else "kontra"
+        else:
+            if re_eyes >= re_win:
+                winner = "re"
+            elif kontra_eyes >= kontra_win:
+                winner = "kontra"
+
+        if winner == "re":
             game_summary.append("re_win")
-        elif kontra_eyes >= kontra_win:
-            winner = "kontra"
+        elif winner == "kontra":
             game_summary.append("kontra_win")
 
         if re_eyes >= re_win and kontra_eyes >= kontra_win:
@@ -1929,167 +1935,211 @@ class DoppelkopfRound(object):
 
         # Determine the game value - The game value is positive for re and negative for kontra
         game_value = 0
-        if winner == "re":
-            game_value = 1
-        elif winner == "kontra":
-            game_value = -1
-        else:
-            game_summary.append("no_win")
 
-        # Game summary re and kontra
-        if winner is not None:
+        if self.game_type not in ["solo_null", "solo_boneless"]:
+            if winner == "re":
+                game_value = 1
+            elif winner == "kontra":
+                game_value = -1
+            else:
+                game_summary.append("no_win")
+
+            # Game summary re and kontra
+            if winner is not None:
+                if "re" in self.modifiers["re"]:
+                    game_summary.append("re")
+                if "kontra" in self.modifiers["kontra"]:
+                    game_summary.append("kontra")
+
+            # Eyes, under which a party was played
+            if winner != "kontra":
+                if kontra_eyes < 90:
+                    game_value += 1
+                    game_summary.append("no90")
+                if kontra_eyes < 60:
+                    game_value += 1
+                    game_summary.remove("no90")
+                    game_summary.append("no60")
+                if kontra_eyes < 30:
+                    game_value += 1
+                    game_summary.remove("no60")
+                    game_summary.append("no30")
+                if kontra_eyes == 0:
+                    game_value += 1
+                    game_summary.remove("no30")
+                    game_summary.append("black")
+
+            if winner != "re":
+                if re_eyes < 90:
+                    game_value -= 1
+                    game_summary.append("no90")
+                if re_eyes < 60:
+                    game_value -= 1
+                    game_summary.remove("no90")
+                    game_summary.append("no60")
+                if re_eyes < 30:
+                    game_value -= 1
+                    game_summary.remove("no60")
+                    game_summary.append("no30")
+                if re_eyes == 0:
+                    game_value -= 1
+                    game_summary.remove("no30")
+                    game_summary.append("black")
+
+            # Denials that the winner reached
+            if winner == "re":
+                if kontra_eyes < 90 and "no90" in self.modifiers["re"]:
+                    game_value += 1
+                    game_summary.append("c_no90")
+                if kontra_eyes < 60 and "no60" in self.modifiers["re"]:
+                    game_value += 1
+                    game_summary.remove("c_no90")
+                    game_summary.append("c_no60")
+                if kontra_eyes < 30 and "no30" in self.modifiers["re"]:
+                    game_value += 1
+                    game_summary.remove("c_no60")
+                    game_summary.append("c_no30")
+                if kontra_eyes == 0 and "black" in self.modifiers["re"]:
+                    game_value += 1
+                    game_summary.remove("c_no30")
+                    game_summary.append("c_black")
+
+            if winner == "kontra":
+                if re_eyes < 90 and "no90" in self.modifiers["kontra"]:
+                    game_value -= 1
+                    game_summary.append("c_no90")
+                if re_eyes < 60 and "no60" in self.modifiers["kontra"]:
+                    game_value -= 1
+                    game_summary.remove("c_no90")
+                    game_summary.append("c_no60")
+                if re_eyes < 30 and "no30" in self.modifiers["kontra"]:
+                    game_value -= 1
+                    game_summary.remove("c_no60")
+                    game_summary.append("c_no30")
+                if re_eyes == 0 and "black" in self.modifiers["kontra"]:
+                    game_value -= 1
+                    game_summary.remove("c_no30")
+                    game_summary.append("c_black")
+
+            # Denials that the looser didn't reach
+            if winner == "kontra":
+                if "no90" in self.modifiers["re"]:
+                    game_value -= 1
+                    game_summary.append("fc_no90")
+                if "no60" in self.modifiers["re"]:
+                    game_value -= 1
+                    game_summary.remove("fc_no90")
+                    game_summary.append("fc_no60")
+                if "no30" in self.modifiers["re"]:
+                    game_value -= 1
+                    game_summary.remove("fc_no60")
+                    game_summary.append("fc_no30")
+                if "black" in self.modifiers["re"]:
+                    game_value -= 1
+                    game_summary.remove("fc_no30")
+                    game_summary.append("fc_black")
+
+            if winner == "re":
+                if "no90" in self.modifiers["kontra"]:
+                    game_value += 1
+                    game_summary.append("fc_no90")
+                if "no60" in self.modifiers["kontra"]:
+                    game_value += 1
+                    game_summary.remove("fc_no90")
+                    game_summary.append("fc_no60")
+                if "no30" in self.modifiers["kontra"]:
+                    game_value += 1
+                    game_summary.remove("fc_no60")
+                    game_summary.append("fc_no30")
+                if "black" in self.modifiers["kontra"]:
+                    game_value += 1
+                    game_summary.remove("fc_no30")
+                    game_summary.append("fc_black")
+
+            # Denials that were overshot by 30 points
+            if winner != "re":
+                goal = min(int(kontra_eyes / 30) * 30, 120)
+                if "no90" in self.modifiers["re"] and kontra_eyes >= 120:
+                    game_value -= 1
+                    game_summary.append(f"{goal}vs_no90")
+                if "no60" in self.modifiers["re"] and kontra_eyes >= 90:
+                    game_value -= 1
+                    if f"{goal}vs_no90" in game_summary:
+                        game_summary.remove(f"{goal}vs_no90")
+                    game_summary.append(f"{goal}vs_no60")
+                if "no30" in self.modifiers["re"] and kontra_eyes >= 60:
+                    game_value -= 1
+                    if f"{goal}vs_no60" in game_summary:
+                        game_summary.remove(f"{goal}vs_no60")
+                    game_summary.append(f"{goal}vs_no30")
+                if "black" in self.modifiers["re"] and kontra_eyes >= 30:
+                    game_value -= 1
+                    if f"{goal}vs_no30" in game_summary:
+                        game_summary.remove(f"{goal}vs_no30")
+                    game_summary.append(f"{goal}vs_black")
+
+            if winner != "kontra":
+                goal = min(int(re_eyes / 30) * 30, 120)
+                if "no90" in self.modifiers["kontra"] and re_eyes >= 120:
+                    game_value += 1
+                    game_summary.append(f"{goal}vs_no90")
+                if "no60" in self.modifiers["kontra"] and re_eyes >= 90:
+                    game_value += 1
+                    if f"{goal}vs_no90" in game_summary:
+                        game_summary.remove(f"{goal}vs_no90")
+                    game_summary.append(f"{goal}vs_no60")
+                if "no30" in self.modifiers["kontra"] and re_eyes >= 60:
+                    game_value += 1
+                    if f"{goal}vs_no60" in game_summary:
+                        game_summary.remove(f"{goal}vs_no60")
+                    game_summary.append(f"{goal}vs_no30")
+                if "black" in self.modifiers["kontra"] and re_eyes >= 30:
+                    game_value += 1
+                    if f"{goal}vs_no30" in game_summary:
+                        game_summary.remove(f"{goal}vs_no30")
+                    game_summary.append(f"{goal}vs_black")
+
+        elif self.game_type in ["solo_null", "solo_boneless"]:
+            if winner == "re":
+                game_value = 2
+            elif winner == "kontra":
+                game_value = -1
+                if re_eyes > 30:
+                    game_value -= 1
+                    game_summary.append("o30")
+                if re_eyes > 60:
+                    game_value -= 1
+                    game_summary.remove("o30")
+                    game_summary.append("o60")
+                if re_eyes > 90:
+                    game_value -= 1
+                    game_summary.remove("o60")
+                    game_summary.append("o90")
+                if re_eyes > 120:
+                    game_value -= 1
+                    game_summary.remove("o90")
+                    game_summary.append("o120")
+                if re_eyes > 150:
+                    game_value -= 1
+                    game_summary.remove("o120")
+                    game_summary.append("o150")
+                if re_eyes > 180:
+                    game_value -= 1
+                    game_summary.remove("o150")
+                    game_summary.append("o180")
+                if re_eyes > 210:
+                    game_value -= 1
+                    game_summary.remove("o180")
+                    game_summary.append("o210")
+                if re_eyes == 240:
+                    game_value -= 1
+                    game_summary.remove("o210")
+                    game_summary.append("black")
+
             if "re" in self.modifiers["re"]:
                 game_summary.append("re")
             if "kontra" in self.modifiers["kontra"]:
                 game_summary.append("kontra")
-
-        # Eyes, under which a party was played
-        if winner != "kontra":
-            if kontra_eyes < 90:
-                game_value += 1
-                game_summary.append("no90")
-            if kontra_eyes < 60:
-                game_value += 1
-                game_summary.remove("no90")
-                game_summary.append("no60")
-            if kontra_eyes < 30:
-                game_value += 1
-                game_summary.remove("no60")
-                game_summary.append("no30")
-            if kontra_eyes == 0:
-                game_value += 1
-                game_summary.remove("no30")
-                game_summary.append("black")
-
-        if winner != "re":
-            if re_eyes < 90:
-                game_value -= 1
-                game_summary.append("no90")
-            if re_eyes < 60:
-                game_value -= 1
-                game_summary.remove("no90")
-                game_summary.append("no60")
-            if re_eyes < 30:
-                game_value -= 1
-                game_summary.remove("no60")
-                game_summary.append("no30")
-            if re_eyes == 0:
-                game_value -= 1
-                game_summary.remove("no30")
-                game_summary.append("black")
-
-        # Denials that the winner reached
-        if winner == "re":
-            if kontra_eyes < 90 and "no90" in self.modifiers["re"]:
-                game_value += 1
-                game_summary.append("c_no90")
-            if kontra_eyes < 60 and "no60" in self.modifiers["re"]:
-                game_value += 1
-                game_summary.remove("c_no90")
-                game_summary.append("c_no60")
-            if kontra_eyes < 30 and "no30" in self.modifiers["re"]:
-                game_value += 1
-                game_summary.remove("c_no60")
-                game_summary.append("c_no30")
-            if kontra_eyes == 0 and "black" in self.modifiers["re"]:
-                game_value += 1
-                game_summary.remove("c_no30")
-                game_summary.append("c_black")
-
-        if winner == "kontra":
-            if re_eyes < 90 and "no90" in self.modifiers["kontra"]:
-                game_value -= 1
-                game_summary.append("c_no90")
-            if re_eyes < 60 and "no60" in self.modifiers["kontra"]:
-                game_value -= 1
-                game_summary.remove("c_no90")
-                game_summary.append("c_no60")
-            if re_eyes < 30 and "no30" in self.modifiers["kontra"]:
-                game_value -= 1
-                game_summary.remove("c_no60")
-                game_summary.append("c_no30")
-            if re_eyes == 0 and "black" in self.modifiers["kontra"]:
-                game_value -= 1
-                game_summary.remove("c_no30")
-                game_summary.append("c_black")
-
-        # Denials that the looser didn't reach
-        if winner == "kontra":
-            if "no90" in self.modifiers["re"]:
-                game_value -= 1
-                game_summary.append("fc_no90")
-            if "no60" in self.modifiers["re"]:
-                game_value -= 1
-                game_summary.remove("fc_no90")
-                game_summary.append("fc_no60")
-            if "no30" in self.modifiers["re"]:
-                game_value -= 1
-                game_summary.remove("fc_no60")
-                game_summary.append("fc_no30")
-            if "black" in self.modifiers["re"]:
-                game_value -= 1
-                game_summary.remove("fc_no30")
-                game_summary.append("fc_black")
-
-        if winner == "re":
-            if "no90" in self.modifiers["kontra"]:
-                game_value += 1
-                game_summary.append("fc_no90")
-            if "no60" in self.modifiers["kontra"]:
-                game_value += 1
-                game_summary.remove("fc_no90")
-                game_summary.append("fc_no60")
-            if "no30" in self.modifiers["kontra"]:
-                game_value += 1
-                game_summary.remove("fc_no60")
-                game_summary.append("fc_no30")
-            if "black" in self.modifiers["kontra"]:
-                game_value += 1
-                game_summary.remove("fc_no30")
-                game_summary.append("fc_black")
-
-        # Denials that were overshot by 30 points
-        if winner != "re":
-            goal = min(int(kontra_eyes / 30) * 30, 120)
-            if "no90" in self.modifiers["re"] and kontra_eyes >= 120:
-                game_value -= 1
-                game_summary.append(f"{goal}vs_no90")
-            if "no60" in self.modifiers["re"] and kontra_eyes >= 90:
-                game_value -= 1
-                if f"{goal}vs_no90" in game_summary:
-                    game_summary.remove(f"{goal}vs_no90")
-                game_summary.append(f"{goal}vs_no60")
-            if "no30" in self.modifiers["re"] and kontra_eyes >= 60:
-                game_value -= 1
-                if f"{goal}vs_no60" in game_summary:
-                    game_summary.remove(f"{goal}vs_no60")
-                game_summary.append(f"{goal}vs_no30")
-            if "black" in self.modifiers["re"] and kontra_eyes >= 30:
-                game_value -= 1
-                if f"{goal}vs_no30" in game_summary:
-                    game_summary.remove(f"{goal}vs_no30")
-                game_summary.append(f"{goal}vs_black")
-
-        if winner != "kontra":
-            goal = min(int(re_eyes / 30) * 30, 120)
-            if "no90" in self.modifiers["kontra"] and re_eyes >= 120:
-                game_value += 1
-                game_summary.append(f"{goal}vs_no90")
-            if "no60" in self.modifiers["kontra"] and re_eyes >= 90:
-                game_value += 1
-                if f"{goal}vs_no90" in game_summary:
-                    game_summary.remove(f"{goal}vs_no90")
-                game_summary.append(f"{goal}vs_no60")
-            if "no30" in self.modifiers["kontra"] and re_eyes >= 60:
-                game_value += 1
-                if f"{goal}vs_no60" in game_summary:
-                    game_summary.remove(f"{goal}vs_no60")
-                game_summary.append(f"{goal}vs_no30")
-            if "black" in self.modifiers["kontra"] and re_eyes >= 30:
-                game_value += 1
-                if f"{goal}vs_no30" in game_summary:
-                    game_summary.remove(f"{goal}vs_no30")
-                game_summary.append(f"{goal}vs_black")
 
         # Re and Kontra as adding multipliers
         if self.game.gamerules["dk.re_kontra"] == "+2":
@@ -2118,7 +2168,7 @@ class DoppelkopfRound(object):
             kontra_extra += 1
 
         # Punishment for cowardice
-        if self.game.gamerules["dk.coward"] != "None":
+        if self.game.gamerules["dk.coward"] != "None" and self.game_type not in ["solo_null", "solo_boneless"]:
             if winner == "re" and re_eyes > 210:
                 if "re" not in self.modifiers["re"]:
                     game_value *= -1
@@ -3886,6 +3936,10 @@ class DoppelkopfRound(object):
                 self.game.send_to_user(p, "cg:game.dk.round.change", {
                     "rebtn_lbl": "no90"
                 })
+                if self.game_type in ["solo_null", "solo_boneless"]:
+                    self.game.send_to_user(p, "cg:game.dk.round.change", {
+                        "rebtn_lbl": "none"
+                    })
 
             self.update_obvious_party(self.current_player, "re")
 
@@ -3921,6 +3975,10 @@ class DoppelkopfRound(object):
                 self.game.send_to_user(p, "cg:game.dk.round.change", {
                     "rebtn_lbl": "no90"
                 })
+                if self.game_type in ["solo_null", "solo_boneless"]:
+                    self.game.send_to_user(p, "cg:game.dk.round.change", {
+                        "rebtn_lbl": "none"
+                    })
 
             self.update_obvious_party(self.current_player, "kontra")
 
@@ -4289,6 +4347,8 @@ class DoppelkopfRound(object):
         elif btn_option == "black":
             legal_call = len(self.hands[player]) >= (self.max_tricks - 4 - self.wedding_find_trick)
 
+        if self.game_type in ["solo_null", "solo_boneless"]:
+            return btn_option in ["re", "kontra"]
         return legal_call
 
     def do_autoplay(self):

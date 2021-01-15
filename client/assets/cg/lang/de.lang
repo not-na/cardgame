@@ -85,6 +85,14 @@ game.doppelkopf.extra.60vs_no30=+ 60 gegen unter 30
 game.doppelkopf.extra.60vs_black=+ 60 gegen schwarz
 game.doppelkopf.extra.30vs_black=+ 30 gegen schwarz
 
+game.doppelkopf.extra.o30=+ Über 30 gespielt
+game.doppelkopf.extra.o60=+ Über 60 gespielt
+game.doppelkopf.extra.o90=+ Über 90 gespielt
+game.doppelkopf.extra.o120=+ Über 120 gespielt
+game.doppelkopf.extra.o150=+ Über 150 gespielt
+game.doppelkopf.extra.o1830=+ Über 180 gespielt
+game.doppelkopf.extra.o210=+ Über 210 gespielt
+
 game.doppelkopf.extra.p_against_cqs=+ Gegen die Alten
 game.doppelkopf.extra.p_fox=+ Fuchs
 game.doppelkopf.extra.p_doppelkopf=+ Doppelkopf
@@ -301,6 +309,7 @@ gui.menu.smain.loginerr.wrongcred=Falsche Anmeldeinformationen oder ungültiger 
 gui.menu.smain.loginerr.userexists=Dieser Benutzername ist bereits vergeben!
 gui.menu.smain.loginerr.registerdisabled=Der Server erlaubt keine Registrierungen!
 gui.menu.smain.loginerr.blocked=Der angegebene Benutzername ist blockiert!
+gui.menu.smain.loginerr.invname=Ungültiger Benutzername!
 
 gui.menu.smain.connerr.unknown=Unbekannter Fehler beim Verbinden
 gui.menu.smain.connerr.ok=OK
