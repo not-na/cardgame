@@ -410,8 +410,8 @@ class DoppelkopfGame(CGame):
 
     GAME_VERSION = 1
 
-    def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
-        super().__init__(c, lobby)
+    def __init__(self, c: cg.CardGame, lobby: uuid.UUID, id: uuid.UUID = None):
+        super().__init__(c, lobby, id)
 
         self.player_decisions: Dict[str, Set[uuid.UUID]] = {
             "continue": set(),
@@ -745,8 +745,8 @@ class DoppelkopfGame(CGame):
 
     @classmethod
     def deserialize(cls, cg, lobby, data) -> "CGame":
-        game = cls(cg, lobby)
-        game.game_id = uuidify(data["id"])
+        game_id = uuidify(data["id"])
+        game = cls(cg, lobby, game_id)
         game.creation_time = data["creation_time"]
         game.players = uuidify(data["player_order"])
         game.gamerules = data["gamerules"]

@@ -128,6 +128,7 @@ class RoundChangePacket(CGPacket):
                 self.cg.client.gui.ingame.hud_layer.s_main.getWidget(f"selfimg").redraw()
 
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("loadingscreen")
+                self.cg.client.game.game_type = "normal"
             elif msg["phase"] == "dealing":
                 self.cg.client.gui.ingame.gui_layer.changeSubMenu("ingame")
             elif msg["phase"] == "w_for_ready":

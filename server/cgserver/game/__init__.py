@@ -82,10 +82,10 @@ class CGame(object, metaclass=abc.ABCMeta):
 
     GAME_VERSION = 1
 
-    def __init__(self, c: cg.CardGame, lobby: uuid.UUID):
+    def __init__(self, c: cg.CardGame, lobby: uuid.UUID, id: uuid.UUID = None):
         self.cg: cg.CardGame = c
 
-        self.game_id = uuid.uuid4()
+        self.game_id = uuid.uuid4() if id is None else id
 
         self.creation_time = time.time()
 
@@ -115,11 +115,13 @@ class CGame(object, metaclass=abc.ABCMeta):
                 self.gamerules[rule] = self.GAMERULES[rule]["default"]
 
     def cancel_game(self, notify=True):
+        self.lobby.started = False
+        self.lobby.game_data = None
+
         for p in self.players:
             if isinstance(self.cg.server.users_uuid[p], cgserver.user.BotUser):
                 continue
 
-            self.lobby.started = False
             self.cg.server.users_uuid[p].cur_game = None
             self.cg.server.send_to_user(p, "cg:game.end", {
                 "next_state": "lobby",

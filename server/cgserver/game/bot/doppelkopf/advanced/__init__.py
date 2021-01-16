@@ -1063,6 +1063,7 @@ class AdvancedDKBot(Bot):
 
             elif data["phase"] == "tricks":
                 self.state = "tricks"
+                self.update_card_colors()
 
         if "rebtn_lbl" in data:
             self.current_re = data["rebtn_lbl"]
