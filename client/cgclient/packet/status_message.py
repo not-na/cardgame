@@ -39,7 +39,15 @@ class StatusMessagePacket(CGPacket):
     ]
     side = SIDE_CLIENT
 
-    def receive(self,msg,cid=None):
+    def receive(self, msg, cid=None):
         if "data" not in msg:
             msg["data"] = {}
-        self.cg.send_event("cg:status.message.open", msg)
+
+        # Autoplay mode
+        if self.cg.client.game is not None and self.cg.client.game.AUTOPLAY and \
+                msg["message"] == "cg:msg.game.dk.pc_wrong_card":
+            self.cg.send_event("cg:game.dk.cheat.wrong_card")
+
+        # Normal mode
+        else:
+            self.cg.send_event("cg:status.message.open", msg)

@@ -68,6 +68,11 @@ class ChangePacket(CGPacket):
                             "index": lobby.users.index(i)
                         } for i in lobby.users}
                     })
+
+                if lobby.game_data is not None:
+                    lobby.game_data = None
+                    self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.load_game.reset.user_order")
+
             else:
                 self.cg.server.send_status_message(u, "warn", "cg:msg.lobby.change_user_order.missing_rights")
                 self.cg.warn(f"User {u.username} tried to change a lobby user order with insufficient rights")
@@ -108,7 +113,7 @@ class ChangePacket(CGPacket):
 
             if lobby.game_data is not None:
                 lobby.game_data = None
-                self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.load_game.reset")
+                self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.load_game.reset.gamerules")
             lobby.update_gamerules(msg["gamerules"])
 
         if "user_roles" in msg:

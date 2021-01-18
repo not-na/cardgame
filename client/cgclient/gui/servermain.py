@@ -1189,6 +1189,7 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                 try:
                     sg = save_games[i+self.save_offset]
                     btn.visible = True
+                    btn.enabled = True
                     btn.game_id = sg["id"]
                     btn.players = list(map(uuidify, sg["players"]))
                     btn.player_names = sg.get("player_names", [])
@@ -1202,11 +1203,11 @@ class AdjournSubMenu(peng3d.gui.SubMenu):
                     users_match = sorted(map(uuidify, sg["players"])) == sorted(self.peng.cg.client.lobby.users)
                     server_match = sg["server"] == self.menu.cg.client.server_id
 
-                    self.save_btns[i].match = users_match and server_match
+                    btn.match = users_match and server_match
                     if not (users_match and server_match):
-                        self.save_btns[i].enabled = False
-                        self.save_btns[i].bg_layer.switchImage("disabled")
-                        self.save_btns[i].redraw()
+                        btn.enabled = False
+                        btn.bg_layer.switchImage("disabled")
+                        btn.redraw()
                 except Exception:
                     self.menu.cg.exception(f"Exception while rendering saved game")
             else:
@@ -1900,8 +1901,19 @@ class AdjournGameButton(peng3d.gui.LayeredWidget):
                 self.bg_layer.switchImage("idle")
         self.addAction("hover_end", f)
 
-        self.addAction("press_down", self.bg_layer.switchImage, "pressed")
-        self.addAction("press_up", self.bg_layer.switchImage, "hover")
+        def f():
+            self.bg_layer.switchImage("pressed")
+            for btn in self.submenu.save_btns:
+                if btn != self and btn.enabled:
+                    btn.doAction("press_up")
+        self.addAction("press_down", f)
+
+        def f():
+            if self.is_hovering:
+                self.bg_layer.switchImage("hover")
+            else:
+                self.bg_layer.switchImage("idle")
+        self.addAction("press_up", f)
 
         h = pyglet.font.load("Times New Roman", 30).ascent / 2
         self.date_layer = peng3d.gui.LabelWidgetLayer(
@@ -2328,7 +2340,6 @@ class PlayerButton(peng3d.gui.LayeredWidget):
                 self.readybtn.switchImage("transparent")
 
     def handle_user_leave(self, event: str, data: dict):
-        #print(data, self.player.uuid)
         if data["user"] == self.player.uuid:
             self.readybtn.switchImage("transparent")
             self.admin_icon.switchImage("transparent")

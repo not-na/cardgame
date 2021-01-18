@@ -155,8 +155,10 @@ msg.lobby.load_game.oldversion=This save game is from an outdated version!
 msg.lobby.load_game.invalid_data=Invalid / Flawed save game!
 msg.lobby.load_game.missing_rights=Only admins can load a save game!
 msg.lobby.load_game.users_not_identical=Exactly the same players have to be in the lobby!
-msg.lobby.load_game.success=Save game has been loaded successfully!
-msg.lobby.load_game.reset=Game rules were changed! Game won't be loaded.
+msg.lobby.load_game.success=Save game has been loaded successfully! Any changed game rules have been reset.
+msg.lobby.load_game.reset.gamerules=Game rules were changed! Game won't be loaded.
+msg.lobby.load_game.reset.user_order=Order of players changed! Game won't be loaded.
+msg.lobby.load_game.reset.player_list=Player list changed! Game won't be loaded.
 
 msg.game.cancel=The game has been cancelled!
 

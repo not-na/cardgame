@@ -30,6 +30,7 @@ from . import CGame
 
 
 class DoppelkopfGame(CGame):
+    AUTOPLAY = False
     SLOT_NAMES: List[str] = [
         "stack",
         "poverty",
@@ -75,6 +76,9 @@ class DoppelkopfGame(CGame):
             "cancel": set(),
             "end": set()
         }
+
+        self.cheat_card_counter = 0
+        self.register_event_handlers()
 
     def start(self):
         self.menu = self.cg.client.gui.ingame
@@ -157,3 +161,28 @@ class DoppelkopfGame(CGame):
 
         for c in self.slots[self.own_hand]:
             c.start_anim(self.own_hand, self.own_hand)
+
+    def register_event_handlers(self):
+        if self.AUTOPLAY:
+            self.cg.add_event_listener("cg:game.dk.cheat.my_turn", self.handle_my_turn, group=self.game_id)
+            self.cg.add_event_listener("cg:game.dk.cheat.wrong_card", self.handle_wrong_turn, group=self.game_id)
+
+    # Autoplay handlers
+    def handle_my_turn(self, event, data):
+        print("my_turn")
+        self.cheat_card_counter = 0
+        card = self.slots[self.own_hand][self.cheat_card_counter].cardid.hex
+        print("card")
+        self.cg.client.send_message("cg:game.dk.card.intent", {
+            "intent": "play",
+            "card": card
+        })
+
+    def handle_wrong_turn(self, event, data):
+        print("wrong_card")
+        self.cheat_card_counter += 1
+        card = self.slots[self.own_hand][self.cheat_card_counter].cardid.hex
+        self.cg.client.send_message("cg:game.dk.card.intent", {
+            "intent": "play",
+            "card": card
+        })

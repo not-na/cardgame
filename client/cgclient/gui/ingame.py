@@ -1484,14 +1484,10 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         self.container = peng3d.gui.ScrollableContainer(
             "container", self, self.window, self.peng,
             pos=self.grid.get_cell([0, 2], [20, 4], border=0),
-            size=(lambda sw, sh: (sw, 0)),
             content_height=0
         )
-        self.container.pos = (lambda sw, sh, bw, bh: (
-            self.grid.get_cell([0, 2], [20, 4], anchor_y="top", border=0).pos[0],
-            self.grid.get_cell([0, 2], [20, 4], anchor_y="top", border=0).pos[1] - bh
-        ))
         self.container._scrollbar.visible = False
+        self.container.actual_content_height = 0
         self.addWidget(self.container)
 
         # Player scores
@@ -1537,34 +1533,9 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         h = font_height * (len(extras) + 2) + 8
 
         # Adjust height of the container
-        old_container_height = self.container.size[1]
-        if old_container_height + h > self.window.height * 1 / 2 - 3:
-            self.container.size = (lambda sw, sh: (sw, sh * 1 / 2 - 3))
-            self.container.content_height = old_container_height + h - (self.window.height * 1 / 2 - 3)
-        else:
-            self.container.size = (lambda sw, sh: (sw, old_container_height + h))
-
-        # Move old widgets upwards
-        # Scores
-        for i, l in enumerate(self.player_scores):
-            for j in l:
-                old_widget_pos = j.pos[1] - self.container.pos[1]
-                j.pos = self._lambda_score_pos(i, old_widget_pos + h)
-
-        # Summaries
-        for j in self.game_summaries:
-            old_widget_pos = j.pos[1] - self.container.pos[1]
-            j.pos = self._lambda_bar_pos(4, old_widget_pos + h)
-
-        # Bars
-        for i, l in enumerate(self.separation_bars):
-            for j in l:
-                old_widget_pos = j.pos[1] - self.container.pos[1]
-                if not j.visible:  # Workaround because of the pos being [-10000, -10000] when invisible
-                    j.visible = True
-                    old_widget_pos = j.pos[1] - self.container.pos[1]
-                    j.visible = False
-                j.pos = self._lambda_bar_pos(i, old_widget_pos + h)
+        self.container.actual_content_height += h
+        if self.container.actual_content_height > self.container.size[1]:
+            self.container.content_height = self.container.actual_content_height - self.container.size[1]
 
         # Create new widgets
         for i in range(5):
@@ -1572,7 +1543,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             if i < 4:
                 score = peng3d.gui.Label(
                     f"score{i}.{round_num}", self.container, self.window, self.peng,
-                    pos=self._lambda_score_pos(i, 0),
+                    pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
+                         (sw / 5 * i, self.container.size[1] - abs_pos + self.container.content_height)),
                     size=(lambda sw, sh: (sw / 5, h)),
                     label=str(point_change[i])
                 )
@@ -1590,7 +1562,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
                     summary_label += str(self.peng.tl(f"cg:game.doppelkopf.extra.{extra}")) + "\n"
                 summary = peng3d.gui.Label(
                     f"summary{round_num}", self.container, self.window, self.peng,
-                    pos=self._lambda_bar_pos(i, 0),
+                    pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
+                         (sw / 5 * i + 30, self.container.size[1] - abs_pos + self.container.content_height)),
                     size=(lambda sw, sh: (sw / 5 - 60, h)),
                     label=summary_label,
                     multiline=True,
@@ -1603,7 +1576,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             # Separation bar
             bar = peng3d.gui.ImageButton(
                 f"separation_bar{i}.{round_num}", self.container, self.window, self.peng,
-                pos=self._lambda_bar_pos(i, 0),
+                pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
+                    (sw / 5 * i + 30, self.container.size[1] - abs_pos + self.container.content_height + 3)),
                 size=(lambda sw, sh: (sw / 5 - 60, 3)),
                 bg_idle=("cg:img.bg.gray_brown", "gui"),
                 label=""
@@ -1642,8 +1616,9 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
         for i in self.score_labels:
             i.label = "score_label"
 
-        self.container.size = (lambda sw, sh: (sw, 0))
         self.container._scrollbar.visible = False
+        self.container.content_height = 0
+        self.container.actual_content_height = 0
 
         for i in self.player_scores:
             for s in i:
@@ -1654,12 +1629,6 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             i.visible = False
         self.game_summaries = []
 
-    def _lambda_score_pos(self, i, y):
-        return lambda sw, sh, ww, wh: (sw / 5 * i, y - 3)
-
-    def _lambda_bar_pos(self, i, y):
-        return lambda sw, sh, ww, wh: (sw / 5 * i + 30, y)
-
     def register_event_handlers(self):
         self.peng.cg.add_event_listener("cg:user.update", self.handle_user_update)
 
@@ -1668,6 +1637,11 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             u = self.peng.cg.client.users_uuid.get(data["uuid"], None)
             if u is not None:
                 self.player_labels[self.player_list.index(data["uuid"])].label = u.username
+
+    def on_enter(self, old):
+        super().on_enter(old)
+        self.container._scrollbar.n = 0
+        self.redraw()
 
 
 class StatusLayer(peng3d.gui.GUILayer):

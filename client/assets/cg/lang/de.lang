@@ -155,8 +155,10 @@ msg.lobby.load_game.oldversion=Dieser Spielstand ist von einer veralteten Versio
 msg.lobby.load_game.invalid_data=Ungültiger / Fehlerhafter Spielstand!
 msg.lobby.load_game.missing_rights=Du hast nicht die nötigen Rechte um ein Spiel zu laden!
 msg.lobby.load_game.users_not_identical=Es müssen die exakt gleichen Spieler in der Lobby sein!
-msg.lobby.load_game.success=Spielstand wurde erfolgreich geladen!
-msg.lobby.load_game.reset=Spielregeln wurden verändert! Spiel wird nicht mehr geladen.
+msg.lobby.load_game.success=Spielstand wurde erfolgreich geladen! Alle veränderten Spielregeln wurden zurückgesetzt.
+msg.lobby.load_game.reset.gamerules=Spielregeln wurden verändert! Spiel wird nicht mehr geladen.
+msg.lobby.load_game.reset.user_order=Spielerreihenfolge wurde verändert! Spiel wird nicht mehr geladen.
+msg.lobby.load_game.reset.player_list=Spielerliste wurde verändert! Spiel wird nicht mehr geladen.
 
 msg.game.cancel=Das Spiel wurde abgebrochen!
 

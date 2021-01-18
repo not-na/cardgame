@@ -77,3 +77,8 @@ class TurnPacket(CGPacket):
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = \
                     self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose != "none"
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.enabled = False
+
+        # Autoplay mode
+        if self.cg.client.game is not None and self.cg.client.game.AUTOPLAY and \
+                cur_player == self.cg.client.user_id:
+            self.cg.send_event("cg:game.dk.cheat.my_turn")

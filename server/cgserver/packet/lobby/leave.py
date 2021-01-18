@@ -21,7 +21,7 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
-from cg.constants import STATE_LOBBY, STATE_ACTIVE
+from cg.constants import STATE_LOBBY, STATE_ACTIVE, ROLE_ADMIN
 from cg.packet import CGPacket
 from cg.util import uuidify
 
@@ -46,6 +46,12 @@ class LeavePacket(CGPacket):
             return
 
         lobby.remove_user(u.uuid)
+
+        if lobby.game_data is not None:
+            lobby.game_data = None
+            for u, r in lobby.user_roles.items():
+                if r >= ROLE_ADMIN:
+                    self.cg.server.send_status_message(u, "warning", "cg:msg.lobby.load_game.reset.player_list")
 
     def send(self, msg, cid=None):
         self.peer.clients[cid].state = STATE_ACTIVE
