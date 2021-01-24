@@ -39,6 +39,7 @@ class TurnPacket(CGPacket):
         "total_tricks",
         "current_player",
         "rebtn_state",
+        "pigbtn_state",
     ]
     side = SIDE_CLIENT
 
@@ -77,6 +78,18 @@ class TurnPacket(CGPacket):
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.visible = \
                     self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.purpose != "none"
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.enabled = False
+
+        if "pigbtn_state" in msg:
+            if msg["pigbtn_state"] == "invis":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = False
+            elif msg["pigbtn_state"] == "enabled":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.enabled = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose != "none"
+            elif msg["pigbtn_state"] == "disabled":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = \
+                    self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose != "none"
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.enabled = False
 
         # Autoplay mode
         if self.cg.client.game is not None and self.cg.client.game.AUTOPLAY and \

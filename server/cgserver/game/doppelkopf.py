@@ -98,6 +98,7 @@ class DoppelkopfGame(CGame):
             "default": False,
             "requirements": {
                 "dk.fox": [True],
+                "dk.pigs": ["None"],
             },
         },
         "dk.pigs": {
@@ -113,6 +114,7 @@ class DoppelkopfGame(CGame):
             ],
             "requirements": {
                 "dk.fox": [True],
+                "dk.fox_lasttrick": [False],
             },
         },
         "dk.superpigs": {
@@ -127,6 +129,7 @@ class DoppelkopfGame(CGame):
             "requirements": {
                 "dk.fox": [True],
                 "dk.pigs": ["two_reservation", "two_on_play"],
+                "dk.joker": ["None"],
             },
         },
         "dk.charlie": {
@@ -139,6 +142,7 @@ class DoppelkopfGame(CGame):
             "default": False,
             "requirements": {
                 "dk.charlie": [True],
+                "dk.jane": [False],
             },
         },
         "dk.jane": {  # Lieschen Müller
@@ -146,7 +150,7 @@ class DoppelkopfGame(CGame):
             "default": False,
             "requirements": {
                 "dk.charlie": [True],
-                "dk.charlie_broken": [True],
+                "dk.charlie_broken": [False],
             },
         },
         "dk.charlie_prio": {
@@ -189,9 +193,10 @@ class DoppelkopfGame(CGame):
                 "None",
                 "over_h10",  # dk.heart10: True
                 "over_pigs",  # dk.pigs: not None
-                "over_superpigs",  # dk.superpigs: not None
             ],
-            "requirements": {},
+            "requirements": {
+                "dk.superpigs": ["None"],
+            },
         },
         "dk.hobgoblin": {  # Klabautermann
             "type": "bool",
@@ -449,7 +454,8 @@ class DoppelkopfGame(CGame):
         self.start_round(self.round_num)
 
     def start_round(self, round_num: int):
-        players = self.players[(round_num - 1) % 4:] + self.players[:(round_num - 1) % 4]  # Each round, another player begins
+        players = self.players[(round_num - 1) % 4:] + self.players[
+                                                       :(round_num - 1) % 4]  # Each round, another player begins
 
         self.current_round = DoppelkopfRound(self, players)
         self.rounds.append(self.current_round)
@@ -465,7 +471,7 @@ class DoppelkopfGame(CGame):
     def collect_statistics(self):
         self.cg.info(f"Collecting statistics for game {self.game_id}")
 
-        #for i in self.players:
+        # for i in self.players:
         #    botgame |= isinstance(self.cg.server.users_uuid[i], user.BotUser)
         botgame = any(map(lambda pid: isinstance(self.cg.server.users_uuid[pid], user.BotUser), self.players))
         data = {
@@ -525,18 +531,6 @@ class DoppelkopfGame(CGame):
         self.cg.add_event_listener("cg:game.dk.play.adjourn_no", self.handle_not_adjourn_play, group=self.game_id)
 
     def handle_end_round(self, event: str, data: Dict):
-        # Send the information on the round
-        self.send_to_all("cg:game.dk.round.change", {
-            "phase": "end",
-            "game_type": data["game_type"],
-            "winner": data["winner"],
-            "eyes": data["eyes"],
-            "modifiers": data["modifiers"],
-            "extras": data["extras"],
-            "round": self.round_num,
-            "game_summary": data["game_summary"]
-        })
-
         m = -1 if data["game_type"] in ["ramsch", "ramsch_sw"] else 1  # In case of Ramsch, the points are swapped
 
         # Determine if the round should be played again
@@ -606,13 +600,31 @@ class DoppelkopfGame(CGame):
             elif self.gamerules["dk.buck_round"] == "parallel":
                 self.buckrounds.extend(data["buckround_events"] * [int(self.gamerules["dk.buck_amount"])])
 
-            self.round_num += 1
         else:
             self.scores.append([0, 0, 0, 0])
+            for p in self.players:
+                self.send_to_all("cg:game.dk.scoreboard", {
+                    "player": p.hex,
+                    "points": self.points[p],
+                    "point_change": 0
+                })
 
         self.game_summaries[-1]["point_change"] = self.scores[-1].copy()
         self.game_summaries[-1]["points"] = list(self.points.values())
 
+        # Send the information on the round
+        self.send_to_all("cg:game.dk.round.change", {
+            "phase": "end",
+            "game_type": data["game_type"],
+            "winner": data["winner"],
+            "eyes": data["eyes"],
+            "modifiers": data["modifiers"],
+            "extras": data["extras"],
+            "round": self.round_num,
+            "game_summary": data["game_summary"]
+        })
+
+        self.round_num += not remake_round
         self.cg.event_manager.del_group(self.current_round.round_id)  # Deinitialise the round's event handlers
 
     # Button Handling
@@ -696,8 +708,8 @@ class DoppelkopfGame(CGame):
                 "cancel": set(),
                 "end": set()
             }
-            #self.collect_statistics()
-            #self.cg.info(f"game_data: {self.serialize()}")
+            # self.collect_statistics()
+            # self.cg.info(f"game_data: {self.serialize()}")
             self.adjourn()
             self.cancel_game(notify=False)
 
@@ -716,9 +728,11 @@ class DoppelkopfGame(CGame):
             "creation_time": self.creation_time,
             "players": [i.hex for i in self.players if not isinstance(self.cg.server.users_uuid[i], user.BotUser)],
             "bots": [
-                self.cg.server.users_uuid[i].bot.serialize() for i in self.players if isinstance(self.cg.server.users_uuid[i], user.BotUser)
+                self.cg.server.users_uuid[i].bot.serialize() for i in self.players if
+                isinstance(self.cg.server.users_uuid[i], user.BotUser)
             ],
-            "player_names": [self.cg.server.users_uuid[i].username for i in self.players if not isinstance(self.cg.server.users_uuid[i], user.BotUser)],
+            "player_names": [self.cg.server.users_uuid[i].username for i in self.players if
+                             not isinstance(self.cg.server.users_uuid[i], user.BotUser)],
             "player_order": [i.hex for i in self.players],
             "gamerules": self.gamerules,
             "round_num": self.round_num,
@@ -776,7 +790,7 @@ class DoppelkopfGame(CGame):
 
 
 class DoppelkopfRound(object):
-    DEV_MODE_PREP_CARDS = False
+    DEV_MODE_PREP_CARDS = True
 
     if DoppelkopfGame.DEV_MODE:
         CARD_DEAL_DELAY = 0.3
@@ -948,7 +962,8 @@ class DoppelkopfRound(object):
             if to_slot == "stack":
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot,
                 })
@@ -961,7 +976,8 @@ class DoppelkopfRound(object):
                 receiver = self.players[int(to_slot.strip("hand"))]
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot,
                 }, exclude=[receiver])
@@ -984,7 +1000,8 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -1009,7 +1026,8 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -1023,7 +1041,8 @@ class DoppelkopfRound(object):
                 })
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 }, exclude=[self.current_player])
@@ -1035,7 +1054,8 @@ class DoppelkopfRound(object):
             if "tricks" in to_slot:
                 self.game.send_to_all("cg:game.dk.card.transfer", {
                     "card_id": card.card_id.hex,
-                    "card_value": "" if not (self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
+                    "card_value": "" if not (
+                                self.game.DEV_MODE or self.game.gamerules["dk.open_cards"]) else card.card_value,
                     "from_slot": from_slot,
                     "to_slot": to_slot
                 })
@@ -1623,6 +1643,10 @@ class DoppelkopfRound(object):
 
         self.game.cg.info("Initialized cards")
 
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "pigbtn_lbl": "none"
+        })
+
     def start_normal(self):
         self.reserv_state = "finished"
 
@@ -1637,12 +1661,14 @@ class DoppelkopfRound(object):
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
                 self.parties["re"].add(player)
                 self.game.send_to_user(player, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "re"
+                    "rebtn_lbl": "re",
+                    "pigbtn_lbl": "pigs",
                 })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
                 self.parties["kontra"].add(player)
                 self.game.send_to_user(player, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "kontra"
+                    "rebtn_lbl": "kontra",
+                    "pigbtn_lbl": "pigs",
                 })
 
             self.obvious_parties["unknown"].add(player)
@@ -1669,13 +1695,15 @@ class DoppelkopfRound(object):
         # Put the players into their parties
         self.parties["re"].add(solist)
         self.game.send_to_user(solist, "cg:game.dk.round.change", {
-            "rebtn_lbl": "re"
+            "rebtn_lbl": "re",
+            "pigbtn_lbl": "pigs",
         })
         for i in self.players:
             if i != solist:
                 self.parties["kontra"].add(i)
                 self.game.send_to_user(i, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "kontra"
+                    "rebtn_lbl": "kontra",
+                    "pigbtn_lbl": "pigs",
                 })
 
         # Obvious parties
@@ -1742,16 +1770,19 @@ class DoppelkopfRound(object):
         # Put the players into their parties
         self.parties["re"].update([self.poverty_player, accepter])
         self.game.send_to_user(self.poverty_player, "cg:game.dk.round.change", {
-            "rebtn_lbl": "re"
+            "rebtn_lbl": "re",
+            "pigbtn_lbl": "pigs",
         })
         self.game.send_to_user(accepter, "cg:game.dk.round.change", {
-            "rebtn_lbl": "re"
+            "rebtn_lbl": "re",
+            "pigbtn_lbl": "pigs",
         })
         for i in self.players:
             if i not in self.parties["re"]:
                 self.parties["kontra"].add(i)
                 self.game.send_to_user(i, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "kontra"
+                    "rebtn_lbl": "kontra",
+                    "pigbtn_lbl": "pigs",
                 })
 
         # Obvious parties
@@ -1796,17 +1827,20 @@ class DoppelkopfRound(object):
             if list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 1:
                 self.parties["re"].add(player)
                 self.game.send_to_user(player, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "re"
+                    "rebtn_lbl": "re",
+                    "pigbtn_lbl": "pigs",
                 })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 0:
                 self.parties["kontra"].add(player)
                 self.game.send_to_user(player, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "kontra"
+                    "rebtn_lbl": "kontra",
+                    "pigbtn_lbl": "pigs",
                 })
             elif list(map(lambda x: self.cards[x].card_value, hand)).count("cq") == 2:
                 self.parties["re"].add(player)
                 self.game.send_to_user(player, "cg:game.dk.round.change", {
-                    "rebtn_lbl": "re"
+                    "rebtn_lbl": "re",
+                    "pigbtn_lbl": "pigs",
                 })
                 self.game_type = "ramsch_sw"
 
@@ -2355,10 +2389,13 @@ class DoppelkopfRound(object):
         # Check for valid states
         if self.game.cg.server.users_uuid[uuidify(data["player"])].cur_game != self.game.game_id:
             return
-        if self.game_state != "w_for_ready":
-            raise GameStateError(f"Game state for throw handling must be 'w_for_ready', not {self.game_state}!")
-        if self.game.gamerules["dk.throw"] != "throw":
+        if self.game.gamerules["dk.throw"] not in ["reservation", "throw"]:
             raise RuleError("Throwing is not permitted by the rules!")
+        else:
+            if self.game.gamerules["dk.throw"] == "throw" and self.game_state != "w_for_ready":
+                raise GameStateError(f"Game state for throw handling must be 'w_for_ready', not {self.game_state}!")
+            elif self.game.gamerules["dk.throw"] == "reservation" and self.game_state != "reservations":
+                raise GameStateError(f"Game state for throw handling must be 'reservations', not {self.game_state}!")
 
         player = uuidify(data["player"])
 
@@ -2418,11 +2455,13 @@ class DoppelkopfRound(object):
         self.game.cg.send_event("cg:game.dk.end_round", {
             "game_type": "throw",
             "winner": None,
+            "game_value": 0,
             "re": [],
             "kontra": [],
-            "eyes": 0,
+            "eyes": (0, 0),
             "modifiers": self.modifiers,
-            "extras": []
+            "extras": [],
+            "game_summary": [],
         })
 
     def handle_reservation(self, event: str, data: Dict):
@@ -2646,11 +2685,13 @@ class DoppelkopfRound(object):
             self.game.cg.send_event("cg:game.dk.end_round", {
                 "game_type": "throw",
                 "winner": None,
+                "game_value": 0,
                 "re": [],
                 "kontra": [],
-                "eyes": 0,
+                "eyes": (0, 0),
                 "modifiers": self.modifiers,
-                "extras": []
+                "extras": [],
+                "game_summary": [],
             })
 
         # If he doesn't want to throw
@@ -2738,6 +2779,9 @@ class DoppelkopfRound(object):
                 return
             else:
                 self.pigs = [True, self.current_player]
+                self.game.send_to_all("cg:game.dk.round.change", {
+                    "pigbtn_lbl": "superpigs"
+                })
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -2860,6 +2904,9 @@ class DoppelkopfRound(object):
                 })
                 return
             self.superpigs = [True, self.current_player]
+            self.game.send_to_all("cg:game.dk.round.change", {
+                "pigbtn_lbl": "none"
+            })
 
         # Announce decision
         self.game.send_to_all("cg:game.dk.announce", {
@@ -3261,9 +3308,10 @@ class DoppelkopfRound(object):
                         "winner": None,
                         "re": [],
                         "kontra": [],
-                        "eyes": 0,
+                        "eyes": (0, 0),
                         "modifiers": self.modifiers,
-                        "extras": []
+                        "extras": [],
+                        "game_summary": [],
                     })
 
                 # Play a round of black sow
@@ -3813,6 +3861,9 @@ class DoppelkopfRound(object):
             "announcer": self.current_player.hex,
             "type": "pigs"
         })
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "pigbtn_lbl": "superpigs"
+        })
 
         # Register the move
         self.add_move(self.current_player, "announcement", data["type"])
@@ -3879,6 +3930,9 @@ class DoppelkopfRound(object):
         self.game.send_to_all("cg:game.dk.announce", {
             "announcer": player.hex,
             "type": "superpigs"
+        })
+        self.game.send_to_all("cg:game.dk.round.change", {
+            "pigbtn_lbl": "none"
         })
 
         # Register the move
@@ -4264,11 +4318,19 @@ class DoppelkopfRound(object):
             if not self.check_announce(p):
                 state = "invis"
 
+            pig_state = self.get_pig_state(p)
+            p_state = "enabled"
+            if p != self.current_player and pig_state != "activate":
+                p_state = "disabled"
+            if not pig_state:
+                p_state = "invis"
+
             self.game.send_to_user(p, "cg:game.dk.turn", {
                 "current_trick": trick_num,
                 "total_tricks": self.max_tricks,
                 "current_player": self.current_player.hex,
-                "rebtn_state": state
+                "rebtn_state": state,
+                "pigbtn_state": p_state
             })
 
     def check_announce(self, player: uuid.UUID):
@@ -4352,6 +4414,80 @@ class DoppelkopfRound(object):
         if self.game_type in ["solo_null", "solo_boneless"]:
             return btn_option in ["re", "kontra"]
         return legal_call
+
+    def get_pig_state(self, player: uuid.UUID):
+        # Find out, which cards are the pigs in this round
+        if self.game_type == "solo_hearts":
+            pig_card = "ha"
+        elif self.game_type == "solo_spades":
+            pig_card = "sa"
+        elif self.game_type == "solo_clubs":
+            pig_card = "ca"
+        else:
+            pig_card = "da"
+
+        if self.game.gamerules["dk.pigs"] in ["two_on_play", "one_first"]:
+            # The player has two pigs on his hand
+            if list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(pig_card) == 2:
+                return True
+
+        elif self.game.gamerules["dk.pigs"] == "one_on_play":
+            # The player had two pigs at the start of the game and still one left
+            if list(map(lambda x: self.cards[x].card_value, self.start_hands[player])).count(
+                    pig_card) == 2:
+                if list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(pig_card) > 0:
+                    return True
+
+        elif self.game.gamerules["dk.pigs"] == "one_on_fox":
+            # The player had two pigs at the start of the game and still one left
+            if list(map(lambda x: self.cards[x].card_value, self.start_hands[player])).count(pig_card) == 2:
+                if list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(pig_card) > 0:
+                    # Check if the players party brought a fox home
+                    # The player took the fox
+                    for card in self.slots[f"tricks{self.players.index(player)}"]:
+                        if self.cards[card].value == pig_card:
+                            return True
+
+                    # The players party member(s) took it
+                    if not self.pigs[0]:
+                        player_party = ""
+                        for party, players in self.parties.items():
+                            if player in players:
+                                player_party = party
+                        if player_party != "none":
+                            for player in self.obvious_parties[player_party]:
+                                for card in self.slots[f"tricks{self.players.index(player)}"]:
+                                    if self.cards[card].card_value == pig_card:
+                                        return True
+
+        if self.pigs[0]:
+            # Find out, which cards are the superpigs in this round
+            if self.game.gamerules["dk.without9"] == "with_all":
+                value = "9"
+            else:
+                value = "k"
+
+            if self.game_type == "solo_hearts":
+                color = "h"
+            elif self.game_type == "solo_spades":
+                color = "s"
+            elif self.game_type == "solo_clubs":
+                color = "c"
+            else:
+                color = "d"
+
+            superpig_card = color + value
+
+            if self.game.gamerules["dk.superpigs"] == "on_play":
+                if list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
+                    return True
+
+            elif self.game.gamerules["dk.superpigs"] == "on_pig":
+                if list(map(lambda x: self.cards[x].card_value, self.hands[player])).count(superpig_card) == 2:
+                    if "pigs" in list(map(lambda x: x["data"], self.moves.values()))[-2:]:
+                        return "activate"
+
+        return False
 
     def do_autoplay(self):
         return

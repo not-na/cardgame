@@ -41,6 +41,7 @@ class RoundChangePacket(CGPacket):
         "extras",
         "game_summary",
         "rebtn_lbl",
+        "pigbtn_lbl",
         "wedding_trick_num",
     ]
     side = SIDE_CLIENT

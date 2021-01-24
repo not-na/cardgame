@@ -71,14 +71,14 @@ def create_dk_deck(with9: int = 8, joker: bool = False):
 
 
 def create_dk_prepped_deck():
-    deck = 2
+    deck = 0
     hands = {}
     if deck == 0:
         hands = {
-            0: ['ca', 'ca', 'c10', 'sa', 'sa', 's10', 'ha', 'ha', 'h10', 'da', 'da', 'd10'],
-            1: ['ck', 'ck', 'c10', 'sk', 'sk', 's10', 'hk', 'hk', 'h10', 'dk', 'dk', 'd10'],
-            2: ['cq', 'cq', 'cj', 'sq', 'sq', 'sj', 'hq', 'hq', 'hj', 'dq', 'dq', 'dj'],
-            3: ['c9', 'c9', 'cj', 's9', 's9', 'sj', 'h9', 'h9', 'hj', 'd9', 'd9', 'dj']
+            3: ['ca', 'ca', 'c10', 'sa', 'sa', 's10', 'ha', 'ha', 'hk', 'da', 'da', 'd9'],
+            1: ['ck', 'ck', 'c10', 'sk', 'sk', 's10', 'hk', 'd9', 'h10', 'dk', 'dk', 'd10'],
+            2: ['c9', 'cq', 'cj', 'sq', 'sq', 'sj', 'hq', 'hq', 'hj', 'dq', 'dq', 'dj'],
+            0: ['cq', 'c9', 'cj', 's9', 's9', 'sj', 'h10', 'h9', 'hj', 'h9', 'd10', 'dj']
         }
     elif deck == 1:
         hands = {

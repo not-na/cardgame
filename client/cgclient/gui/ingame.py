@@ -545,6 +545,13 @@ class GameLayer(peng3d.layer.Layer):
         for c in self.game.cards.values():
             c.delete()
         self.game.cards = {}
+        for key, slot in self.game.slots.items():
+            self.game.slots[key] = []
+
+        # Reset old announces
+        for a_widget in self.menu.hud_layer.s_main.announces.values():
+            a_widget.announce_queue = []
+            a_widget.visible = False
 
         self.color_db = {
             0: None,
@@ -982,7 +989,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.choice1btn = cgclient.gui.CGButton(
             "choice1btn", self, self.window, self.peng,
-            pos=self.grid.get_cell([2, 4], [2, 1]),
+            pos=self.grid.get_cell([2, 4], [2, 2]),
             label=self.peng.tl("cg:question.poverty_return_trumps.choice1"),
         )
         self.addWidget(self.choice1btn)
@@ -991,7 +998,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.choice2btn = cgclient.gui.CGButton(
             "choice2btn", self, self.window, self.peng,
-            pos=self.grid.get_cell([4, 4], [2, 1]),
+            pos=self.grid.get_cell([4, 4], [2, 2]),
             label=self.peng.tl("cg:question.poverty_return_trumps.choice2"),
         )
         self.addWidget(self.choice2btn)
@@ -1000,7 +1007,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.choice3btn = cgclient.gui.CGButton(
             "choice3btn", self, self.window, self.peng,
-            pos=self.grid.get_cell([2, 6], [2, 1]),
+            pos=self.grid.get_cell([2, 6], [2, 2]),
             label=self.peng.tl("cg:question.poverty_return_trumps.choice3"),
         )
         self.addWidget(self.choice3btn)
@@ -1009,7 +1016,7 @@ class ReturnTrumpsSubMenu(peng3d.gui.SubMenu):
 
         self.choice4btn = cgclient.gui.CGButton(
             "choice4btn", self, self.window, self.peng,
-            pos=self.grid.get_cell([4, 6], [2, 1]),
+            pos=self.grid.get_cell([4, 6], [2, 2]),
             label=self.peng.tl("cg:question.poverty_return_trumps.choice4"),
         )
         self.addWidget(self.choice4btn)
@@ -1527,6 +1534,11 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             self.quitbtn.label = self.peng.tl(
                 "cg:gui.menu.ingame.scoreboard.quitbtn.label3", {"rounds": 4 - (round_num % 4)})
 
+        actual_round_num = len(self.game_summaries)
+
+        # Game was thrown / poverty was not accepted
+        void_game = game_type in ["throw", "poverty_cancel"]
+
         # Height of the new widgets
         font = pyglet.font.load("Times New Roman", 16)
         font_height = font.ascent - font.descent
@@ -1542,7 +1554,7 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             # Scores
             if i < 4:
                 score = peng3d.gui.Label(
-                    f"score{i}.{round_num}", self.container, self.window, self.peng,
+                    f"score{i}.{actual_round_num}", self.container, self.window, self.peng,
                     pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
                          (sw / 5 * i, self.container.size[1] - abs_pos + self.container.content_height)),
                     size=(lambda sw, sh: (sw / 5, h)),
@@ -1556,12 +1568,13 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             elif i == 4:
                 summary_label = ""
                 summary_label += str(self.peng.tl(f"cg:game.doppelkopf.game_type.{game_type}")) + "\n"
-                summary_label += f"{eyes[0]} : {eyes[1]}\n"
+                if not void_game:
+                    summary_label += f"{eyes[0]} : {eyes[1]}\n"
                 for extra in extras:
                     # TODO This kind of undermines the whole point of peng.tl...
                     summary_label += str(self.peng.tl(f"cg:game.doppelkopf.extra.{extra}")) + "\n"
                 summary = peng3d.gui.Label(
-                    f"summary{round_num}", self.container, self.window, self.peng,
+                    f"summary{actual_round_num}", self.container, self.window, self.peng,
                     pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
                          (sw / 5 * i + 30, self.container.size[1] - abs_pos + self.container.content_height)),
                     size=(lambda sw, sh: (sw / 5 - 60, h)),
@@ -1575,9 +1588,9 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
 
             # Separation bar
             bar = peng3d.gui.ImageButton(
-                f"separation_bar{i}.{round_num}", self.container, self.window, self.peng,
+                f"separation_bar{i}.{actual_round_num}", self.container, self.window, self.peng,
                 pos=(lambda sw, sh, ww, wh, i=i, abs_pos=self.container.actual_content_height:
-                    (sw / 5 * i + 30, self.container.size[1] - abs_pos + self.container.content_height + 3)),
+                     (sw / 5 * i + 30, self.container.size[1] - abs_pos + self.container.content_height + 3)),
                 size=(lambda sw, sh: (sw / 5 - 60, 3)),
                 bg_idle=("cg:img.bg.gray_brown", "gui"),
                 label=""
@@ -1588,8 +1601,8 @@ class ScoreboardGUISubMenu(peng3d.gui.SubMenu):
             self.separation_bars[i].append(bar)
 
             # Previous separation bar
-            if round_num > 1:
-                self.container.getWidget(f"separation_bar{i}.{round_num - 1}").visible = True
+            if actual_round_num >= 1:
+                self.container.getWidget(f"separation_bar{i}.{actual_round_num - 1}").visible = True
 
         # Update total scores
         for i, j in enumerate(self.score_labels):

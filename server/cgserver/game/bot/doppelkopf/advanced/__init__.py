@@ -281,7 +281,7 @@ class AdvancedDKBot(Bot):
 
         card_values = cgserver.game.card.create_dk_deck(with9=with9, joker=joker)
         card_values = [v.card_value for v in card_values.values()]
-        card_values = card_values[:len(card_values)//2]
+        card_values = list(set(card_values))
 
         self.ggs = GlobalGameState(
             card_hands=([], [], [], []),
@@ -478,19 +478,65 @@ class AdvancedDKBot(Bot):
     def _get_possible_reservations(self) -> List[str]:
         out = []
 
+        # Check if throwing is possible
+        # TODO: maybe announce throwing based on how good the cards are
+        if self.gamerules.get("dk.throw", None) in ["throw", "reservation"]:
+            legal_throw = False
+            # Check, whether throwing is justified
+            nines = []
+            kings = []
+            fulls = []
+            high_trumps = []
+            dj = False
+
+            player_hand = self.own_hand
+            for card in player_hand:
+                if card.value == "9":
+                    nines.append(card)
+                elif card.value == "k":
+                    kings.append(card)
+                elif card.value in ["10", "a"]:
+                    fulls.append(card)
+                if card.card_value in ["h10", "cq", "sq", "hq", "dq", "cj", "sj", "hj"]:
+                    high_trumps.append(card)
+                if card.card_value == "dj":
+                    dj = True
+
+            if "5_9" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(nines) >= 5
+            if "5_k" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(kings) >= 5
+            if "4_9+4_k" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(nines) >= 4 and len(kings) >= 4
+            if "9_all_c" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(set(list(map(lambda x: x.color, nines)))) == 4
+            if "k_all_c" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(set(list(map(lambda x: x.color, kings)))) == 4
+            if "7full" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(fulls) >= 7
+            if "t<hj" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(high_trumps) == 0
+            if "t<dj" in self.gamerules["dk.throw_cases"]:
+                legal_throw = legal_throw or len(high_trumps) == 0 and not dj
+
+            if legal_throw:
+                out.append("throw")
+
         # Check if wedding is possible
         # TODO: maybe announce wedding based on how good our cards are
-        if list(map(lambda x: x.card_value, self.own_hand)).count("cq") == 2:
-            out.append("wedding")
+        if self.gamerules.get("dk.wedding", None) in ["3_trick", "wish_trick"]:
+            if list(map(lambda x: x.card_value, self.own_hand)).count("cq") == 2:
+                out.append("wedding")
 
         # Check if poverty is possible
-        trumps = []
-        for c in self.own_hand:
-            if c.color == "d" or c.value in ["j", "q"] or c.color == "j" or (
-                    c.card_value == "h10" and self.gamerules.get("dk.heart10")):
-                trumps.append(c)
-        if len(trumps) <= 3:
-            out.append("poverty")
+        if self.gamerules.get("poverty", None) in ["sell", "circulate", "circulate_duty"]:
+            trumps = []
+            for c in self.own_hand:
+                if c.color == "d" or c.value in ["j", "q"] or c.color == "j" or (
+                        c.card_value == "h10" and self.gamerules.get("dk.heart10")):
+                    trumps.append(c)
+            if len(trumps) <= 3:
+                out.append("poverty")
 
         return out
 
@@ -503,54 +549,13 @@ class AdvancedDKBot(Bot):
 
         :return: None
         """
-
         # TODO: merge duplicated code from basic doppelkopf bots
         if self.state == "w_for_ready":
             # Throw if possible, otherwise announce readiness
-            if self.gamerules.get("dk.throw", False):
-                legal_throw = False
-                # Check, whether throwing is justified
-                nines = []
-                kings = []
-                fulls = []
-                high_trumps = []
-                dj = False
-
-                player_hand = self.own_hand
-                for card in player_hand:
-                    if card.value == "9":
-                        nines.append(card)
-                    elif card.value == "k":
-                        kings.append(card)
-                    elif card.value in ["10", "a"]:
-                        fulls.append(card)
-                    if card.card_value in ["h10", "cq", "sq", "hq", "dq", "cj", "sj", "hj"]:
-                        high_trumps.append(card)
-                    if card.card_value == "dj":
-                        dj = True
-
-                if "5_9" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(nines) >= 5
-                if "5_k" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(kings) >= 5
-                if "4_9+4_k" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(nines) >= 4 and len(kings) >= 4
-                if "9_all_c" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(set(list(map(lambda x: x.color, nines)))) == 4
-                if "k_all_c" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(set(list(map(lambda x: x.color, kings)))) == 4
-                if "7full" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(fulls) >= 7
-                if "t<hj" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(high_trumps) == 0
-                if "t<dj" in self.gamerules["dk.throw_cases"]:
-                    legal_throw = legal_throw or len(high_trumps) == 0 and not dj
-
-                if legal_throw:
-                    self.announce("throw")
-                    return
-
-            self.announce("ready")
+            if self.gamerules.get("dk.throw", False) == "throw" and "throw" in self._get_possible_reservations():
+                self.announce("throw")
+            else:
+                self.announce("ready")
         elif self.state == "reservation":
             # Announce a wedding or poverty if possible, otherwise reservation_no
             if len(self._get_possible_reservations()) > 0:
@@ -558,8 +563,13 @@ class AdvancedDKBot(Bot):
             else:
                 self.announce("reservation_no")
         elif self.state == "solo":
-            # Never play a solo
+            # TODO: Can the bot play a solo?
             self.announce("solo_no")
+        elif self.state == "throw":
+            if "throw" in self._get_possible_reservations():
+                self.announce("throw_yes")
+            else:
+                self.announce("throw_no")
         elif self.state == "pigs":
             # Never announce pigs
             # TODO: find out if announcing pigs is mandatory
@@ -591,6 +601,13 @@ class AdvancedDKBot(Bot):
                 self.announce("wedding_no")
         elif self.state in ["tricks", "wedding_clarification_trick"]:
             self.cg.warning(f"do_announce() wrongly called during '{self.state}' phase, ignoring")
+        elif self.state == "black_sow_solo":
+            # TODO select the best solo
+            solo = self.gamerules.get("dk.solos", [""])[0]
+            if solo == "":
+                self.cg.error(f"No possible solos to call, answer impossible")
+            else:
+                self.announce("black_sow_solo", {"type": solo})
         else:
             self.cg.error(f"do_announce() called during unsupported phase '{self.state}', ignoring")
 
@@ -1049,7 +1066,7 @@ class AdvancedDKBot(Bot):
                     self.update_party(self.cache["poverty_acceptant"], "re")
                 elif self.game_type == "wedding":
                     self.update_party(self.cache["wedding_player"], "re")
-                elif self.game_type not in ["normal", "ramsch"]:
+                elif self.game_type not in ["normal", "ramsch", "black_sow"]:
                     self.update_party(uuidify(data["solist"]), "re")
 
         if "phase" in data:

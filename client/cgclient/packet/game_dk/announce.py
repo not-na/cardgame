@@ -214,6 +214,10 @@ class AnnouncePacket(CGPacket):
             peng = self.cg.client.gui.peng
             i18n = peng.i18n
 
+            # Black sow solo
+            if msg['type'] == "black_sow_solo":
+                msg['type'] = "solo_yes"
+
             # Check if the key exists and fall back otherwise
             if f"announce.{msg['type']}.key" not in i18n.cache[i18n.lang]["cg"]:
                 key = f"cg:announce.{msg['type']}"

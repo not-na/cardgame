@@ -42,6 +42,7 @@ class RoundChangePacket(CGPacket):
         "extras",
         "game_summary",
         "rebtn_lbl",
+        "pigbtn_lbl",
         "wedding_trick_num",
     ]
     side = SIDE_CLIENT
@@ -168,6 +169,30 @@ class RoundChangePacket(CGPacket):
                 self.cg.client.game.scoreboard_data["game_summary"] = msg["game_summary"]
 
                 self.cg.client.game.round_num = msg["round"]
+
+                # Add new round to scoreboard
+                self.cg.client.gui.ingame.gui_layer.s_scoreboard.add_round(
+                    self.cg.client.game.round_num,
+                    self.cg.client.game.scoreboard_data["winner"],
+                    self.cg.client.game.scoreboard_data["game_type"],
+                    self.cg.client.game.scoreboard_data["eyes"],
+                    self.cg.client.game.scoreboard_data["game_summary"],
+                    self.cg.client.game.scoreboard_data["point_change"],
+                    self.cg.client.game.scoreboard_data["points"],
+                )
+
+                # Reset scoreboard data
+                self.cg.client.game.scoreboard_data = {
+                    "receives": 0,
+                    "winner": "None",
+                    "game_type": "None",
+                    "eyes": (0, 0),
+                    "extras": [],
+                    "point_change": [0, 0, 0, 0],
+                    "points": [0, 0, 0, 0]
+                }
+
+                self.cg.client.gui.ingame.gui_layer.changeSubMenu("scoreboard")
             else:
                 self.cg.crash(f"Invalid round phase {msg['phase']}")
 
@@ -180,4 +205,15 @@ class RoundChangePacket(CGPacket):
             else:
                 self.cg.client.gui.ingame.gui_layer.s_ingame.rebtn.label = self.cg.client.gui.peng.tl(
                     f"cg:gui.menu.ingame.ingamegui.rebtn.{msg['rebtn_lbl']}"
+                )
+
+        if "pigbtn_lbl" in msg:
+            self.cg.client.gui.ingame.hud_layer.s_main.self_img.redraw()
+            self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.visible = msg["pigbtn_lbl"] != "none"
+            self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.purpose = msg["pigbtn_lbl"]
+            if msg["pigbtn_lbl"] == "none":
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.label = ""
+            else:
+                self.cg.client.gui.ingame.gui_layer.s_ingame.pigsbtn.label = self.cg.client.gui.peng.tl(
+                    f"cg:gui.menu.ingame.ingamegui.pigsbtn.{msg['pigbtn_lbl']}"
                 )

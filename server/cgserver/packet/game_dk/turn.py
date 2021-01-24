@@ -37,6 +37,7 @@ class TurnPacket(CGPacket):
         "current_trick",
         "total_tricks",
         "current_player",
-        "rebtn_change",
+        "rebtn_state",
+        "pigbtn_state",
     ]
     side = SIDE_CLIENT

@@ -10,6 +10,8 @@ window.caption=Card Game
 game.doppelkopf=Doppelkopf
 
 game.doppelkopf.game_type.None=Game type NONE
+game.doppelkopf.game_type.throw=Thrown
+game.doppelkopf.game_type.poverty_cancel=Poverty rejected
 game.doppelkopf.game_type.normal=Normal game
 game.doppelkopf.game_type.wedding=Wedding
 game.doppelkopf.game_type.silent_wedding=Silent wedding
