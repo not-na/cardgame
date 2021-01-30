@@ -790,7 +790,7 @@ class DoppelkopfGame(CGame):
 
 
 class DoppelkopfRound(object):
-    DEV_MODE_PREP_CARDS = True
+    DEV_MODE_PREP_CARDS = False
 
     if DoppelkopfGame.DEV_MODE:
         CARD_DEAL_DELAY = 0.3

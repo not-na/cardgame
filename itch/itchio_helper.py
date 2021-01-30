@@ -267,6 +267,7 @@ def main():
         --beta          Mark all compilations in this run as beta
         --server        Also compile the server as well. Takes longer
         """)
+        return
 
     if "--push" in sys.argv:
         print("Pushing using butler")

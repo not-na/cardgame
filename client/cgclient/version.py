@@ -21,11 +21,11 @@
 #  along with cardgame.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSIONSTRING = "v0.3.0"
+VERSIONSTRING = "v0.3.2"
 
-VERSION = (0, 3, 0, "dev")
+VERSION = (0, 3, 2, "dev")
 
-SEMVER = "0.3.0-dev"
+SEMVER = "0.3.2-dev"
 
 PROTO_VERSION = 1
 
