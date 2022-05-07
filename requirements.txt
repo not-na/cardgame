@@ -5,7 +5,7 @@ sphinx_rtd_theme==0.2.4
 plumbum==1.6.9
 #ujson==2.0.3
 jsoncomment==0.4.2
-PyYAML==5.3.1
+PyYAML==5.4
 msgpack==1.0.0
 cachetools==4.1.1
 vectormath==0.2.2
