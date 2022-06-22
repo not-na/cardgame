@@ -10,7 +10,7 @@ msgpack==1.0.0
 cachetools==4.1.1
 vectormath==0.2.2
 pyglet==1.5.5
-numpy==1.21.0
+numpy==1.22.0
 PyJWT==2.4.0
 pyinstaller==4.0
 pyperclip==1.8.1
