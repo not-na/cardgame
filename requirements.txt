@@ -14,4 +14,4 @@ numpy==1.22.0
 PyJWT==2.4.0
 pyinstaller==4.0
 pyperclip==1.8.1
-requests==2.24.0
+requests==2.31.0
